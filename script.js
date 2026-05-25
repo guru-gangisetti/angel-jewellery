@@ -358,7 +358,9 @@ function initializeAddressMemoryEngine() {
         
         if (addressWarning) addressWarning.style.display = "none";
         localStorage.setItem('angel_customer_address', addressText);
-        executeWhatsAppOrderDispatch(addressText);
+        
+        // ➔ REDIRECT TO OPEN THE COMPREHENSIVE INVOICE LAYER
+        openInvoiceScreen(addressText);
     });
 }
 
@@ -410,6 +412,9 @@ function applyCouponEngineAction() {
 }
 
 // --- WHATSAPP ORDER DISPATCH PROCESSOR ---
+// =========================================================================
+// PREMIUM ORDER DISPATCH PROCESSOR & CART RECOVERY RESET
+// =========================================================================
 function executeWhatsAppOrderDispatch(shippingAddress) {
     let messageText = `✨ *ANGEL JEWELLERY — NEW ORDER DISPATCH* ✨\n\n`;
     let subtotalValue = 0;
@@ -448,8 +453,30 @@ function executeWhatsAppOrderDispatch(shippingAddress) {
     messageText += `📍 *Delivery Shipping Address:* \n${shippingAddress}\n\n`;
     messageText += `💬 _Please click send to verify your order file setup. Our customer care concierge team will reach out immediately._`;
 
-    const generatedLink = `https://wa.me/919290066290?text=${encodeURIComponent(messageText)}`;
+    const generatedLink = `https://wa.me/919985044066?text=${encodeURIComponent(messageText)}`;
+    
+    // 1. Launch order line on WhatsApp tab cleanly
     window.open(generatedLink, '_blank');
+    
+    // 2. CLEAR CART STATE DATA IMMEDIATELY AFTER THE HANDOFF
+    shoppingCart = [];
+    activeDiscount = { code: "", type: "", value: 0 };
+    
+    // 3. WIPE PERSISTENT STORAGE SESSIONS TRACKING
+    if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
+    if (localStorage.getItem('cart')) localStorage.removeItem('cart');
+    
+    // 4. RESET ALL FORM FIELD INPUT CHANNELS IN THE SIDEBAR
+    if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
+    if (document.getElementById('couponStatusMessage')) document.getElementById('couponStatusMessage').style.display = "none";
+    if (document.getElementById('giftCheckbox')) document.getElementById('giftCheckbox').checked = false;
+    if (document.getElementById('giftMessageWrapper')) document.getElementById('giftMessageWrapper').style.display = "none";
+    if (document.getElementById('giftMessageInput')) document.getElementById('giftMessageInput').value = "";
+    if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
+    
+    // 5. REFRESH CART UI MANIFEST VISUAL PANELS AND CLOSE DRAWER
+    updateCartUI();
+    toggleCartDrawer();
 }
 
 // =========================================================================
@@ -666,3 +693,218 @@ window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { preloader.style.opacity = '0'; setTimeout(() => { preloader.remove(); }, 600); }, 400);
     }
 });
+// =========================================================================
+// ANGEL JEWELLERY — PREMIUM INVOICE GENERATOR & RAZORPAY OPERATOR
+// =========================================================================
+
+let globalPayableAmountInPaise = 0; // Tracks the price for Razorpay backend context
+
+function openInvoiceScreen(addressText) {
+    if (!shoppingCart || shoppingCart.length === 0) return;
+
+    const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
+    const itemsContainer = document.getElementById('invoiceItemsContainer');
+    const pricingSummary = document.getElementById('invoicePricingSummary');
+
+    // Extract potential pre-existing names or numbers from address layout structure
+    document.getElementById('invClientAddress').value = addressText;
+    document.getElementById('invClientName').value = localStorage.getItem('angel_customer_name') || "";
+    document.getElementById('invClientPhone').value = localStorage.getItem('angel_customer_phone') || "";
+
+    // 1. Build Itemized Row Manifest
+    itemsContainer.innerHTML = shoppingCart.map(item => `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <img src="${item.image}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <h4 style="margin:0; font-size:0.9rem; font-weight:500;">${item.title}</h4>
+                    <p style="margin:2px 0 0 0; font-size:0.75rem; color:#666;">Category: ${item.category} • Qty: ${item.quantity}</p>
+                </div>
+            </div>
+            <span style="font-weight:500; font-size:0.9rem;">${formatCurrency(item.price * item.quantity)}</span>
+        </div>
+    `).join('');
+
+    // 2. Compute Financial Ledger Data Points
+    let grandSubtotal = shoppingCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let discountAmount = 0;
+    if (activeDiscount.code) {
+        if (activeDiscount.type === "percentage") discountAmount = (grandSubtotal * activeDiscount.value) / 100;
+        else if (activeDiscount.type === "flat") discountAmount = activeDiscount.value;
+    }
+    let finalPayableTotal = grandSubtotal - discountAmount;
+    
+    // Razorpay accepts balances in minor currency sub-units (Paise for Indian Rupees). Multiply by 100.
+    globalPayableAmountInPaise = finalPayableTotal * 100;
+
+    // 3. Render Financial Ledger Box
+    pricingSummary.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="color:#666;">Bag Subtotal:</span><span>${formatCurrency(grandSubtotal)}</span>
+        </div>
+        ${discountAmount > 0 ? `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#25d366;">
+            <span>Coupon Promo (${activeDiscount.code}):</span><span>-${formatCurrency(discountAmount)}</span>
+        </div>` : ''}
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#888;">
+            <span>Insured Vault Delivery:</span><span style="color:#25d366; font-weight:600;">FREE</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px; margin-top:10px; color:#dfba6b;">
+            <span>Total Gross Bill:</span><span>${formatCurrency(finalPayableTotal)}</span>
+        </div>
+    `;
+
+    toggleCartDrawer(); // Close the sidebar cart drawer cleanly
+    invoiceOverlay.style.display = 'flex';
+}
+
+function closeInvoiceScreen() {
+    document.getElementById('invoiceOverlayScreen').style.display = 'none';
+}
+
+// 4. FIRE THE NATIVE SURFACE RAZORPAY STANDARD SHEET
+function initiateRazorpayPaymentProcess(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('invClientName').value.trim();
+    const phone = document.getElementById('invClientPhone').value.trim();
+    const address = document.getElementById('invClientAddress').value.trim();
+
+    localStorage.setItem('angel_customer_name', name);
+    localStorage.setItem('angel_customer_phone', phone);
+
+    // Standard Client-Side Razorpay Configuration Setup Options Packet
+    const paymentOptions = {
+        "key": "rzp_test_StZ7M1D8qRHUIN", // ⚠️ Replace this with your Live or Test API key from Razorpay Dashboard
+        "amount": globalPayableAmountInPaise, 
+        "currency": "INR",
+        "name": "Angel Jewellery",
+        "description": "Premium High-Fashion Order Settlement",
+        "image": "angel-logo.png", 
+        "handler": function (transactionResponse) {
+            // Fired instantly when transaction registers success states!
+            executePostPaidWhatsAppDispatch(transactionResponse.razorpay_payment_id, name, phone, address);
+        },
+        "prefill": {
+            "name": name,
+            "contact": phone
+        },
+        "theme": {
+            "color": "#111111" // Luxury brand dark coordination color hex
+        }
+    };
+
+    const razorpayUiEngineInstance = new Razorpay(paymentOptions);
+    razorpayUiEngineInstance.open();
+}
+
+// 5. SECURE COMPILATION UPON SUCCESSFUL PAYMENT VERIFICATION MATCHES
+// =========================================================================
+// POST-PAID CONFIRMATION VIEW ARCHITECTURE ENGINE
+// =========================================================================
+function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
+    const confirmationScreen = document.getElementById('confirmationPageScreen');
+    const confItemsManifest = document.getElementById('confItemsManifest');
+    
+    // 1. Set Transaction Metrics Metadata Display
+    document.getElementById('confPaymentId').innerText = paymentId;
+    document.getElementById('confClientMeta').innerText = `${name} (${phone})`;
+    document.getElementById('confClientAddress').innerText = address;
+    document.getElementById('confOrderDate').innerText = new Date().toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    // 2. Map Selected Masterpieces Rows to Success Summary Card
+    confItemsManifest.innerHTML = shoppingCart.map(item => `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
+            <span style="color:#aaa;">${item.title} <small style="color:#666;">x${item.quantity}</small></span>
+            <span style="font-weight:500;">${formatCurrency(item.price * item.quantity)}</span>
+        </div>
+    `).join('');
+
+    // 3. Compute Ledger Breakdown Pricing Fields for Display
+    let subtotalValue = 0;
+    let messageText = `✨ *ANGEL JEWELLERY — PAID ORDER MANIFEST* ✨\n\n`;
+    messageText += `💳 *Payment ID:* \`${paymentId}\` (Verified via Razorpay)\n`;
+    messageText += `🟢 *Status:* TRANSACTION SUCCESSFUL\n\n`;
+    messageText += `👤 *Client:* ${name} (${phone})\n`;
+    
+    shoppingCart.forEach((item, index) => {
+        const rowCost = item.price * item.quantity;
+        subtotalValue += rowCost;
+        messageText += `${index + 1}. *${item.title}* [x${item.quantity}] — ${formatCurrency(rowCost)}\n`;
+    });
+    
+    let discountAmt = 0;
+    if (activeDiscount.code) {
+        if (activeDiscount.type === "percentage") discountAmt = (subtotalValue * activeDiscount.value) / 100;
+        else if (activeDiscount.type === "flat") discountAmt = activeDiscount.value;
+    }
+    const finalTotalCost = subtotalValue - discountAmt;
+    
+    document.getElementById('confFinalTotal').innerText = formatCurrency(finalTotalCost);
+
+    // 4. Wrap up the Clean Invoice Message Text for WhatsApp Handoff
+    messageText += `\n💰 *Total Paid:* ${formatCurrency(finalTotalCost)}\n`;
+    messageText += `📍 *Delivery Address:* \n${address}\n\n`;
+    messageText += `💬 _Payment token validated. Please share to generate courier delivery slip profiles._`;
+
+    const generatedLink = `https://wa.me/919985044066?text=${encodeURIComponent(messageText)}`;
+    
+    // Bind the link dynamically to the green summary action button
+    document.getElementById('confWhatsAppBtn').onclick = () => {
+        window.open(generatedLink, '_blank');
+    };
+
+    
+    // --- SAFE GOOGLE SHEETS DISPATCH GATEWAY ---
+    console.log("Streaming transaction data to secure Google ledger...");
+    
+    // --- BULLETPROOF SHEETDB DISPATCH GATEWAY ---
+    console.log("Streaming transaction data to secure SheetDB ledger...");
+    
+    fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            // The keys below must exactly match the column headers in row 1 of your sheet!
+            data: [
+                {
+                    "Payment ID": paymentId,
+                    "Date": new Date().toLocaleString('en-IN'),
+                    "Client Name": name,
+                    "Phone": phone,
+                    "Address": address,
+                    "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
+                    "Total Paid": formatCurrency(finalTotalCost),
+                    "Status": "Paid"
+                }
+            ]
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log("SheetDB integration success payload:", data))
+    .catch(err => console.error("SheetDB network stream drop:", err));
+    
+    // 5. SECURE BACKGROUND ARCHITECTURE RESET LOOP
+    shoppingCart = [];
+    activeDiscount = { code: "", type: "", value: 0 };
+    if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
+    
+    if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
+    if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
+    
+    updateCartUI();
+    closeInvoiceScreen(); // Remove invoice screen input overlay layer
+
+    // Reveal the gorgeous luxury final confirmation page!
+    confirmationScreen.style.display = 'flex';
+}
+
+// 6. DISMISS CONTAINER PANEL AND RESTORE HOME STORE VIEW FRONTEND
+function exitConfirmationAndReset() {
+    document.getElementById('confirmationPageScreen').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
