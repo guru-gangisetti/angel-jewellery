@@ -31,6 +31,14 @@
       "image": "images/ring-03.jpg",
       "badge": "New In",
       "price": 234
+    },
+    {
+      "id": 65,
+      "title": "Sbdjb",
+      "category": "rings",
+      "price": 236,
+      "image": "images/56447.jpg",
+      "badge": "New In"
     }
   ]
 }
