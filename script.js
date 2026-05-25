@@ -21,19 +21,29 @@ const couponRegistry = {
 // =========================================================================
 // 1. ASYNCHRONOUS DATA FETCHING & INITIALIZATION
 // =========================================================================
+// =========================================================================
+// REAL-TIME ASYNCHRONOUS LUXURY CATALOG DATABANK LOADING ENGINE
+// =========================================================================
 async function loadProductDatabaseEngine() {
     try {
-        // Reads live updates from the Git-backed Mobile Admin JSON stream
         const targetResponse = await fetch('data/products.json');
         if (!targetResponse.ok) throw new Error('Data stream failed verification handles');
         
-        productDatabase = await targetResponse.json();
+        const fileContent = await targetResponse.json();
         
-        // Populate the catalog grid automatically once data arrives
+        // SAFE EXTRACTOR: Gracefully unpacks the array list if it's wrapped in Sveltia's object key
+        if (fileContent && typeof fileContent === 'object' && Array.isArray(fileContent.products)) {
+            productDatabase = fileContent.products;
+        } else if (Array.isArray(fileContent)) {
+            productDatabase = fileContent;
+        } else {
+            productDatabase = [];
+        }
+        
+        // Populate the storefront layout grid automatically once data arrives
         filterCatalog();
     } catch (error) {
         console.error('Critical catalog database execution drop:', error);
-        // Fallback interface indicator in case file path mapping is broken
         const grid = document.getElementById('productGrid');
         if (grid) grid.innerHTML = `<div class="no-results">Unable to load catalog matrix at this moment.</div>`;
     }

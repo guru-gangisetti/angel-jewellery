@@ -1,43 +1,40 @@
 # =========================================================================
-# ANGEL JEWELLERY — LIGHTWEIGHT ADMINISTRATIVE CONFIGURATION SYSTEM
+# ANGEL JEWELLERY — UNIFIED LEDGER CONFIGURATION LIST SETUP
 # =========================================================================
 backend:
-  name: git-gateway
-  branch: main # Tracks your active server deployment branch hook
+  name: github
+  repo: https://github.com/guru-gangisetti/angel-jewellery
+  branch: main
 
-media_folder: "assets/products" # Destination folder where uploaded mobile photos are saved
-public_folder: "assets/products" # Path structural reference route inside code indices
-
-# Visual Dashboard custom luxury dark brand skin styles
-theme:
-  primary_color: "#dfba6b"
-  background_color: "#0a0a0a"
-  text_color: "#ffffff"
+media_folder: "images"
+public_folder: "images"
 
 collections:
-  - name: "products"
-    label: "Jewellery Catalog Items"
-    folder: "data" # We store data inside a clean structured JSON file
-    extension: "json"
-    format: "json"
-    create: true # Permits you to click 'Add New Product' right from mobile
-    slug: "{{title}}"
-    identifier_field: "id"
-    fields:
-      - { label: "Unique Item ID", name: "id", widget: "number", value_type: "int" }
-      - { label: "Masterpiece Title", name: "title", widget: "string" }
-      - { 
-          label: "Design Category", 
-          name: "category", 
-          widget: "select", 
-          options: ["necklace", "earrings", "rings", "bracelets"] 
-        }
-      - { label: "Retail Value Price (₹)", name: "price", widget: "number", value_type: "int" }
-      - { label: "Display Photograph Media", name: "image", widget: "image" }
-      - { 
-          label: "Inventory Alert Tag Badge", 
-          name: "badge", 
-          widget: "select", 
-          options: ["", "New In", "Sold Out"],
-          required: false 
-        }
+  - name: "catalog"
+    label: "Inventory Core Data Files"
+    files:
+      - file: "data/products.json" # Points precisely to your primary data ledger
+        label: "Jewellery Master Catalog"
+        name: "products"
+        fields:
+          - name: "products"
+            label: "Product Matrix Database Loop"
+            widget: "list" # Forces a single continuous array list structure
+            fields:
+              - { label: "Unique Item ID", name: "id", widget: "number", value_type: "int" }
+              - { label: "Masterpiece Title", name: "title", widget: "string" }
+              - { 
+                  label: "Design Category", 
+                  name: "category", 
+                  widget: "select", 
+                  options: ["necklace", "earrings", "rings", "bracelets"] 
+                }
+              - { label: "Retail Value Price (₹)", name: "price", widget: "number", value_type: "int" }
+              - { label: "Display Photograph Media", name: "image", widget: "image" }
+              - { 
+                  label: "Inventory Alert Tag Badge", 
+                  name: "badge", 
+                  widget: "select", 
+                  options: ["Sale", "New In", "Sold Out"],
+                  required: false 
+                }
