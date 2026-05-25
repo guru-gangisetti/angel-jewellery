@@ -2,7 +2,7 @@
 # ANGEL JEWELLERY — UNIFIED LEDGER CONFIGURATION LIST SETUP
 # =========================================================================
 backend:
-  name: github
+  name: git-gateway
   repo: https://github.com/guru-gangisetti/angel-jewellery
   branch: main
 
