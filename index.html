@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angel Jewellery | Luxury Catalog Collection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="preloader"><div class="spinner"></div></div>
+
+    <header id="header">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <img src="angel-logo.png" alt="Angel Jewellery Luxury Logo">
+            </a>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#" class="nav-link">Home</a></li>
+                <li><a href="#productGrid" class="nav-link nav-link-catalog">Full Catalog</a></li>
+                <li><a href="#story" class="nav-link">Our Story</a></li>
+                <li><a href="#faq" class="nav-link">Client Care</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                
+               <a href="#" id="wishlistBtn" style="position: relative;" aria-label="Open Wishlist">
+                    <i class="far fa-heart"></i>
+                    <span id="wishlistCountBadge">0</span>
+                </a>
+
+                <a href="#" id="cartBtn" style="position: relative;" aria-label="Open Shopping Cart">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span id="cartCountBadge">0</span>
+                </a>
+
+                <div class="mobile-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content" data-aos="fade-up">
+                <h1>The <span class="gold-text">Complete Collection</span></h1>
+                <p>Browse our verified ultra-premium fashion gallery. Interactive cart collection built for direct WhatsApp ordering.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog-controls" id="catalog">
+        <div class="container">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search luxury designs...">
+            </div>
+            <div class="filter-wrapper" id="filterContainer">
+                <button class="filter-btn active" data-filter="all">All Masterpieces</button>
+                <button class="filter-btn" data-filter="necklace">Necklaces</button>
+                <button class="filter-btn" data-filter="earrings">Earrings</button>
+                <button class="filter-btn" data-filter="rings">Rings</button>
+                <button class="filter-btn" data-filter="bracelets">Bracelets</button>
+                
+                <div class="inventory-toggle-wrapper">
+                    <label class="switch-container">
+                        <input type="checkbox" id="hideSoldOutCheckbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                    <span class="toggle-label">Hide Sold Out</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container">
+            <div class="product-grid" id="productGrid">
+                </div>
+        </div>
+    </section>
+
+    <div id="cartDrawer">
+    <div class="cart-header">
+        <h3>Your Selection</h3>
+        <i class="fas fa-times" id="closeCartBtn"></i>
+    </div>
+    
+    <div id="cartItemsContainer">
+        
+        <div id="cartItemsList">
+            </div>
+
+        <div class="cart-footer-embedded" id="cartFooterSection">
+            
+            <div class="cart-form-group">
+                <label for="customerAddress">
+                    <i class="fas fa-map-marker-alt"></i> Shipping Address
+                </label>
+                <textarea id="customerAddress" rows="2" placeholder="Full Name, Phone Number, House No, Pincode..."></textarea>
+                <p id="addressWarning" style="color: #ff4444; font-size: 0.68rem; margin-top: 4px; display: none; font-weight: 500;">Please provide a delivery address before checkout.</p>
+            </div>
+
+            <div class="cart-form-group">
+                <label class="gift-checkbox-container">
+                    <input type="checkbox" id="giftCheckbox">
+                    <span class="custom-checkbox"></span>
+                    <span style="letter-spacing: 1px;">This order is a luxury gift</span>
+                </label>
+                <div id="giftMessageWrapper">
+                    <textarea id="giftMessageInput" rows="2" placeholder="Write your personalized gift message here..."></textarea>
+                </div>
+            </div>
+
+            <div class="cart-form-group">
+                <label>
+                    <i class="fas fa-ticket-alt"></i> Offers & Coupons
+                </label>
+                <div class="coupon-input-wrapper">
+                    <input type="text" id="couponInput" placeholder="Enter coupon code...">
+                    <button id="applyCouponBtn">Apply</button>
+                </div>
+                <p id="couponStatusMessage"></p>
+                
+                <div class="coupon-helper-tags" id="couponHelpersGroup">
+                    </div>
+            </div>
+
+            <div id="cartTotalQty" class="cart-totals-box">
+                </div>
+            
+            <button id="checkoutBtn" class="btn-luxury checkout-action-btn">
+                <i class="fab fa-whatsapp"></i> Secure Checkout via WhatsApp
+            </button>
+            
+        </div> </div> </div> <div id="cartOverlay"></div>
+
+    <div id="wishlistDrawer">
+        <div class="cart-header">
+            <h3>Your Wishlist</h3>
+            <i class="fas fa-times" id="closeWishlistBtn"></i>
+        </div>
+        <div id="wishlistItemsList">
+            </div>
+    </div>
+
+    <div id="cartOverlay"></div>
+
+    <section class="story-section-wrapper" id="story">
+        <div class="container story-grid">
+            <div class="story-image-pane">
+                <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800" alt="Crafting Angel Jewellery">
+            </div>
+            <div class="story-text-pane">
+                <span class="story-tagline">The Heritage of Elegance</span>
+                <h2>Unveiling The Wings Of <br><span class="gold-text">Celestial Glamour</span></h2>
+                <p>Founded on the philosophy that fine fashion should be an empowering extension of your inner brilliance, Angel Jewellery curates ultra-premium fashion accessories designed to transform your entire aura.</p>
+                <p>Every masterpiece in our collection undergoes strict multi-tier quality benchmarks—combining flawless 24k gold micron plating mechanics with anti-tarnish protective engineering. We believe confidence is the ultimate ornament, and our purpose is to craft it for you daily.</p>
+                <div class="story-signature">
+                    <p class="sig-title">Angel Jewellery Concierge Desk</p>
+                    <p class="sig-sub">Handcrafted Excellence • Estimated Est. 2026</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <h2 class="faq-main-title">Client Care & FAQ</h2>
+            <p class="faq-subtitle">Everything you need to know about your luxury order</p>
+            
+            <div class="faq-accordion-container">
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <h3>How do I care for my Angel Jewellery?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-body">
+                        <p>To preserve the exquisite 24k gold plating and stone brilliance, avoid direct contact with perfumes, sanitizers, and water. Store each piece individually inside our provided anti-tarnish luxury box packaging.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <h3>What are your standard delivery timelines?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-body">
+                        <p>We process orders within 24–48 hours. Standard insured delivery takes 3 to 5 business days across India. Express courier options within Hyderabad can be coordinated directly over WhatsApp support chats.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <h3>What payment protocols do you accept?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-body">
+                        <p>Once your checkout list manifest is generated over WhatsApp, our executive concierge desk will verify real-time inventory slots and instantly share secure UPI handles, bank transfer paths, or custom QR links to settle your order booking safely.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <a href="https://wa.me/919290066290?text=Hello%20Angel%20Jewellery!%20I%20am%20browsing%20your%20website%20and%20have%20a%20few%20questions%20about%20your%20collections." target="_blank" id="whatsappFloatingBubble" aria-label="Chat with Support">
+        <i class="fab fa-whatsapp"></i>
+        <span class="bubble-tooltip">Chat With Us</span>
+    </a>
+
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <img src="angel-logo.png" alt="Angel Jewellery Logo">
+            </div>
+            <div class="copyright">
+                &copy; 2026 Angel Jewellery. High-Performance Front-End Grid.
+            </div>
+            <div class="footer-socials">
+                <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="script.js"></script>
+    <button id="backToTopBtn" aria-label="Scroll to top"><i class="fas fa-chevron-up"></i></button>
+    <div id="quickviewModalShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(10,10,10,0.95); backdrop-filter: blur(15px); z-index: 4000; align-items: center; justify-content: center; padding: 20px;">
+    
+    <div class="qv-modal-card" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); max-width: 780px; width: 100%; border-radius: 8px; display: flex; position: relative; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8);">
+        
+        <i class="fas fa-times" onclick="closeQuickViewShield()" style="position: absolute; top: 20px; right: 20px; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; z-index: 10; transition: var(--transition);"></i>
+        
+        <div class="qv-image-pane" style="width: 50%; background: #000; display: flex; align-items: center; justify-content: center;">
+            <img id="qvImage" src="" alt="Masterpiece Loading" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        
+        <div class="qv-details-pane" style="width: 50%; padding: 40px; display: flex; flex-direction: column; justify-content: center;">
+            <p id="qvCategory" style="font-size: 0.65rem; color: var(--gold-primary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 600;"></p>
+            <h2 id="qvTitle" style="font-family: var(--font-display); color: #fff; font-size: 1.6rem; margin-bottom: 15px; font-weight: 400; line-height: 1.3;"></h2>
+            <p id="qvPrice" style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 30px; font-weight: 500;"></p>
+            
+            <button id="qvAddToCartBtn" class="btn-luxury" style="width: 100%; padding: 14px 0; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                </button>
+        </div>
+        
+    </div>
+</div>
+</body>
+</html>
