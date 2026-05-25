@@ -23,6 +23,14 @@
       "price": 4444,
       "image": "/images/angel-logo-bg.png",
       "badge": "New In"
+    },
+    {
+      "id": 1212,
+      "title": "safsaf",
+      "category": "necklace",
+      "image": "images/ring-03.jpg",
+      "badge": "New In",
+      "price": 234
     }
   ]
 }
