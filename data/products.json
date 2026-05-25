@@ -21,8 +21,9 @@
       "title": "new one",
       "category": "rings",
       "price": 4444,
+      "originalPrice": 5000,
       "image": "/images/angel-logo-bg.png",
-      "badge": "New In"
+      "badge": "Sale"
     },
     {
       "id": 1212,

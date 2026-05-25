@@ -42,6 +42,7 @@ async function loadProductDatabaseEngine() {
         
         // Populate the storefront layout grid automatically once data arrives
         filterCatalog();
+        //renderVaultSaleSection();
     } catch (error) {
         console.error('Critical catalog database execution drop:', error);
         const grid = document.getElementById('productGrid');
@@ -133,6 +134,10 @@ function filterCurrentDataset() {
 
 function filterCatalog() { 
     displayProducts(filterCurrentDataset()); 
+
+    if (typeof renderVaultSaleSection === "function") {
+        renderVaultSaleSection();
+    }
 }
 
 // =========================================================================
@@ -501,7 +506,17 @@ function openQuickViewShield(id) {
     document.getElementById('qvImage').src = product.image;
     document.getElementById('qvTitle').innerText = product.title;
     document.getElementById('qvCategory').innerText = product.category.toUpperCase();
-    document.getElementById('qvPrice').innerText = formatCurrency(product.price);
+    const priceContainer = document.getElementById('qvPrice');
+    if (priceContainer) {
+        if (product.originalPrice && product.originalPrice > product.price) {
+            priceContainer.innerHTML = `
+                <span style="color: #dfba6b; margin-right: 12px;">${formatCurrency(product.price)}</span>
+                <span style="color: #555; font-size: 0.95rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
+             Dino`;
+        } else {
+            priceContainer.innerText = formatCurrency(product.price);
+        }
+    }
     
     const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
     const qvBtn = document.getElementById('qvAddToCartBtn');
@@ -907,4 +922,321 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
 function exitConfirmationAndReset() {
     document.getElementById('confirmationPageScreen').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// =========================================================================
+// ANGEL JEWELLERY — LIVE CONCIERGE SEARCH TRACKING ENGINE
+// =========================================================================
+function executeLiveOrderTrackingSearch() {
+    const inputField = document.getElementById('trackingPhoneInput');
+    const statusMsg = document.getElementById('trackingStatusMessage');
+    const resultsContainer = document.getElementById('trackingResultsContainer');
+    
+    if (!inputField || !statusMsg || !resultsContainer) return;
+    
+    const plainPhoneNumberInput = inputField.value.trim();
+    resultsContainer.innerHTML = ""; // Clear out previous searches
+    
+    if (!plainPhoneNumberInput) {
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "#ff4444";
+        statusMsg.innerText = "Please provide a valid contact registration number.";
+        return;
+    }
+    
+    statusMsg.style.display = "block";
+    statusMsg.style.color = "#dfba6b";
+    statusMsg.innerText = "Compiling live records archive from ledger data slots...";
+
+    // ➔ Target SheetDB Search API looking specifically inside the 'Phone' column
+    const searchApiEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/search?Phone=${encodeURIComponent(plainPhoneNumberInput)}`;
+
+    fetch(searchApiEndpoint)
+        .then(response => {
+            if (!response.ok) throw new Error("Database interface link dropped.");
+            return response.json();
+        })
+        .then(matchingOrdersArray => {
+            if (!matchingOrdersArray || matchingOrdersArray.length === 0) {
+                statusMsg.style.color = "#ff4444";
+                statusMsg.innerText = "No verified luxury transaction records discovered matching this number.";
+                return;
+            }
+
+            statusMsg.style.color = "#25d366";
+            statusMsg.innerText = `Discovered ${matchingOrdersArray.length} authenticated reservation order file(s):`;
+
+            // Render each discovered spreadsheet row into a beautiful dark receipt card
+            resultsContainer.innerHTML = matchingOrdersArray.map(order => `
+                <div style="background: #161616; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #888;">
+                        <span>Ref ID: <strong style="color: #fff; font-family: monospace;">${order['Payment ID']}</strong></span>
+                        <span>${order['Date']}</span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; color: #dfba6b; letter-spacing: 0.5px;">Masterpieces Secured</h4>
+                        <p style="margin: 0; color: #fff; font-size: 0.95rem; font-weight: 500; line-height: 1.4;">${order['Order Items']}</p>
+                    </div>
+
+                    <div style="border-top: 1px solid rgba(255,255,255,0.03); padding-top: 12px; margin-top: 12px; font-size: 0.85rem; color: #aaa;">
+                        <p style="margin: 0 0 4px 0;"><span style="color: #666;">Consignee:</span> ${order['Client Name']}</p>
+                        <p style="margin: 0;"><span style="color: #666;">Destination:</span> ${order['Address']}</p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 12px; margin-top: 15px;">
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: #666; font-weight: 600;">Payment Status</span>
+                        <span style="background: rgba(37, 211, 102, 0.1); color: #25d366; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Paid via Gateway</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 1.05rem; font-weight: 600; color: #dfba6b;">
+                        <span>Settled Balance:</span>
+                        <span>${order['Total Paid']}</span>
+                    </div>
+
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            console.error("Live ledger sync execution drop:", err);
+            statusMsg.style.color = "#ff4444";
+            statusMsg.innerText = "Fulfillment system extraction dropped. Please verify network links.";
+        });
+}
+// =========================================================================
+// ANGEL JEWELLERY — FULL SCREEN TRACKING PAGE OVERLAY CONTROLLERS
+// =========================================================================
+function openTrackingScreenOverlay(event) {
+    if (event) event.preventDefault(); // Stop default browser href jump
+    
+    // Close the mobile dropdown toggle menu panel if it's currently open
+    const navMenu = document.getElementById('navMenu');
+    if (navMenu) navMenu.classList.remove('active');
+
+    const trackingOverlay = document.getElementById('trackingScreenOverlay');
+    if (trackingOverlay) {
+        // Reset old input states cleanly
+        document.getElementById('trackingPhoneInput').value = "";
+        document.getElementById('trackingStatusMessage').style.display = "none";
+        document.getElementById('trackingResultsContainer').innerHTML = "";
+        
+        trackingOverlay.style.display = 'flex';
+    }
+}
+
+function closeTrackingScreenOverlay() {
+    document.getElementById('trackingScreenOverlay').style.display = 'none';
+}
+// =========================================================================
+// ANGEL JEWELLERY — ADMINISTRATIVE SYSTEM CONTROLLERS
+// =========================================================================
+
+function openAdminMasterConsole(event) {
+    if (event) event.preventDefault();
+    
+    const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
+    const statusMsg = document.getElementById('adminConsoleStatus');
+    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
+    
+    if (!adminOverlay || !statusMsg || !ordersContainer) return;
+    
+    ordersContainer.innerHTML = ""; // Clear out stale panel logs
+    statusMsg.innerText = "Extracting complete operational transaction matrix from Google server...";
+    adminOverlay.style.display = 'flex';
+
+    // ➔ GET request reads the absolute entire spreadsheet array sequence cleanly
+    fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi")
+        .then(response => {
+            if (!response.ok) throw new Error("Administrative link connection dropout.");
+            return response.json();
+        })
+        .then(allOrdersArray => {
+            if (!allOrdersArray || allOrdersArray.length === 0) {
+                statusMsg.innerText = "The database file contains zero active order logs.";
+                return;
+            }
+
+            statusMsg.innerHTML = `Connected. Total Orders Processed: <span style="color:#25d366; font-weight:600;">${allOrdersArray.length}</span>`;
+
+            // Reverse the array sequence so the newest transactions stream up first!
+            const chronologicallyReversedStack = allOrdersArray.reverse();
+
+            // Construct clean, compact table-style tracking metrics rows
+            ordersContainer.innerHTML = chronologicallyReversedStack.map(order => `
+                <div style="background: #161616; border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start;">
+                    
+                    <div style="flex: 1; min-width: 250px;">
+                        <span style="font-size:0.7rem; color:#666; text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace;">Ref: ${order['Payment ID']}</span>
+                        <h4 style="margin: 0 0 8px 0; font-size: 1.05rem; font-weight: 500; color: #fff;">${order['Client Name']}</h4>
+                        <p style="margin: 0 0 4px 0; font-size: 0.85rem; color: #aaa;"><strong style="color:#dfba6b;">Items:</strong> ${order['Order Items']}</p>
+                        <p style="margin: 0; font-size: 0.85rem; color: #888;"><strong style="color:#666;">Ship To:</strong> ${order['Address']}</p>
+                    </div>
+
+                    <div style="text-align: right; min-width: 150px; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: auto;">
+                        <span style="font-size: 0.75rem; color: #666; display:block; margin-bottom:10px;">${order['Date']}</span>
+                        <span style="font-size: 1.15rem; font-weight: 600; color: #dfba6b; display:block; margin-bottom:8px;">${order['Total Paid']}</span>
+                        <a href="https://wa.me/${order['Phone'].replace(/[^0-9]/g, '')}" target="_blank" style="background: rgba(37,211,102,0.08); color: #25d366; border: 1px solid rgba(37,211,102,0.2); padding: 5px 12px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-radius: 2px;">
+                            <i class="fab fa-whatsapp"></i> Chat Client
+                        </a>
+                    </div>
+
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            console.error("Admin dashboard runtime drop:", err);
+            statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate spreadsheet rows.";
+        });
+}
+
+function closeAdminMasterConsole() {
+    document.getElementById('adminMasterConsoleOverlay').style.display = 'none';
+}
+// =========================================================================
+// ANGEL JEWELLERY — MASTER RUNTIME ENGINE BANNER CAROUSEL
+// =========================================================================
+let currentCarouselActiveIndex = 0;
+let carouselAutoRotationTimerHandle = null;
+
+function initializeLuxuryBannerCarousel() {
+    const headerElement = document.getElementById('header');
+    const track = document.getElementById('carouselSliderTrack');
+     if (headerElement && track) {
+        const headerHeight = headerElement.offsetHeight;
+        // Dynamically applies a top margin to the carousel wrapper based on header size
+        track.parentElement.parentElement.style.marginTop = `${headerHeight}px`;
+    }
+
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!track) return;
+
+    const slidesCount = track.children.length;
+    if (slidesCount === 0) return;
+
+    // 1. Build bottom indicator tracking navigation dots
+    indicatorsDock.innerHTML = "";
+    for (let i = 0; i < slidesCount; i++) {
+        const indicatorDot = document.createElement('div');
+        indicatorDot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? '#dfba6b' : 'rgba(255,255,255,0.2)'}; cursor: pointer; transition: background 0.3s;`;
+        indicatorDot.onclick = () => jumpToSpecificCarouselSlide(i);
+        indicatorsDock.appendChild(indicatorDot);
+    }
+
+    // 2. Spark automated slideshow rotation timeline
+    startCarouselAutoPlayCycle(slidesCount);
+}
+
+function updateCarouselRenderPosition() {
+    const track = document.getElementById('carouselSliderTrack');
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!track) return;
+
+    // Move slider track via CSS transitions shifts
+    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
+
+    // Toggle active coloring states across indicator dot frames
+    Array.from(indicatorsDock.children).forEach((dot, index) => {
+        dot.style.background = index === currentCarouselActiveIndex ? '#dfba6b' : 'rgba(255,255,255,0.2)';
+    });
+}
+
+function shiftCarouselSlideDirection(directionStep) {
+    const track = document.getElementById('carouselSliderTrack');
+    if (!track) return;
+    
+    const totalSlides = track.children.length;
+    
+    // Cycle calculations loops wrap back around limits gracefully
+    currentCarouselActiveIndex += directionStep;
+    if (currentCarouselActiveIndex >= totalSlides) currentCarouselActiveIndex = 0;
+    if (currentCarouselActiveIndex < 0) currentCarouselActiveIndex = totalSlides - 1;
+
+    updateCarouselRenderPosition();
+    
+    // Reset automatic timers upon manual customer override actions
+    startCarouselAutoPlayCycle(totalSlides);
+}
+
+function jumpToSpecificCarouselSlide(targetIndex) {
+    currentCarouselActiveIndex = targetIndex;
+    updateCarouselRenderPosition();
+    
+    const track = document.getElementById('carouselSliderTrack');
+    if (track) startCarouselAutoPlayCycle(track.children.length);
+}
+
+function startCarouselAutoPlayCycle(totalSlidesCount) {
+    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
+    
+    // Smooth auto-advancement loop ticks every 5000ms (5 seconds)
+    carouselAutoRotationTimerHandle = setInterval(() => {
+        currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
+        updateCarouselRenderPosition();
+    }, 5000);
+}
+
+// ➔ BIND CAROUSEL TO INITIALIZE AUTOMATICALLY ONCE HTML STRUCTURE STANDS UP
+window.addEventListener('DOMContentLoaded', initializeLuxuryBannerCarousel);
+
+// =========================================================================
+// ANGEL JEWELLERY — VAULT SALE DISTRIBUTION GRID ENGINE
+// =========================================================================
+function renderVaultSaleSection() {
+    const saleSection = document.getElementById('saleSection');
+    const saleGrid = document.getElementById('saleProductGrid');
+    
+    if (!saleSection || !saleGrid) return;
+
+    // Filter database for elements that contain an active original price field
+    const saleItems = productDatabase.filter(product => product.originalPrice && product.originalPrice > product.price);
+
+    // If zero pieces match our sale criteria, keep the section hidden entirely
+    if (saleItems.length === 0) {
+        saleSection.style.display = 'none';
+        return;
+    }
+
+    // Reveal the pristine sale frame area
+    saleSection.style.display = 'block';
+    saleGrid.innerHTML = "";
+
+    saleItems.forEach(product => {
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        const isFavorited = wishlistMemory.includes(product.id);
+        
+        const saleCard = document.createElement('div');
+        saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
+        
+        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background:#ff4444;">${product.badge}</span>` : '';
+
+        // --- STRIKE-OUT CURRENCY TYPOGRAPHY GENERATOR ---
+        const pricingLayoutHTML = `
+            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+                <span style="color: #dfba6b; font-weight: 500;">${formatCurrency(product.price)}</span>
+                <span style="color: #666; font-size: 0.85rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
+            </p>
+        `;
+
+        saleCard.innerHTML = `
+            <div class="product-img-wrapper">
+                ${badgeHTML}
+                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
+                </button>
+                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+                <div class="product-actions-overlay">
+                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
+                </div>
+            </div>
+            <div class="product-info">
+                <p class="product-category" style="color: #ff4444;">${product.category} • Special Offer</p>
+                <h3 class="product-title">${product.title}</h3>
+                ${pricingLayoutHTML}
+                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px;">
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fab fa-whatsapp'}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+                </button>
+            </div>
+        `;
+        saleGrid.appendChild(saleCard);
+    });
 }
