@@ -5,6 +5,7 @@ backend:
   name: github
   repo: https://github.com/guru-gangisetti/angel-jewellery
   branch: main
+  site_domain: https://angel-jewellery.netlify.app/
 
 media_folder: "images"
 public_folder: "images"
