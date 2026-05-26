@@ -2,15 +2,13 @@
    ANGEL JEWELLERY — COMPLETE MASTER RUNTIME ENGINE APPLICATIVE LOGIC
    ========================================================================= */
 
-// --- GLOBAL APP STATE CONTROL DATA LAYERS ---
-let productDatabase = [];    // Populated dynamically via loadProductDatabaseEngine()
-let shoppingCart = [];       // Holds active checkout item sets
-let wishlistMemory = [];     // Holds favorited product unique IDs
+let productDatabase = [];    
+let shoppingCart = [];       
+let wishlistMemory = [];     
 let activeDiscount = { code: "", type: "", value: 0 };
 
-const FREE_SHIPPING_THRESHOLD = 25000; // Free delivery unlocks if purchase passes ₹25,000
+const FREE_SHIPPING_THRESHOLD = 25000; 
 
-// Active coupon registry codes dataset
 const couponRegistry = {
     "ANGEL10": { type: "percentage", value: 10 },
     "WELCOME5": { type: "percentage", value: 5 },
@@ -18,12 +16,6 @@ const couponRegistry = {
     "LAUNCH2026": { type: "percentage", value: 15 }
 };
 
-// =========================================================================
-// 1. ASYNCHRONOUS DATA FETCHING & INITIALIZATION
-// =========================================================================
-// =========================================================================
-// REAL-TIME ASYNCHRONOUS LUXURY CATALOG DATABANK LOADING ENGINE
-// =========================================================================
 async function loadProductDatabaseEngine() {
     try {
         const targetResponse = await fetch('data/products.json');
@@ -31,7 +23,6 @@ async function loadProductDatabaseEngine() {
         
         const fileContent = await targetResponse.json();
         
-        // SAFE EXTRACTOR: Gracefully unpacks the array list if it's wrapped in Sveltia's object key
         if (fileContent && typeof fileContent === 'object' && Array.isArray(fileContent.products)) {
             productDatabase = fileContent.products;
         } else if (Array.isArray(fileContent)) {
@@ -40,9 +31,7 @@ async function loadProductDatabaseEngine() {
             productDatabase = [];
         }
         
-        // Populate the storefront layout grid automatically once data arrives
         filterCatalog();
-        //renderVaultSaleSection();
     } catch (error) {
         console.error('Critical catalog database execution drop:', error);
         const grid = document.getElementById('productGrid');
@@ -50,14 +39,10 @@ async function loadProductDatabaseEngine() {
     }
 }
 
-// Helper utility: Currency structural formatter rule
 function formatCurrency(amount) {
     return '₹' + amount.toLocaleString('en-IN');
 }
 
-// =========================================================================
-// 2. PRODUCTS FRONT-STORE GRID ARCHITECTURE RENDERERS
-// =========================================================================
 function displayProducts(productsList) {
     const gridContainer = document.getElementById('productGrid');
     if (!gridContainer) return;
@@ -76,7 +61,6 @@ function displayProducts(productsList) {
         const designCard = document.createElement('div');
         designCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
         
-        // Establish visual configuration tags layout fields
         let badgeHTML = "";
         if (product.badge) {
             const urgencyClass = isSoldOut ? 'sold-out-alert' : (product.badge.toLowerCase() === 'new in' ? '' : 'urgency-alert');
@@ -84,32 +68,30 @@ function displayProducts(productsList) {
         }
 
         designCard.innerHTML = `
-            <div class="product-img-wrapper">
-                ${badgeHTML}
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-                </button>
-                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
-                <div class="product-actions-overlay">
-                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
-                </div>
+        <div class="product-img-wrapper">
+            ${badgeHTML}
+            <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
+                <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
+            </button>
+            <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+            <div class="product-actions-overlay">
+                <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
             </div>
-            <div class="product-info">
-                <p class="product-category">${product.category}</p>
-                <h3 class="product-title">${product.title}</h3>
-                <p class="product-price">${formatCurrency(product.price)}</p>
-                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''}>
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fab fa-whatsapp'}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
-                </button>
-            </div>
-        `;
+        </div>
+        <div class="product-info">
+            <p class="product-category">${product.category}</p>
+            <h3 class="product-title">${product.title}</h3>
+            <p class="product-price">${formatCurrency(product.price)}</p>
+            
+            <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''}>
+                <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+            </button>
+        </div>
+    `;
         gridContainer.appendChild(designCard);
     });
 }
 
-// =========================================================================
-// 3. REAL-TIME CATALOG MATRIX FILTERS & STOCK DROPOUT TOGGLES
-// =========================================================================
 function filterCurrentDataset() {
     const activeFilterBtn = document.querySelector('.filter-btn.active');
     const activeFilter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
@@ -135,14 +117,15 @@ function filterCurrentDataset() {
 function filterCatalog() { 
     displayProducts(filterCurrentDataset()); 
 
+    // Update both structural collections simultaneously on page reload or filter shifts
     if (typeof renderVaultSaleSection === "function") {
         renderVaultSaleSection();
     }
+    if (typeof renderTrendingSection === "function") {
+        renderTrendingSection();
+    }
 }
 
-// =========================================================================
-// 4. BUSINESS LOGIC CORE ENGINES (CART & INTERFACE UPDATER COUNTERS)
-// =========================================================================
 function addToCartEngine(id) {
     const targetItem = productDatabase.find(p => p.id === id);
     if (!targetItem) return;
@@ -172,7 +155,6 @@ function removeFromCart(id) {
     updateCartUI();
 }
 
-// --- DYNAMIC CONTINUOUS DRAWERS RENDER ENGINE ---
 function updateCartUI() {
     const cartItemsList = document.getElementById('cartItemsList');
     const cartCountBadge = document.getElementById('cartCountBadge');
@@ -185,9 +167,8 @@ function updateCartUI() {
     let grandSubtotal = 0;
 
     if (shoppingCart.length === 0) {
-        cartItemsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-top:40px; padding-bottom:40px;">Your cart is currently empty.</div>`;
+        cartItemsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding: 40px 0;">Your cart is currently empty.</div>`;
         if (cartCountBadge) cartCountBadge.style.opacity = "0";
-        
         if (cartFooterSection) cartFooterSection.style.display = "none";
         if (shippingProgressBox) shippingProgressBox.style.display = "none";
         
@@ -231,7 +212,6 @@ function updateCartUI() {
         cartCountBadge.style.opacity = "1";
     }
     
-    // COMFORT 2: DYNAMIC FREE SHIPPING BAR CALCULATOR 
     const progressBarFill = document.getElementById('shippingBarFill');
     const progressText = document.getElementById('shippingProgressText');
     
@@ -240,14 +220,13 @@ function updateCartUI() {
         progressBarFill.style.width = `${structuralPercentage}%`;
         
         if (grandSubtotal >= FREE_SHIPPING_THRESHOLD) {
-            progressText.innerHTML = `✨ <span style="color:#25d366; font-weight:600;">Premium Shipping Unlocked!</span> Free Insured Express Courier Delivery`;
+            progressText.innerHTML = `✨ <span style="color:#25d366; font-weight:600;">Premium Shipping Unlocked!</span> Free Insured Courier Delivery`;
         } else {
             const gapAmount = FREE_SHIPPING_THRESHOLD - grandSubtotal;
-            progressText.innerHTML = `Add <span style="color:var(--gold-primary); font-weight:600;">${formatCurrency(gapAmount)}</span> more for Free Insured Delivery`;
+            progressText.innerHTML = `Add <span style="color:var(--pink-accent); font-weight:600;">${formatCurrency(gapAmount)}</span> more for Free Insured Delivery`;
         }
     }
     
-    // CALCULATE DISCOUNTS
     let discountAmount = 0;
     if (activeDiscount.code) {
         if (activeDiscount.type === "percentage") discountAmount = (grandSubtotal * activeDiscount.value) / 100;
@@ -263,14 +242,15 @@ function updateCartUI() {
     summaryHTML += `<div class="totals-row grand-payable"><span>Final Payable:</span><span>${formatCurrency(finalPayableTotal)}</span></div>`;
     
     if (cartTotalQty) cartTotalQty.innerHTML = summaryHTML;
+    const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
+    if (primaryCheckoutButtonElement) {
+        primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;
+        primaryCheckoutButtonElement.style.display = "flex"; // Prevents layout collapses
+    }
 }
 
-// =========================================================================
-// 5. WISHLIST DATA OPERATIONS LOOPS (WITH RE-STOCK ACTIONS HIDES)
-// =========================================================================
 function toggleWishlistEngine(event, id, targetButton) {
-    if (event) event.stopPropagation(); // Stops parent grid card click events from firing
-
+    if (event) event.stopPropagation();
     const matchIndex = wishlistMemory.indexOf(id);
     if (matchIndex > -1) {
         wishlistMemory.splice(matchIndex, 1);
@@ -279,8 +259,6 @@ function toggleWishlistEngine(event, id, targetButton) {
         wishlistMemory.push(id);
         if (targetButton) targetButton.classList.add('active');
     }
-    
-    // Refresh visual state fields across catalog panels
     updateWishlistUI();
     filterCatalog(); 
 }
@@ -298,7 +276,7 @@ function updateWishlistUI() {
     }
 
     if (wishlistMemory.length === 0) {
-        wishlistItemsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-top:40px;">Your wishlist is empty.</div>`;
+        wishlistItemsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding:40px 0;">Your wishlist is empty.</div>`;
         return;
     }
 
@@ -311,13 +289,13 @@ function updateWishlistUI() {
         let actionButtonHTML = "";
         if (isSoldOut) {
             actionButtonHTML = `
-                <button class="btn-luxury" disabled style="padding:4px 10px; font-size:0.65rem; letter-spacing:1px; border-color:rgba(255,255,255,0.05); color:var(--text-muted); cursor:not-allowed; background:rgba(255,255,255,0.01);">
-                    <i class="fas fa-hourglass-start"></i> Restocking Soon
+                <button class="btn-luxury" disabled style="padding:6px 12px; font-size:0.65rem; letter-spacing:1px; color:var(--text-muted); background:#f1f0f5; border:none; cursor:not-allowed;">
+                    Restocking Soon
                 </button>
             `;
         } else {
             actionButtonHTML = `
-                <button onclick="addToCartEngine(${item.id}); toggleWishlistDrawer(); triggerCartNotification('${item.title}');" class="btn-luxury" style="padding:4px 10px; font-size:0.65rem; letter-spacing:1px; border-color:rgba(223,186,107,0.2);">
+                <button onclick="addToCartEngine(${item.id}); toggleWishlistDrawer(); triggerCartNotification('${item.title}');" class="btn-luxury" style="padding:6px 12px; font-size:0.65rem; letter-spacing:1px;">
                     Move To Cart
                 </button>
             `;
@@ -332,55 +310,46 @@ function updateWishlistUI() {
                 <p class="cart-item-price" style="margin-bottom:8px;">${formatCurrency(item.price)}</p>
                 ${actionButtonHTML}
             </div>
-            <i class="fas fa-trash" onclick="toggleWishlistEngine(null, ${item.id}, null)" style="cursor:pointer; color:rgba(255,68,68,0.5); font-size:0.85rem; position:absolute; right:5px; top:15px;"></i>
+            <i class="fas fa-trash" onclick="toggleWishlistEngine(null, ${item.id}, null)" style="cursor:pointer; color:var(--text-muted); font-size:0.95rem; position:absolute; right:20px; top:50%; transform:translateY(-50%);"></i>
         `;
         wishlistItemsList.appendChild(row);
     });
 }
 
-// =========================================================================
-// 6. MICRO-COMFORT USER EXPERIENCE COMPONENT PLUGINS
-// =========================================================================
-
-// --- COMFORT 1: ADDRESS MEMORY INTERCEPT SYSTEM ---
 function initializeAddressMemoryEngine() {
-    const addressInput = document.getElementById('customerAddress');
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    if (!addressInput || !checkoutBtn) return;
-    
-    const savedAddress = localStorage.getItem('angel_customer_address');
-    if (savedAddress) addressInput.value = savedAddress;
-    
-    checkoutBtn.addEventListener('click', () => {
-        const addressText = addressInput.value.trim();
-        const addressWarning = document.getElementById('addressWarning');
-        
-        if (!addressText) {
-            if (addressWarning) addressWarning.style.display = "block";
-            addressInput.focus();
-            return;
+}
+
+// Global Validation Enforcer Utility to attach to any input field element
+function applyStrictIndianPhoneValidationRules(inputElementId) {
+    const phoneInputField = document.getElementById(inputElementId);
+    if (!phoneInputField) return;
+
+    // Real-time listener strips non-numeric characters instantly on type
+    phoneInputField.addEventListener('input', function(e) {
+        let numericString = this.value.replace(/[^0-9]/g, ''); // RegEx drops letters, spaces, and symbols
+        if (numericString.length > 10) {
+            numericString = numericString.slice(0, 10); // Cuts off any input past the 10th digit
         }
-        
-        if (addressWarning) addressWarning.style.display = "none";
-        localStorage.setItem('angel_customer_address', addressText);
-        
-        // ➔ REDIRECT TO OPEN THE COMPREHENSIVE INVOICE LAYER
-        openInvoiceScreen(addressText);
+        this.value = numericString;
     });
 }
 
-// --- COMFORT 3: COUPON HELPER TAG GENERATION LOOP ---
+// Initialize validation tracking hooks on launch
+window.addEventListener('DOMContentLoaded', () => {
+    // Apply validation to both the Checkout Form input and the Tracking overlay input box
+    applyStrictIndianPhoneValidationRules('invClientPhone');
+    applyStrictIndianPhoneValidationRules('trackingPhoneInput');
+});
+
 function mountCouponHelperBadges() {
     const helpersGroup = document.getElementById('couponHelpersGroup');
     if (!helpersGroup) return;
     
     helpersGroup.innerHTML = "";
-    
     Object.keys(couponRegistry).forEach(code => {
         const badge = document.createElement('span');
         badge.className = "coupon-tag-badge";
         badge.innerHTML = `<i class="fas fa-tag"></i> ${code}`;
-        
         badge.addEventListener('click', () => {
             const inputField = document.getElementById('couponInput');
             if (inputField) {
@@ -416,83 +385,11 @@ function applyCouponEngineAction() {
     }
 }
 
-// --- WHATSAPP ORDER DISPATCH PROCESSOR ---
-// =========================================================================
-// PREMIUM ORDER DISPATCH PROCESSOR & CART RECOVERY RESET
-// =========================================================================
-function executeWhatsAppOrderDispatch(shippingAddress) {
-    let messageText = `✨ *ANGEL JEWELLERY — NEW ORDER DISPATCH* ✨\n\n`;
-    let subtotalValue = 0;
-    
-    shoppingCart.forEach((item, index) => {
-        const rowCost = item.price * item.quantity;
-        subtotalValue += rowCost;
-        messageText += `${index + 1}. *${item.title}* [x${item.quantity}] — ${formatCurrency(rowCost)}\n`;
-    });
-    
-    messageText += `\n----------------------------------\n`;
-    messageText += `*Gross Subtotal:* ${formatCurrency(subtotalValue)}\n`;
-    
-    let discountAmt = 0;
-    if (activeDiscount.code) {
-        if (activeDiscount.type === "percentage") discountAmt = (subtotalValue * activeDiscount.value) / 100;
-        else if (activeDiscount.type === "flat") discountAmt = activeDiscount.value;
-        messageText += `*Discount Applied (${activeDiscount.code}):* -${formatCurrency(discountAmt)}\n`;
-    }
-    
-    const finalTotalCost = subtotalValue - discountAmt;
-    messageText += `*Grand Net Payable:* ${formatCurrency(finalTotalCost)}\n`;
-    
-    const shippingMethod = finalTotalCost >= FREE_SHIPPING_THRESHOLD ? "Free Insured Express Courier" : "Standard Premium Delivery";
-    messageText += `*Shipping Method:* ${shippingMethod}\n`;
-    
-    // Add dynamic luxury gift note profiles if active
-    const giftCheckbox = document.getElementById('giftCheckbox');
-    if (giftCheckbox && giftCheckbox.checked) {
-        const giftMsg = document.getElementById('giftMessageInput').value.trim();
-        messageText += `\n🎁 *Order Setting:* Luxury Gift Wrapping Assigned\n`;
-        if (giftMsg) messageText += `📝 *Gift Message Note:* "${giftMsg}"\n`;
-    }
-    
-    messageText += `----------------------------------\n\n`;
-    messageText += `📍 *Delivery Shipping Address:* \n${shippingAddress}\n\n`;
-    messageText += `💬 _Please click send to verify your order file setup. Our customer care concierge team will reach out immediately._`;
-
-    const generatedLink = `https://wa.me/919985044066?text=${encodeURIComponent(messageText)}`;
-    
-    // 1. Launch order line on WhatsApp tab cleanly
-    window.open(generatedLink, '_blank');
-    
-    // 2. CLEAR CART STATE DATA IMMEDIATELY AFTER THE HANDOFF
-    shoppingCart = [];
-    activeDiscount = { code: "", type: "", value: 0 };
-    
-    // 3. WIPE PERSISTENT STORAGE SESSIONS TRACKING
-    if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
-    if (localStorage.getItem('cart')) localStorage.removeItem('cart');
-    
-    // 4. RESET ALL FORM FIELD INPUT CHANNELS IN THE SIDEBAR
-    if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
-    if (document.getElementById('couponStatusMessage')) document.getElementById('couponStatusMessage').style.display = "none";
-    if (document.getElementById('giftCheckbox')) document.getElementById('giftCheckbox').checked = false;
-    if (document.getElementById('giftMessageWrapper')) document.getElementById('giftMessageWrapper').style.display = "none";
-    if (document.getElementById('giftMessageInput')) document.getElementById('giftMessageInput').value = "";
-    if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
-    
-    // 5. REFRESH CART UI MANIFEST VISUAL PANELS AND CLOSE DRAWER
-    updateCartUI();
-    toggleCartDrawer();
-}
-
-// =========================================================================
-// 7. UTILITY NOTIFICATIONS & DYNAMIC LIGHTBOX OVERLAYS
-// =========================================================================
 function triggerCartNotification(title) {
     const toast = document.createElement('div');
     toast.className = "copied-toast";
     toast.innerHTML = `<i class="fas fa-check-circle"></i> Added ${title} to selection`;
     document.body.appendChild(toast);
-    
     setTimeout(() => { toast.remove(); }, 2400);
 }
 
@@ -506,13 +403,14 @@ function openQuickViewShield(id) {
     document.getElementById('qvImage').src = product.image;
     document.getElementById('qvTitle').innerText = product.title;
     document.getElementById('qvCategory').innerText = product.category.toUpperCase();
+    
     const priceContainer = document.getElementById('qvPrice');
     if (priceContainer) {
         if (product.originalPrice && product.originalPrice > product.price) {
             priceContainer.innerHTML = `
-                <span style="color: #dfba6b; margin-right: 12px;">${formatCurrency(product.price)}</span>
-                <span style="color: #555; font-size: 0.95rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
-             Dino`;
+                <span style="color: var(--purple-primary); margin-right: 12px;">${formatCurrency(product.price)}</span>
+                <span style="color: var(--text-muted); font-size: 0.95rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
+            `;
         } else {
             priceContainer.innerText = formatCurrency(product.price);
         }
@@ -536,7 +434,6 @@ function openQuickViewShield(id) {
             };
         }
     }
-
     modalShield.style.display = "flex";
 }
 
@@ -545,7 +442,6 @@ function closeQuickViewShield() {
     if (modalShield) modalShield.style.display = "none";
 }
 
-// --- VISUAL SLIDE INTERACTION SWITCH CONSOLE ACTIONS ---
 function toggleCartDrawer() {
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
@@ -574,14 +470,10 @@ function toggleWishlistDrawer() {
     }
 }
 
-// =========================================================================
-// 8. GLOBAL SCROLL WATCHER & CINEMATIC LAYOUT ADJUSTMENT CONTROLLERS
-// =========================================================================
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
     const catalogControls = document.querySelector('.catalog-controls');
     const storySection = document.getElementById('story');
-    const faqSection = document.getElementById('faq');
     const backToTopBtn = document.getElementById('backToTopBtn');
     
     if (window.scrollY > 50) {
@@ -590,22 +482,19 @@ window.addEventListener('scroll', () => {
         if (header) header.classList.remove('scrolled');
     }
     
-    // COMFORT 4: Manage dynamic back-to-top layout arrow visibility transitions
     if (backToTopBtn) {
         if (window.scrollY > 400) backToTopBtn.classList.add('visible');
         else backToTopBtn.classList.remove('visible');
     }
     
-    // Smoothly push out catalog bar menu fields when browsing footer informational panels
-    if (catalogControls && (storySection || faqSection)) {
-        const storyTop = storySection ? storySection.getBoundingClientRect().top + window.scrollY : Infinity;
-        const faqTop = faqSection ? faqSection.getBoundingClientRect().top + window.scrollY : Infinity;
-        const readingZoneThreshold = Math.min(storyTop, faqTop) - 160; 
+    if (catalogControls && storySection) {
+        const storyTop = storySection.getBoundingClientRect().top + window.scrollY;
+        const readingZoneThreshold = storyTop - 240; 
         
         if (window.scrollY >= readingZoneThreshold) {
             catalogControls.style.opacity = '0';
             catalogControls.style.pointerEvents = 'none';
-            catalogControls.style.transform = 'translateY(-20px)';
+            catalogControls.style.transform = 'translateY(-10px)';
         } else {
             catalogControls.style.opacity = '1';
             catalogControls.style.pointerEvents = 'all';
@@ -614,19 +503,11 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// =========================================================================
-// 9. ENGINE INITIALIZATION LIFE-CYCLE LIFECYCLE INITIALIZER BINDINGS
-// =========================================================================
 window.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. Kick off the asynchronous JSON administrative databank fetch
     loadProductDatabaseEngine();
-    
-    // 2. Initialize comfort automation systems
     initializeAddressMemoryEngine();
     mountCouponHelperBadges();
     
-    // 3. Connect filter action click hooks
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.addEventListener('input', filterCatalog);
     
@@ -642,30 +523,38 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 4. Connect Drawer Toggle Openers
     const cartBtn = document.getElementById('cartBtn');
     const closeCartBtn = document.getElementById('closeCartBtn');
     const wishlistBtn = document.getElementById('wishlistBtn');
     const closeWishlistBtn = document.getElementById('closeWishlistBtn');
     const cartOverlay = document.getElementById('cartOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
     
     if (cartBtn) cartBtn.addEventListener('click', toggleCartDrawer);
     if (closeCartBtn) closeCartBtn.addEventListener('click', toggleCartDrawer);
     if (wishlistBtn) wishlistBtn.addEventListener('click', toggleWishlistDrawer);
     if (closeWishlistBtn) closeWishlistBtn.addEventListener('click', toggleWishlistDrawer);
-    if (cartOverlay) cartOverlay.addEventListener('click', () => {
-        const cartDrawer = document.getElementById('cartDrawer');
-        const wishlistDrawer = document.getElementById('wishlistDrawer');
-        if (cartDrawer) cartDrawer.style.right = "-100%";
-        if (wishlistDrawer) wishlistDrawer.style.right = "-100%";
-        cartOverlay.style.display = "none";
-    });
+    
+    if (menuToggle && navMenu) {
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+    }
 
-    // 5. Connect Apply Manual Coupon Code Click Buttons
+    if (cartOverlay) {
+        cartOverlay.addEventListener('click', () => {
+            const cartDrawer = document.getElementById('cartDrawer');
+            const wishlistDrawer = document.getElementById('wishlistDrawer');
+            if (cartDrawer) cartDrawer.style.right = "-100%";
+            if (wishlistDrawer) wishlistDrawer.style.right = "-100%";
+            cartOverlay.style.display = "none";
+        });
+    }
+
     const applyCouponBtn = document.getElementById('applyCouponBtn');
     if (applyCouponBtn) applyCouponBtn.addEventListener('click', applyCouponEngineAction);
 
-    // 6. Connect Luxury Gift Option Expanders
     const giftCheckbox = document.getElementById('giftCheckbox');
     if (giftCheckbox) {
         giftCheckbox.addEventListener('change', function() {
@@ -674,27 +563,18 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 7. Connect Precision Jump Scroll Core links
     const catalogJumpLinks = document.querySelectorAll('.nav-link-catalog');
     catalogJumpLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const catalogControls = document.querySelector('.catalog-controls');
             const targetSection = document.getElementById('productGrid');
-            
             if (targetSection) {
-                if (catalogControls) {
-                    catalogControls.style.opacity = '1';
-                    catalogControls.style.pointerEvents = 'all';
-                    catalogControls.style.transform = 'translateY(0)';
-                }
-                const offsetPosition = targetSection.getBoundingClientRect().top + window.scrollY - 180;
+                const offsetPosition = targetSection.getBoundingClientRect().top + window.scrollY - 220;
                 window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         });
     });
 
-    // 8. SAFE BINDING: COMFORT 4 Back-to-top smooth click action
     const backToTopBtn = document.getElementById('backToTopBtn');
     if (backToTopBtn) {
         backToTopBtn.addEventListener('click', () => {
@@ -702,45 +582,47 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // 9. Hide Preloader shield once assets finish rendering pathways
     const preloader = document.getElementById('preloader');
     if (preloader) {
         setTimeout(() => { preloader.style.opacity = '0'; setTimeout(() => { preloader.remove(); }, 600); }, 400);
     }
 });
-// =========================================================================
-// ANGEL JEWELLERY — PREMIUM INVOICE GENERATOR & RAZORPAY OPERATOR
-// =========================================================================
 
-let globalPayableAmountInPaise = 0; // Tracks the price for Razorpay backend context
+// =========================================================================
+// ANGEL JEWELLERY — INVOICES & RAZORPAY CHECKOUT INTERFACES (FIXED)
+// =========================================================================
+let globalPayableAmountInPaise = 0; 
 
-function openInvoiceScreen(addressText) {
+function openInvoiceScreen() {
+    // 1. Safety check to make sure the cart isn't empty
     if (!shoppingCart || shoppingCart.length === 0) return;
 
     const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
     const itemsContainer = document.getElementById('invoiceItemsContainer');
     const pricingSummary = document.getElementById('invoicePricingSummary');
 
-    // Extract potential pre-existing names or numbers from address layout structure
-    document.getElementById('invClientAddress').value = addressText;
+    if (!invoiceOverlay || !itemsContainer || !pricingSummary) return;
+
+    // 2. Clear out any old input field entries or pull cached user records gracefully
+    document.getElementById('invClientAddress').value = localStorage.getItem('angel_customer_address') || "";
     document.getElementById('invClientName').value = localStorage.getItem('angel_customer_name') || "";
     document.getElementById('invClientPhone').value = localStorage.getItem('angel_customer_phone') || "";
 
-    // 1. Build Itemized Row Manifest
+    // 3. Build Itemized Row Manifest
     itemsContainer.innerHTML = shoppingCart.map(item => `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.03);">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <img src="${item.image}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #e8e8ef;">
+            <div style="display:flex; align-items:center; gap:15px; text-align:left;">
+                <img src="${item.image}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; border:1px solid #e8e8ef;">
                 <div>
-                    <h4 style="margin:0; font-size:0.9rem; font-weight:500;">${item.title}</h4>
-                    <p style="margin:2px 0 0 0; font-size:0.75rem; color:#666;">Category: ${item.category} • Qty: ${item.quantity}</p>
+                    <h4 style="margin:0; font-size:0.9rem; font-weight:600; color:var(--text-dark-primary);">${item.title}</h4>
+                    <p style="margin:2px 0 0 0; font-size:0.75rem; color:var(--text-muted); font-weight:500;">Category: ${item.category} • Qty: ${item.quantity}</p>
                 </div>
             </div>
-            <span style="font-weight:500; font-size:0.9rem;">${formatCurrency(item.price * item.quantity)}</span>
+            <span style="font-weight:600; font-size:0.9rem; color:var(--purple-primary);">${formatCurrency(item.price * item.quantity)}</span>
         </div>
     `).join('');
 
-    // 2. Compute Financial Ledger Data Points
+    // 4. Compute Financial Ledger Data Points
     let grandSubtotal = shoppingCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let discountAmount = 0;
     if (activeDiscount.code) {
@@ -748,28 +630,32 @@ function openInvoiceScreen(addressText) {
         else if (activeDiscount.type === "flat") discountAmount = activeDiscount.value;
     }
     let finalPayableTotal = grandSubtotal - discountAmount;
-    
-    // Razorpay accepts balances in minor currency sub-units (Paise for Indian Rupees). Multiply by 100.
     globalPayableAmountInPaise = finalPayableTotal * 100;
 
-    // 3. Render Financial Ledger Box
+    // 5. Render Financial Ledger Box
     pricingSummary.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="color:#666;">Bag Subtotal:</span><span>${formatCurrency(grandSubtotal)}</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:500; color:var(--text-muted);">
+            <span>Bag Subtotal:</span><span style="color:var(--text-dark-primary); font-weight:600;">${formatCurrency(grandSubtotal)}</span>
         </div>
         ${discountAmount > 0 ? `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#25d366;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#25d366; font-weight:600;">
             <span>Coupon Promo (${activeDiscount.code}):</span><span>-${formatCurrency(discountAmount)}</span>
         </div>` : ''}
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#888;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:var(--text-muted); font-weight:500;">
             <span>Insured Vault Delivery:</span><span style="color:#25d366; font-weight:600;">FREE</span>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px; margin-top:10px; color:#dfba6b;">
+        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:700; border-top:2px solid var(--purple-primary); padding-top:12px; margin-top:10px; color:var(--purple-primary);">
             <span>Total Gross Bill:</span><span>${formatCurrency(finalPayableTotal)}</span>
         </div>
     `;
 
-    toggleCartDrawer(); // Close the sidebar cart drawer cleanly
+    // 6. Close the slide-out sidebar drawer overlay seamlessly
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    if (drawer) drawer.style.right = "-100%";
+    if (overlay) overlay.style.display = "none";
+    
+    // 7. Reveal the pristine full view payment dashboard panel sheet
     invoiceOverlay.style.display = 'flex';
 }
 
@@ -777,27 +663,86 @@ function closeInvoiceScreen() {
     document.getElementById('invoiceOverlayScreen').style.display = 'none';
 }
 
-// 4. FIRE THE NATIVE SURFACE RAZORPAY STANDARD SHEET
+// ➔ UPDATED: LEVERAGES HIGH-CONTRAST INLINE INJECTIONS FOR ERROR VALIDATION
+// =========================================================================
+// ANGEL JEWELLERY — INVOICES & MULTI-FIELD INLINE VALIDATION ENGINE
+// =========================================================================
 function initiateRazorpayPaymentProcess(event) {
     event.preventDefault();
 
+    // 1. Extract and trim active field values
     const name = document.getElementById('invClientName').value.trim();
     const phone = document.getElementById('invClientPhone').value.trim();
     const address = document.getElementById('invClientAddress').value.trim();
+    
+    // 2. Grab error element display nodes
+    const nameErrorElement = document.getElementById('invNameValidationError');
+    const phoneErrorElement = document.getElementById('invPhoneValidationError');
+    const addressErrorElement = document.getElementById('invAddressValidationError');
 
+    // 3. Reset error states to clean baselines before running evaluations
+    let isFormSubmissionValid = true;
+
+    if (nameErrorElement) { nameErrorElement.innerText = ""; nameErrorElement.style.display = "none"; }
+    if (phoneErrorElement) { phoneErrorElement.innerText = ""; phoneErrorElement.style.display = "none"; }
+    if (addressErrorElement) { addressErrorElement.innerText = ""; addressErrorElement.style.display = "none"; }
+
+    // --- MANDATORY VALIDATION RUNWAYS ---
+
+    // Checkpoint A: Full Name Validation
+    if (!name) {
+        if (nameErrorElement) {
+            nameErrorElement.innerText = "Please enter Full Name.";
+            nameErrorElement.style.display = "block";
+        }
+        if (isFormSubmissionValid) { document.getElementById('invClientName').focus(); }
+        isFormSubmissionValid = false;
+    }
+
+    // Checkpoint B: Contact Phone Number Validation
+    if (!phone) {
+        if (phoneErrorElement) {
+            phoneErrorElement.innerText = "Please enter 10-digit contact number. \n (For Ex: 9999988888)";
+            phoneErrorElement.style.display = "block";
+        }
+        if (isFormSubmissionValid) { document.getElementById('invClientPhone').focus(); }
+        isFormSubmissionValid = false;
+    } else if (phone.length !== 10) {
+        if (phoneErrorElement) {
+            phoneErrorElement.innerText = "Please input a precise 10-digit mobile contact number.";
+            phoneErrorElement.style.display = "block";
+        }
+        if (isFormSubmissionValid) { document.getElementById('invClientPhone').focus(); }
+        isFormSubmissionValid = false;
+    }
+
+    // Checkpoint C: Shipping Destination Address Validation
+    if (!address) {
+        if (addressErrorElement) {
+            addressErrorElement.innerText = "Please enter valid shipping address.";
+            addressErrorElement.style.display = "block";
+        }
+        if (isFormSubmissionValid) { document.getElementById('invClientAddress').focus(); }
+        isFormSubmissionValid = false;
+    }
+
+    // 4. Halt execution instantly if any validation runway failed
+    if (!isFormSubmissionValid) return;
+
+    // 5. Commit authenticated metadata layers to persistent storage cache
     localStorage.setItem('angel_customer_name', name);
     localStorage.setItem('angel_customer_phone', phone);
+    localStorage.setItem('angel_customer_address', address);
 
-    // Standard Client-Side Razorpay Configuration Setup Options Packet
+    // 6. Launch Native Surface Razorpay Frame Overlay
     const paymentOptions = {
-        "key": "rzp_test_StZ7M1D8qRHUIN", // ⚠️ Replace this with your Live or Test API key from Razorpay Dashboard
+        "key": "rzp_test_StZ7M1D8qRHUIN", 
         "amount": globalPayableAmountInPaise, 
         "currency": "INR",
         "name": "Angel Jewellery",
         "description": "Premium High-Fashion Order Settlement",
         "image": "angel-logo.png", 
         "handler": function (transactionResponse) {
-            // Fired instantly when transaction registers success states!
             executePostPaidWhatsAppDispatch(transactionResponse.razorpay_payment_id, name, phone, address);
         },
         "prefill": {
@@ -805,7 +750,7 @@ function initiateRazorpayPaymentProcess(event) {
             "contact": phone
         },
         "theme": {
-            "color": "#111111" // Luxury brand dark coordination color hex
+            "color": "#202c55" 
         }
     };
 
@@ -813,15 +758,10 @@ function initiateRazorpayPaymentProcess(event) {
     razorpayUiEngineInstance.open();
 }
 
-// 5. SECURE COMPILATION UPON SUCCESSFUL PAYMENT VERIFICATION MATCHES
-// =========================================================================
-// POST-PAID CONFIRMATION VIEW ARCHITECTURE ENGINE
-// =========================================================================
 function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     const confirmationScreen = document.getElementById('confirmationPageScreen');
     const confItemsManifest = document.getElementById('confItemsManifest');
     
-    // 1. Set Transaction Metrics Metadata Display
     document.getElementById('confPaymentId').innerText = paymentId;
     document.getElementById('confClientMeta').innerText = `${name} (${phone})`;
     document.getElementById('confClientAddress').innerText = address;
@@ -829,15 +769,13 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
-    // 2. Map Selected Masterpieces Rows to Success Summary Card
     confItemsManifest.innerHTML = shoppingCart.map(item => `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
-            <span style="color:#aaa;">${item.title} <small style="color:#666;">x${item.quantity}</small></span>
-            <span style="font-weight:500;">${formatCurrency(item.price * item.quantity)}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:0.9rem; border-bottom:1px dashed #e8e8ef; padding-bottom:6px;">
+            <span style="color:var(--text-dark-primary); font-weight:500;">${item.title} <small style="color:var(--text-muted); font-weight:600;">x${item.quantity}</small></span>
+            <span style="font-weight:600; color:var(--purple-primary);">${formatCurrency(item.price * item.quantity)}</span>
         </div>
     `).join('');
 
-    // 3. Compute Ledger Breakdown Pricing Fields for Display
     let subtotalValue = 0;
     let messageText = `✨ *ANGEL JEWELLERY — PAID ORDER MANIFEST* ✨\n\n`;
     messageText += `💳 *Payment ID:* \`${paymentId}\` (Verified via Razorpay)\n`;
@@ -859,23 +797,16 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     
     document.getElementById('confFinalTotal').innerText = formatCurrency(finalTotalCost);
 
-    // 4. Wrap up the Clean Invoice Message Text for WhatsApp Handoff
     messageText += `\n💰 *Total Paid:* ${formatCurrency(finalTotalCost)}\n`;
     messageText += `📍 *Delivery Address:* \n${address}\n\n`;
     messageText += `💬 _Payment token validated. Please share to generate courier delivery slip profiles._`;
 
     const generatedLink = `https://wa.me/919985044066?text=${encodeURIComponent(messageText)}`;
     
-    // Bind the link dynamically to the green summary action button
     document.getElementById('confWhatsAppBtn').onclick = () => {
         window.open(generatedLink, '_blank');
     };
 
-    
-    // --- SAFE GOOGLE SHEETS DISPATCH GATEWAY ---
-    console.log("Streaming transaction data to secure Google ledger...");
-    
-    // --- BULLETPROOF SHEETDB DISPATCH GATEWAY ---
     console.log("Streaming transaction data to secure SheetDB ledger...");
     
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
@@ -884,7 +815,6 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            // The keys below must exactly match the column headers in row 1 of your sheet!
             data: [
                 {
                     "Payment ID": paymentId,
@@ -903,7 +833,6 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     .then(data => console.log("SheetDB integration success payload:", data))
     .catch(err => console.error("SheetDB network stream drop:", err));
     
-    // 5. SECURE BACKGROUND ARCHITECTURE RESET LOOP
     shoppingCart = [];
     activeDiscount = { code: "", type: "", value: 0 };
     if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
@@ -912,19 +841,17 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
     
     updateCartUI();
-    closeInvoiceScreen(); // Remove invoice screen input overlay layer
-
-    // Reveal the gorgeous luxury final confirmation page!
+    closeInvoiceScreen(); 
     confirmationScreen.style.display = 'flex';
 }
 
-// 6. DISMISS CONTAINER PANEL AND RESTORE HOME STORE VIEW FRONTEND
 function exitConfirmationAndReset() {
     document.getElementById('confirmationPageScreen').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // =========================================================================
-// ANGEL JEWELLERY — LIVE CONCIERGE SEARCH TRACKING ENGINE
+// ANGEL JEWELLERY — CONCIERGE SEARCH TRACKING DESK
 // =========================================================================
 function executeLiveOrderTrackingSearch() {
     const inputField = document.getElementById('trackingPhoneInput');
@@ -934,20 +861,19 @@ function executeLiveOrderTrackingSearch() {
     if (!inputField || !statusMsg || !resultsContainer) return;
     
     const plainPhoneNumberInput = inputField.value.trim();
-    resultsContainer.innerHTML = ""; // Clear out previous searches
+    resultsContainer.innerHTML = ""; 
     
     if (!plainPhoneNumberInput) {
         statusMsg.style.display = "block";
-        statusMsg.style.color = "#ff4444";
+        statusMsg.style.color = "var(--pink-accent)";
         statusMsg.innerText = "Please provide a valid contact registration number.";
         return;
     }
     
     statusMsg.style.display = "block";
-    statusMsg.style.color = "#dfba6b";
+    statusMsg.style.color = "var(--purple-primary)";
     statusMsg.innerText = "Compiling live records archive from ledger data slots...";
 
-    // ➔ Target SheetDB Search API looking specifically inside the 'Phone' column
     const searchApiEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/search?Phone=${encodeURIComponent(plainPhoneNumberInput)}`;
 
     fetch(searchApiEndpoint)
@@ -957,7 +883,7 @@ function executeLiveOrderTrackingSearch() {
         })
         .then(matchingOrdersArray => {
             if (!matchingOrdersArray || matchingOrdersArray.length === 0) {
-                statusMsg.style.color = "#ff4444";
+                statusMsg.style.color = "var(--pink-accent)";
                 statusMsg.innerText = "No verified luxury transaction records discovered matching this number.";
                 return;
             }
@@ -965,61 +891,49 @@ function executeLiveOrderTrackingSearch() {
             statusMsg.style.color = "#25d366";
             statusMsg.innerText = `Discovered ${matchingOrdersArray.length} authenticated reservation order file(s):`;
 
-            // Render each discovered spreadsheet row into a beautiful dark receipt card
             resultsContainer.innerHTML = matchingOrdersArray.map(order => `
-                <div style="background: #161616; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative;">
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #888;">
-                        <span>Ref ID: <strong style="color: #fff; font-family: monospace;">${order['Payment ID']}</strong></span>
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-muted); font-weight:600;">
+                        <span>Ref ID: <strong style="color: var(--purple-primary); font-family: monospace;">${order['Payment ID']}</strong></span>
                         <span>${order['Date']}</span>
                     </div>
-
                     <div style="margin-bottom: 15px;">
-                        <h4 style="margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; color: #dfba6b; letter-spacing: 0.5px;">Masterpieces Secured</h4>
-                        <p style="margin: 0; color: #fff; font-size: 0.95rem; font-weight: 500; line-height: 1.4;">${order['Order Items']}</p>
+                        <h4 style="margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px; font-weight:700;">Masterpieces Secured</h4>
+                        <p style="margin: 0; color: #111116; font-size: 0.95rem; font-weight: 500; line-height: 1.5;">${order['Order Items']}</p>
                     </div>
-
-                    <div style="border-top: 1px solid rgba(255,255,255,0.03); padding-top: 12px; margin-top: 12px; font-size: 0.85rem; color: #aaa;">
-                        <p style="margin: 0 0 4px 0;"><span style="color: #666;">Consignee:</span> ${order['Client Name']}</p>
-                        <p style="margin: 0;"><span style="color: #666;">Destination:</span> ${order['Address']}</p>
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 12px; font-size: 0.85rem; color: var(--text-dark-primary); font-weight:500;">
+                        <p style="margin: 0 0 4px 0;"><span style="color: var(--text-muted);">Consignee:</span> ${order['Client Name']}</p>
+                        <p style="margin: 0;"><span style="color: var(--text-muted);">Destination:</span> ${order['Address']}</p>
                     </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 12px; margin-top: 15px;">
-                        <span style="font-size: 0.75rem; text-transform: uppercase; color: #666; font-weight: 600;">Payment Status</span>
-                        <span style="background: rgba(37, 211, 102, 0.1); color: #25d366; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Paid via Gateway</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted var(--border-subtle); padding-top: 12px; margin-top: 15px;">
+                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Payment Status</span>
+                        <span style="background: rgba(37, 211, 102, 0.1); color: #25d366; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Paid via Gateway</span>
                     </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 1.05rem; font-weight: 600; color: #dfba6b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); border-top:1px solid var(--border-subtle); padding-top:10px;">
                         <span>Settled Balance:</span>
                         <span>${order['Total Paid']}</span>
                     </div>
-
                 </div>
             `).join('');
         })
         .catch(err => {
             console.error("Live ledger sync execution drop:", err);
-            statusMsg.style.color = "#ff4444";
+            statusMsg.style.color = "var(--pink-accent)";
             statusMsg.innerText = "Fulfillment system extraction dropped. Please verify network links.";
         });
 }
-// =========================================================================
-// ANGEL JEWELLERY — FULL SCREEN TRACKING PAGE OVERLAY CONTROLLERS
-// =========================================================================
+
 function openTrackingScreenOverlay(event) {
-    if (event) event.preventDefault(); // Stop default browser href jump
+    if (event) event.preventDefault(); 
     
-    // Close the mobile dropdown toggle menu panel if it's currently open
     const navMenu = document.getElementById('navMenu');
     if (navMenu) navMenu.classList.remove('active');
 
     const trackingOverlay = document.getElementById('trackingScreenOverlay');
     if (trackingOverlay) {
-        // Reset old input states cleanly
         document.getElementById('trackingPhoneInput').value = "";
         document.getElementById('trackingStatusMessage').style.display = "none";
         document.getElementById('trackingResultsContainer').innerHTML = "";
-        
         trackingOverlay.style.display = 'flex';
     }
 }
@@ -1027,10 +941,10 @@ function openTrackingScreenOverlay(event) {
 function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
-// =========================================================================
-// ANGEL JEWELLERY — ADMINISTRATIVE SYSTEM CONTROLLERS
-// =========================================================================
 
+// =========================================================================
+// ANGEL JEWELLERY — ADMINISTRATIVE CONSOLE
+// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
     
@@ -1040,11 +954,10 @@ function openAdminMasterConsole(event) {
     
     if (!adminOverlay || !statusMsg || !ordersContainer) return;
     
-    ordersContainer.innerHTML = ""; // Clear out stale panel logs
+    ordersContainer.innerHTML = ""; 
     statusMsg.innerText = "Extracting complete operational transaction matrix from Google server...";
     adminOverlay.style.display = 'flex';
 
-    // ➔ GET request reads the absolute entire spreadsheet array sequence cleanly
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi")
         .then(response => {
             if (!response.ok) throw new Error("Administrative link connection dropout.");
@@ -1056,30 +969,25 @@ function openAdminMasterConsole(event) {
                 return;
             }
 
-            statusMsg.innerHTML = `Connected. Total Orders Processed: <span style="color:#25d366; font-weight:600;">${allOrdersArray.length}</span>`;
+            statusMsg.innerHTML = `Connected. Total Orders Processed: <span style="color:#25d366; font-weight:700;">${allOrdersArray.length}</span>`;
 
-            // Reverse the array sequence so the newest transactions stream up first!
             const chronologicallyReversedStack = allOrdersArray.reverse();
 
-            // Construct clean, compact table-style tracking metrics rows
             ordersContainer.innerHTML = chronologicallyReversedStack.map(order => `
-                <div style="background: #161616; border: 1px solid rgba(255,255,255,0.03); border-radius: 4px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start;">
-                    
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start; text-align:left;">
                     <div style="flex: 1; min-width: 250px;">
-                        <span style="font-size:0.7rem; color:#666; text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace;">Ref: ${order['Payment ID']}</span>
-                        <h4 style="margin: 0 0 8px 0; font-size: 1.05rem; font-weight: 500; color: #fff;">${order['Client Name']}</h4>
-                        <p style="margin: 0 0 4px 0; font-size: 0.85rem; color: #aaa;"><strong style="color:#dfba6b;">Items:</strong> ${order['Order Items']}</p>
-                        <p style="margin: 0; font-size: 0.85rem; color: #888;"><strong style="color:#666;">Ship To:</strong> ${order['Address']}</p>
+                        <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace; font-weight:600;">Ref: ${order['Payment ID']}</span>
+                        <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 600; color: var(--purple-primary);">${order['Client Name']}</h4>
+                        <p style="margin: 0 0 4px 0; font-size: 0.88rem; color: #111116; font-weight:500;"><strong style="color:var(--pink-accent);">Items:</strong> ${order['Order Items']}</p>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); font-weight:500;"><strong style="color:var(--text-dark-primary);">Ship To:</strong> ${order['Address']}</p>
                     </div>
-
-                    <div style="text-align: right; min-width: 150px; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: auto;">
-                        <span style="font-size: 0.75rem; color: #666; display:block; margin-bottom:10px;">${order['Date']}</span>
-                        <span style="font-size: 1.15rem; font-weight: 600; color: #dfba6b; display:block; margin-bottom:8px;">${order['Total Paid']}</span>
-                        <a href="https://wa.me/${order['Phone'].replace(/[^0-9]/g, '')}" target="_blank" style="background: rgba(37,211,102,0.08); color: #25d366; border: 1px solid rgba(37,211,102,0.2); padding: 5px 12px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-radius: 2px;">
+                    <div style="text-align: right; min-width: 150px; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display:block; margin-bottom:10px; font-weight:600;">${order['Date']}</span>
+                        <span style="font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); display:block; margin-bottom:12px;">${order['Total Paid']}</span>
+                        <a href="https://wa.me/${order['Phone'].replace(/[^0-9]/g, '')}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 6px 14px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display:inline-flex; align-items:center; gap:6px;">
                             <i class="fab fa-whatsapp"></i> Chat Client
                         </a>
                     </div>
-
                 </div>
             `).join('');
         })
@@ -1092,18 +1000,19 @@ function openAdminMasterConsole(event) {
 function closeAdminMasterConsole() {
     document.getElementById('adminMasterConsoleOverlay').style.display = 'none';
 }
+
 // =========================================================================
-// ANGEL JEWELLERY — MASTER RUNTIME ENGINE BANNER CAROUSEL
+// ANGEL JEWELLERY — MASTER RUNTIME ENGINE BANNER CAROUSEL (PAUSE CAPABLE)
 // =========================================================================
 let currentCarouselActiveIndex = 0;
 let carouselAutoRotationTimerHandle = null;
+let isCarouselAutoPlayPaused = false; // ➔ Tracks the active operational pause state flag
 
 function initializeLuxuryBannerCarousel() {
     const headerElement = document.getElementById('header');
     const track = document.getElementById('carouselSliderTrack');
      if (headerElement && track) {
         const headerHeight = headerElement.offsetHeight;
-        // Dynamically applies a top margin to the carousel wrapper based on header size
         track.parentElement.parentElement.style.marginTop = `${headerHeight}px`;
     }
 
@@ -1113,7 +1022,6 @@ function initializeLuxuryBannerCarousel() {
     const slidesCount = track.children.length;
     if (slidesCount === 0) return;
 
-    // 1. Build bottom indicator tracking navigation dots
     indicatorsDock.innerHTML = "";
     for (let i = 0; i < slidesCount; i++) {
         const indicatorDot = document.createElement('div');
@@ -1122,22 +1030,54 @@ function initializeLuxuryBannerCarousel() {
         indicatorsDock.appendChild(indicatorDot);
     }
 
-    // 2. Spark automated slideshow rotation timeline
+    // Instantiates automatic sliding interval cycle rules
     startCarouselAutoPlayCycle(slidesCount);
 }
 
-function updateCarouselRenderPosition() {
+// ➔ NEW INTERACTIVE CONTROLLER: Switches auto-advance intervals off or back on dynamically
+function toggleCarouselAutoPlayEngine() {
     const track = document.getElementById('carouselSliderTrack');
-    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    const pauseIcon = document.getElementById('carouselPauseIcon');
+    const buttonWrapper = document.getElementById('carouselPauseToggleBtn');
+    
     if (!track) return;
+    const slidesCount = track.children.length;
 
-    // Move slider track via CSS transitions shifts
-    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
+    if (isCarouselAutoPlayPaused) {
+        // Resume automated slider sequence loop intervals
+        isCarouselAutoPlayPaused = false;
+        if (pauseIcon) {
+            pauseIcon.className = "fas fa-pause";
+        }
+        if (buttonWrapper) {
+            buttonWrapper.title = "Pause Slideshow";
+        }
+        startCarouselAutoPlayCycle(slidesCount);
+    } else {
+        // Halts slider animation immediately and clears active timer handles
+        isCarouselAutoPlayPaused = true;
+        if (pauseIcon) {
+            pauseIcon.className = "fas fa-play";
+        }
+        if (buttonWrapper) {
+            buttonWrapper.title = "Play Slideshow";
+        }
+        if (carouselAutoRotationTimerHandle) {
+            clearInterval(carouselAutoRotationTimerHandle);
+        }
+    }
+}
 
-    // Toggle active coloring states across indicator dot frames
-    Array.from(indicatorsDock.children).forEach((dot, index) => {
-        dot.style.background = index === currentCarouselActiveIndex ? '#dfba6b' : 'rgba(255,255,255,0.2)';
-    });
+function startCarouselAutoPlayCycle(totalSlidesCount) {
+    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
+    
+    // Safety exit block: Stops timer rebuild if user explicitly toggled pause state on
+    if (isCarouselAutoPlayPaused) return;
+
+    carouselAutoRotationTimerHandle = setInterval(() => {
+        currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
+        updateCarouselRenderPosition();
+    }, 5000);
 }
 
 function shiftCarouselSlideDirection(directionStep) {
@@ -1146,14 +1086,13 @@ function shiftCarouselSlideDirection(directionStep) {
     
     const totalSlides = track.children.length;
     
-    // Cycle calculations loops wrap back around limits gracefully
     currentCarouselActiveIndex += directionStep;
     if (currentCarouselActiveIndex >= totalSlides) currentCarouselActiveIndex = 0;
     if (currentCarouselActiveIndex < 0) currentCarouselActiveIndex = totalSlides - 1;
 
     updateCarouselRenderPosition();
     
-    // Reset automatic timers upon manual customer override actions
+    // Maintain strict pause states on direction button overrides
     startCarouselAutoPlayCycle(totalSlides);
 }
 
@@ -1165,21 +1104,81 @@ function jumpToSpecificCarouselSlide(targetIndex) {
     if (track) startCarouselAutoPlayCycle(track.children.length);
 }
 
-function startCarouselAutoPlayCycle(totalSlidesCount) {
-    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
-    
-    // Smooth auto-advancement loop ticks every 5000ms (5 seconds)
-    carouselAutoRotationTimerHandle = setInterval(() => {
-        currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
-        updateCarouselRenderPosition();
-    }, 5000);
+function updateCarouselRenderPosition() {
+    const track = document.getElementById('carouselSliderTrack');
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!track) return;
+
+    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
+
+    Array.from(indicatorsDock.children).forEach((dot, index) => {
+        dot.style.background = index === currentCarouselActiveIndex ? '#dfba6b' : 'rgba(255,255,255,0.2)';
+    });
 }
 
-// ➔ BIND CAROUSEL TO INITIALIZE AUTOMATICALLY ONCE HTML STRUCTURE STANDS UP
+function initializeLuxuryBannerCarousel() {
+    const headerElement = document.getElementById('header');
+    const track = document.getElementById('carouselSliderTrack');
+    if (headerElement && track) {
+        const headerHeight = headerElement.offsetHeight;
+        track.parentElement.parentElement.style.marginTop = `${headerHeight}px`;
+    }
+
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!track) return;
+
+    const slidesCount = track.children.length;
+    if (slidesCount === 0) return;
+
+    indicatorsDock.innerHTML = "";
+    for (let i = 0; i < slidesCount; i++) {
+        const indicatorDot = document.createElement('div');
+        indicatorDot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? 'var(--purple-primary)' : '#e8e8ef'}; cursor: pointer; transition: background 0.3s;`;
+        indicatorDot.onclick = () => jumpToSpecificCarouselSlide(i);
+        indicatorsDock.appendChild(indicatorDot);
+    }
+    startCarouselAutoPlayCycle(slidesCount);
+}
+
+function updateCarouselRenderPosition() {
+    const track = document.getElementById('carouselSliderTrack');
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!track) return;
+
+    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
+    Array.from(indicatorsDock.children).forEach((dot, index) => {
+        dot.style.background = index === currentCarouselActiveIndex ? 'var(--purple-primary)' : '#e8e8ef';
+    });
+}
+
 window.addEventListener('DOMContentLoaded', initializeLuxuryBannerCarousel);
 
+// Real-time listener checks to clear inline form warnings immediately on user key typing
+    const clientNameInput = document.getElementById('invClientName');
+    if (clientNameInput) {
+        clientNameInput.addEventListener('input', () => {
+            const err = document.getElementById('invNameValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
+
+    const clientPhoneInput = document.getElementById('invClientPhone');
+    if (clientPhoneInput) {
+        clientPhoneInput.addEventListener('input', () => {
+            const err = document.getElementById('invPhoneValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
+
+    const clientAddressInput = document.getElementById('invClientAddress');
+    if (clientAddressInput) {
+        clientAddressInput.addEventListener('input', () => {
+            const err = document.getElementById('invAddressValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
 // =========================================================================
-// ANGEL JEWELLERY — VAULT SALE DISTRIBUTION GRID ENGINE
+// ANGEL JEWELLERY — VAULT SALE DISTRIBUTION GRID (PATTERN HARMONIZED)
 // =========================================================================
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
@@ -1187,16 +1186,14 @@ function renderVaultSaleSection() {
     
     if (!saleSection || !saleGrid) return;
 
-    // Filter database for elements that contain an active original price field
     const saleItems = productDatabase.filter(product => product.originalPrice && product.originalPrice > product.price);
 
-    // If zero pieces match our sale criteria, keep the section hidden entirely
     if (saleItems.length === 0) {
         saleSection.style.display = 'none';
         return;
     }
 
-    // Reveal the pristine sale frame area
+    // Unveils the master section row framework cleanly
     saleSection.style.display = 'block';
     saleGrid.innerHTML = "";
 
@@ -1207,18 +1204,19 @@ function renderVaultSaleSection() {
         const saleCard = document.createElement('div');
         saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
         
-        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background:#ff4444;">${product.badge}</span>` : '';
+        // Dynamic ribbon indicator configuration tags
+        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
 
-        // --- STRIKE-OUT CURRENCY TYPOGRAPHY GENERATOR ---
         const pricingLayoutHTML = `
-            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0;">
-                <span style="color: #dfba6b; font-weight: 500;">${formatCurrency(product.price)}</span>
-                <span style="color: #666; font-size: 0.85rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
+            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
+                <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(product.price)}</span>
+                <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
             </p>
         `;
 
+        // Inner template cards override backdrop settings to cast beautiful drop shadows onto your tile textures
         saleCard.innerHTML = `
-            <div class="product-img-wrapper">
+            <div class="product-img-wrapper" style="background: #ffffff;">
                 ${badgeHTML}
                 <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
                     <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
@@ -1228,15 +1226,87 @@ function renderVaultSaleSection() {
                     <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
                 </div>
             </div>
-            <div class="product-info">
-                <p class="product-category" style="color: #ff4444;">${product.category} • Special Offer</p>
+            <div class="product-info" style="background: #ffffff;">
+                <p class="product-category" style="color: var(--pink-accent); font-weight:600;">${product.category} • Special Offer</p>
                 <h3 class="product-title">${product.title}</h3>
                 ${pricingLayoutHTML}
-                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px;">
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fab fa-whatsapp'}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px; background: #ffffff;">
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
                 </button>
             </div>
         `;
         saleGrid.appendChild(saleCard);
+    });
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — TRENDING DISTRIBUTION GRID ENGINE
+// =========================================================================
+function renderTrendingSection() {
+    const trendingSection = document.getElementById('trendingSection');
+    const trendingGrid = document.getElementById('trendingProductGrid');
+    
+    if (!trendingSection || !trendingGrid) return;
+
+    // Filter database for items containing a trending tag or badge (e.g., 'Trending', 'New In', or custom properties)
+    const trendingItems = productDatabase.filter(product => 
+        (product.badge && product.badge.toLowerCase() === 'trending') || 
+        product.trending === true
+    );
+
+    // Keep hidden if no items are explicitly matching the criteria
+    if (trendingItems.length === 0) {
+        trendingSection.style.display = 'none';
+        return;
+    }
+
+    // Unveil the patterned framework canvas layout
+    trendingSection.style.display = 'block';
+    trendingGrid.innerHTML = "";
+
+    trendingItems.forEach(product => {
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        const isFavorited = wishlistMemory.includes(product.id);
+        
+        const trendingCard = document.createElement('div');
+        trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
+        
+        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
+
+        // Checking for special pricing layers inside the trending cards
+        let pricingLayoutHTML = "";
+        if (product.originalPrice && product.originalPrice > product.price) {
+            pricingLayoutHTML = `
+                <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
+                    <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(product.price)}</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
+                </p>
+            `;
+        } else {
+            pricingLayoutHTML = `<p class="product-price" style="margin: 0;">${formatCurrency(product.price)}</p>`;
+        }
+
+        // Mirrors the clean, white card footprint layered flawlessly on top of the patterned bg-3 canvas
+        trendingCard.innerHTML = `
+            <div class="product-img-wrapper" style="background: #ffffff;">
+                ${badgeHTML}
+                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
+                </button>
+                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+                <div class="product-actions-overlay">
+                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
+                </div>
+            </div>
+            <div class="product-info" style="background: #ffffff;">
+                <p class="product-category">${product.category}</p>
+                <h3 class="product-title">${product.title}</h3>
+                ${pricingLayoutHTML}
+                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px; background: #ffffff;">
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+                </button>
+            </div>
+        `;
+        trendingGrid.appendChild(trendingCard);
     });
 }

@@ -6,7 +6,7 @@
       "category": "necklace",
       "price": 45000,
       "image": "/images/choker-01.jpg",
-      "badge": "New In"
+      "badge": "trending"
     },
     {
       "id": 2,
@@ -14,7 +14,7 @@
       "category": "bracelets",
       "price": 1500,
       "image": "/images/bracelets.jpg",
-      "badge": "Sold Out"
+      "badge": "sold out"
     },
     {
       "id": 333,
@@ -23,14 +23,14 @@
       "price": 4444,
       "originalPrice": 5000,
       "image": "/images/angel-logo-bg.png",
-      "badge": "Sale"
+      "badge": "sale"
     },
     {
       "id": 1212,
       "title": "safsaf",
       "category": "necklace",
       "image": "images/ring-03.jpg",
-      "badge": "New In",
+      "badge": "new in",
       "price": 234
     },
     {
@@ -39,7 +39,7 @@
       "category": "rings",
       "price": 236,
       "image": "images/56447.jpg",
-      "badge": "New In"
+      "badge": "new in"
     }
   ]
 }
