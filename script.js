@@ -68,26 +68,26 @@ function displayProducts(productsList) {
         }
 
         designCard.innerHTML = `
-        <div class="product-img-wrapper">
-            ${badgeHTML}
-            <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
-                <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-            </button>
-            <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
-            <div class="product-actions-overlay">
-                <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
+            <div class="product-img-wrapper">
+                ${badgeHTML}
+                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
+                </button>
+                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+                <div class="product-actions-overlay">
+                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
+                </div>
             </div>
-        </div>
-        <div class="product-info">
-            <p class="product-category">${product.category}</p>
-            <h3 class="product-title">${product.title}</h3>
-            <p class="product-price">${formatCurrency(product.price)}</p>
-            
-            <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''}>
-                <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
-            </button>
-        </div>
-    `;
+            <div class="product-info">
+                <p class="product-category">${product.category}</p>
+                <h3 class="product-title">${product.title}</h3>
+                <p class="product-price">${formatCurrency(product.price)}</p>
+                
+                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''}>
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+                </button>
+            </div>
+        `;
         gridContainer.appendChild(designCard);
     });
 }
@@ -116,14 +116,8 @@ function filterCurrentDataset() {
 
 function filterCatalog() { 
     displayProducts(filterCurrentDataset()); 
-
-    // Update both structural collections simultaneously on page reload or filter shifts
-    if (typeof renderVaultSaleSection === "function") {
-        renderVaultSaleSection();
-    }
-    if (typeof renderTrendingSection === "function") {
-        renderTrendingSection();
-    }
+    renderVaultSaleSection();
+    renderTrendingSection();
 }
 
 function addToCartEngine(id) {
@@ -162,6 +156,7 @@ function updateCartUI() {
     const cartFooterSection = document.getElementById('cartFooterSection');
     const shippingProgressBox = document.getElementById('shippingProgressBox');
     
+    if (!cartItemsList) return;
     cartItemsList.innerHTML = "";
     let totalItemsCount = 0;
     let grandSubtotal = 0;
@@ -245,7 +240,7 @@ function updateCartUI() {
     const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
     if (primaryCheckoutButtonElement) {
         primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;
-        primaryCheckoutButtonElement.style.display = "flex"; // Prevents layout collapses
+        primaryCheckoutButtonElement.style.display = "flex"; 
     }
 }
 
@@ -316,30 +311,18 @@ function updateWishlistUI() {
     });
 }
 
-function initializeAddressMemoryEngine() {
-}
-
-// Global Validation Enforcer Utility to attach to any input field element
 function applyStrictIndianPhoneValidationRules(inputElementId) {
     const phoneInputField = document.getElementById(inputElementId);
     if (!phoneInputField) return;
 
-    // Real-time listener strips non-numeric characters instantly on type
     phoneInputField.addEventListener('input', function(e) {
-        let numericString = this.value.replace(/[^0-9]/g, ''); // RegEx drops letters, spaces, and symbols
+        let numericString = this.value.replace(/[^0-9]/g, ''); 
         if (numericString.length > 10) {
-            numericString = numericString.slice(0, 10); // Cuts off any input past the 10th digit
+            numericString = numericString.slice(0, 10); 
         }
         this.value = numericString;
     });
 }
-
-// Initialize validation tracking hooks on launch
-window.addEventListener('DOMContentLoaded', () => {
-    // Apply validation to both the Checkout Form input and the Tracking overlay input box
-    applyStrictIndianPhoneValidationRules('invClientPhone');
-    applyStrictIndianPhoneValidationRules('trackingPhoneInput');
-});
 
 function mountCouponHelperBadges() {
     const helpersGroup = document.getElementById('couponHelpersGroup');
@@ -451,6 +434,10 @@ function toggleCartDrawer() {
         drawer.style.right = "-100%";
         if (overlay) overlay.style.display = "none";
     } else {
+        // Enforce closing the opposite layout sheet first to avoid layering locks
+        const wishlist = document.getElementById('wishlistDrawer');
+        if (wishlist) wishlist.style.right = "-100%";
+        
         drawer.style.right = "0px";
         if (overlay) overlay.style.display = "block";
     }
@@ -465,6 +452,9 @@ function toggleWishlistDrawer() {
         drawer.style.right = "-100%";
         if (overlay) overlay.style.display = "none";
     } else {
+        const cart = document.getElementById('cartDrawer');
+        if (cart) cart.style.right = "-100%";
+        
         drawer.style.right = "0px";
         if (overlay) overlay.style.display = "block";
     }
@@ -505,8 +495,9 @@ window.addEventListener('scroll', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
     loadProductDatabaseEngine();
-    initializeAddressMemoryEngine();
     mountCouponHelperBadges();
+    applyStrictIndianPhoneValidationRules('invClientPhone');
+    applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.addEventListener('input', filterCatalog);
@@ -582,20 +573,40 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    const clientNameInput = document.getElementById('invClientName');
+    if (clientNameInput) {
+        clientNameInput.addEventListener('input', () => {
+            const err = document.getElementById('invNameValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
+
+    const clientPhoneInput = document.getElementById('invClientPhone');
+    if (clientPhoneInput) {
+        clientPhoneInput.addEventListener('input', () => {
+            const err = document.getElementById('invPhoneValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
+
+    const clientAddressInput = document.getElementById('invClientAddress');
+    if (clientAddressInput) {
+        clientAddressInput.addEventListener('input', () => {
+            const err = document.getElementById('invAddressValidationError');
+            if (err) { err.style.display = "none"; err.innerText = ""; }
+        });
+    }
+
     const preloader = document.getElementById('preloader');
     if (preloader) {
         setTimeout(() => { preloader.style.opacity = '0'; setTimeout(() => { preloader.remove(); }, 600); }, 400);
     }
 });
 
-// =========================================================================
-// ANGEL JEWELLERY — INVOICES & RAZORPAY CHECKOUT INTERFACES (FIXED)
-// =========================================================================
 let globalPayableAmountInPaise = 0; 
 
 function openInvoiceScreen() {
-    // 1. Safety check to make sure the cart isn't empty
-    if (!shoppingCart || shoppingCart.length === 0) return;
+    if (shoppingCart.length === 0) return;
 
     const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
     const itemsContainer = document.getElementById('invoiceItemsContainer');
@@ -603,12 +614,10 @@ function openInvoiceScreen() {
 
     if (!invoiceOverlay || !itemsContainer || !pricingSummary) return;
 
-    // 2. Clear out any old input field entries or pull cached user records gracefully
     document.getElementById('invClientAddress').value = localStorage.getItem('angel_customer_address') || "";
     document.getElementById('invClientName').value = localStorage.getItem('angel_customer_name') || "";
     document.getElementById('invClientPhone').value = localStorage.getItem('angel_customer_phone') || "";
 
-    // 3. Build Itemized Row Manifest
     itemsContainer.innerHTML = shoppingCart.map(item => `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #e8e8ef;">
             <div style="display:flex; align-items:center; gap:15px; text-align:left;">
@@ -622,7 +631,6 @@ function openInvoiceScreen() {
         </div>
     `).join('');
 
-    // 4. Compute Financial Ledger Data Points
     let grandSubtotal = shoppingCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let discountAmount = 0;
     if (activeDiscount.code) {
@@ -632,7 +640,6 @@ function openInvoiceScreen() {
     let finalPayableTotal = grandSubtotal - discountAmount;
     globalPayableAmountInPaise = finalPayableTotal * 100;
 
-    // 5. Render Financial Ledger Box
     pricingSummary.innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:500; color:var(--text-muted);">
             <span>Bag Subtotal:</span><span style="color:var(--text-dark-primary); font-weight:600;">${formatCurrency(grandSubtotal)}</span>
@@ -649,13 +656,11 @@ function openInvoiceScreen() {
         </div>
     `;
 
-    // 6. Close the slide-out sidebar drawer overlay seamlessly
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.style.right = "-100%";
     if (overlay) overlay.style.display = "none";
     
-    // 7. Reveal the pristine full view payment dashboard panel sheet
     invoiceOverlay.style.display = 'flex';
 }
 
@@ -663,33 +668,23 @@ function closeInvoiceScreen() {
     document.getElementById('invoiceOverlayScreen').style.display = 'none';
 }
 
-// ➔ UPDATED: LEVERAGES HIGH-CONTRAST INLINE INJECTIONS FOR ERROR VALIDATION
-// =========================================================================
-// ANGEL JEWELLERY — INVOICES & MULTI-FIELD INLINE VALIDATION ENGINE
-// =========================================================================
 function initiateRazorpayPaymentProcess(event) {
     event.preventDefault();
 
-    // 1. Extract and trim active field values
     const name = document.getElementById('invClientName').value.trim();
     const phone = document.getElementById('invClientPhone').value.trim();
     const address = document.getElementById('invClientAddress').value.trim();
     
-    // 2. Grab error element display nodes
     const nameErrorElement = document.getElementById('invNameValidationError');
     const phoneErrorElement = document.getElementById('invPhoneValidationError');
     const addressErrorElement = document.getElementById('invAddressValidationError');
 
-    // 3. Reset error states to clean baselines before running evaluations
     let isFormSubmissionValid = true;
 
     if (nameErrorElement) { nameErrorElement.innerText = ""; nameErrorElement.style.display = "none"; }
     if (phoneErrorElement) { phoneErrorElement.innerText = ""; phoneErrorElement.style.display = "none"; }
     if (addressErrorElement) { addressErrorElement.innerText = ""; addressErrorElement.style.display = "none"; }
 
-    // --- MANDATORY VALIDATION RUNWAYS ---
-
-    // Checkpoint A: Full Name Validation
     if (!name) {
         if (nameErrorElement) {
             nameErrorElement.innerText = "Please enter Full Name.";
@@ -699,7 +694,6 @@ function initiateRazorpayPaymentProcess(event) {
         isFormSubmissionValid = false;
     }
 
-    // Checkpoint B: Contact Phone Number Validation
     if (!phone) {
         if (phoneErrorElement) {
             phoneErrorElement.innerText = "Please enter 10-digit contact number. \n (For Ex: 9999988888)";
@@ -716,7 +710,6 @@ function initiateRazorpayPaymentProcess(event) {
         isFormSubmissionValid = false;
     }
 
-    // Checkpoint C: Shipping Destination Address Validation
     if (!address) {
         if (addressErrorElement) {
             addressErrorElement.innerText = "Please enter valid shipping address.";
@@ -726,15 +719,12 @@ function initiateRazorpayPaymentProcess(event) {
         isFormSubmissionValid = false;
     }
 
-    // 4. Halt execution instantly if any validation runway failed
     if (!isFormSubmissionValid) return;
 
-    // 5. Commit authenticated metadata layers to persistent storage cache
     localStorage.setItem('angel_customer_name', name);
     localStorage.setItem('angel_customer_phone', phone);
     localStorage.setItem('angel_customer_address', address);
 
-    // 6. Launch Native Surface Razorpay Frame Overlay
     const paymentOptions = {
         "key": "rzp_test_StZ7M1D8qRHUIN", 
         "amount": globalPayableAmountInPaise, 
@@ -806,8 +796,6 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     document.getElementById('confWhatsAppBtn').onclick = () => {
         window.open(generatedLink, '_blank');
     };
-
-    console.log("Streaming transaction data to secure SheetDB ledger...");
     
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
         method: "POST",
@@ -830,7 +818,6 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         })
     })
     .then(response => response.json())
-    .then(data => console.log("SheetDB integration success payload:", data))
     .catch(err => console.error("SheetDB network stream drop:", err));
     
     shoppingCart = [];
@@ -850,9 +837,6 @@ function exitConfirmationAndReset() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — CONCIERGE SEARCH TRACKING DESK
-// =========================================================================
 function executeLiveOrderTrackingSearch() {
     const inputField = document.getElementById('trackingPhoneInput');
     const statusMsg = document.getElementById('trackingStatusMessage');
@@ -938,13 +922,32 @@ function openTrackingScreenOverlay(event) {
     }
 }
 
+// Global Validation Enforcer Utility to attach to any input field element
+function applyStrictIndianPhoneValidationRules(inputElementId) {
+    const phoneInputField = document.getElementById(inputElementId);
+    if (!phoneInputField) return;
+
+    // Real-time listener strips non-numeric characters instantly on type
+    phoneInputField.addEventListener('input', function(e) {
+        let numericString = this.value.replace(/[^0-9]/g, ''); // RegEx drops letters, spaces, and symbols
+        if (numericString.length > 10) {
+            numericString = numericString.slice(0, 10); // Cuts off any input past the 10th digit
+        }
+        this.value = numericString;
+    });
+}
+
+// Initialize validation tracking hooks on launch
+window.addEventListener('DOMContentLoaded', () => {
+    // Apply validation to both the Checkout Form input and the Tracking overlay input box
+    applyStrictIndianPhoneValidationRules('invClientPhone');
+    applyStrictIndianPhoneValidationRules('trackingPhoneInput');
+});
+
 function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — ADMINISTRATIVE CONSOLE
-// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
     
@@ -970,7 +973,6 @@ function openAdminMasterConsole(event) {
             }
 
             statusMsg.innerHTML = `Connected. Total Orders Processed: <span style="color:#25d366; font-weight:700;">${allOrdersArray.length}</span>`;
-
             const chronologicallyReversedStack = allOrdersArray.reverse();
 
             ordersContainer.innerHTML = chronologicallyReversedStack.map(order => `
@@ -1006,115 +1008,7 @@ function closeAdminMasterConsole() {
 // =========================================================================
 let currentCarouselActiveIndex = 0;
 let carouselAutoRotationTimerHandle = null;
-let isCarouselAutoPlayPaused = false; // ➔ Tracks the active operational pause state flag
-
-function initializeLuxuryBannerCarousel() {
-    const headerElement = document.getElementById('header');
-    const track = document.getElementById('carouselSliderTrack');
-     if (headerElement && track) {
-        const headerHeight = headerElement.offsetHeight;
-        track.parentElement.parentElement.style.marginTop = `${headerHeight}px`;
-    }
-
-    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
-    if (!track) return;
-
-    const slidesCount = track.children.length;
-    if (slidesCount === 0) return;
-
-    indicatorsDock.innerHTML = "";
-    for (let i = 0; i < slidesCount; i++) {
-        const indicatorDot = document.createElement('div');
-        indicatorDot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? '#dfba6b' : 'rgba(255,255,255,0.2)'}; cursor: pointer; transition: background 0.3s;`;
-        indicatorDot.onclick = () => jumpToSpecificCarouselSlide(i);
-        indicatorsDock.appendChild(indicatorDot);
-    }
-
-    // Instantiates automatic sliding interval cycle rules
-    startCarouselAutoPlayCycle(slidesCount);
-}
-
-// ➔ NEW INTERACTIVE CONTROLLER: Switches auto-advance intervals off or back on dynamically
-function toggleCarouselAutoPlayEngine() {
-    const track = document.getElementById('carouselSliderTrack');
-    const pauseIcon = document.getElementById('carouselPauseIcon');
-    const buttonWrapper = document.getElementById('carouselPauseToggleBtn');
-    
-    if (!track) return;
-    const slidesCount = track.children.length;
-
-    if (isCarouselAutoPlayPaused) {
-        // Resume automated slider sequence loop intervals
-        isCarouselAutoPlayPaused = false;
-        if (pauseIcon) {
-            pauseIcon.className = "fas fa-pause";
-        }
-        if (buttonWrapper) {
-            buttonWrapper.title = "Pause Slideshow";
-        }
-        startCarouselAutoPlayCycle(slidesCount);
-    } else {
-        // Halts slider animation immediately and clears active timer handles
-        isCarouselAutoPlayPaused = true;
-        if (pauseIcon) {
-            pauseIcon.className = "fas fa-play";
-        }
-        if (buttonWrapper) {
-            buttonWrapper.title = "Play Slideshow";
-        }
-        if (carouselAutoRotationTimerHandle) {
-            clearInterval(carouselAutoRotationTimerHandle);
-        }
-    }
-}
-
-function startCarouselAutoPlayCycle(totalSlidesCount) {
-    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
-    
-    // Safety exit block: Stops timer rebuild if user explicitly toggled pause state on
-    if (isCarouselAutoPlayPaused) return;
-
-    carouselAutoRotationTimerHandle = setInterval(() => {
-        currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
-        updateCarouselRenderPosition();
-    }, 5000);
-}
-
-function shiftCarouselSlideDirection(directionStep) {
-    const track = document.getElementById('carouselSliderTrack');
-    if (!track) return;
-    
-    const totalSlides = track.children.length;
-    
-    currentCarouselActiveIndex += directionStep;
-    if (currentCarouselActiveIndex >= totalSlides) currentCarouselActiveIndex = 0;
-    if (currentCarouselActiveIndex < 0) currentCarouselActiveIndex = totalSlides - 1;
-
-    updateCarouselRenderPosition();
-    
-    // Maintain strict pause states on direction button overrides
-    startCarouselAutoPlayCycle(totalSlides);
-}
-
-function jumpToSpecificCarouselSlide(targetIndex) {
-    currentCarouselActiveIndex = targetIndex;
-    updateCarouselRenderPosition();
-    
-    const track = document.getElementById('carouselSliderTrack');
-    if (track) startCarouselAutoPlayCycle(track.children.length);
-}
-
-function updateCarouselRenderPosition() {
-    const track = document.getElementById('carouselSliderTrack');
-    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
-    if (!track) return;
-
-    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
-
-    Array.from(indicatorsDock.children).forEach((dot, index) => {
-        dot.style.background = index === currentCarouselActiveIndex ? '#dfba6b' : 'rgba(255,255,255,0.2)';
-    });
-}
+let isCarouselAutoPlayPaused = false; 
 
 function initializeLuxuryBannerCarousel() {
     const headerElement = document.getElementById('header');
@@ -1125,7 +1019,7 @@ function initializeLuxuryBannerCarousel() {
     }
 
     const indicatorsDock = document.getElementById('carouselIndicatorsDock');
-    if (!track) return;
+    if (!track || !indicatorsDock) return;
 
     const slidesCount = track.children.length;
     if (slidesCount === 0) return;
@@ -1140,10 +1034,63 @@ function initializeLuxuryBannerCarousel() {
     startCarouselAutoPlayCycle(slidesCount);
 }
 
+function toggleCarouselAutoPlayEngine() {
+    const track = document.getElementById('carouselSliderTrack');
+    const pauseIcon = document.getElementById('carouselPauseIcon');
+    const buttonWrapper = document.getElementById('carouselPauseToggleBtn');
+    
+    if (!track) return;
+    const slidesCount = track.children.length;
+
+    if (isCarouselAutoPlayPaused) {
+        isCarouselAutoPlayPaused = false;
+        if (pauseIcon) pauseIcon.className = "fas fa-pause";
+        if (buttonWrapper) buttonWrapper.title = "Pause Slideshow";
+        startCarouselAutoPlayCycle(slidesCount);
+    } else {
+        isCarouselAutoPlayPaused = true;
+        if (pauseIcon) pauseIcon.className = "fas fa-play";
+        if (buttonWrapper) buttonWrapper.title = "Play Slideshow";
+        if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
+    }
+}
+
+function startCarouselAutoPlayCycle(totalSlidesCount) {
+    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
+    if (isCarouselAutoPlayPaused) return;
+
+    carouselAutoRotationTimerHandle = setInterval(() => {
+        currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
+        updateCarouselRenderPosition();
+    }, 5000);
+}
+
+function shiftCarouselSlideDirection(directionStep) {
+    const track = document.getElementById('carouselSliderTrack');
+    if (!track) return;
+    
+    const totalSlides = track.children.length;
+    currentCarouselActiveIndex += directionStep;
+    
+    if (currentCarouselActiveIndex >= totalSlides) currentCarouselActiveIndex = 0;
+    if (currentCarouselActiveIndex < 0) currentCarouselActiveIndex = totalSlides - 1;
+
+    updateCarouselRenderPosition();
+    startCarouselAutoPlayCycle(totalSlides);
+}
+
+function jumpToSpecificCarouselSlide(targetIndex) {
+    currentCarouselActiveIndex = targetIndex;
+    updateCarouselRenderPosition();
+    
+    const track = document.getElementById('carouselSliderTrack');
+    if (track) startCarouselAutoPlayCycle(track.children.length);
+}
+
 function updateCarouselRenderPosition() {
     const track = document.getElementById('carouselSliderTrack');
     const indicatorsDock = document.getElementById('carouselIndicatorsDock');
-    if (!track) return;
+    if (!track || !indicatorsDock) return;
 
     track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
     Array.from(indicatorsDock.children).forEach((dot, index) => {
@@ -1151,35 +1098,6 @@ function updateCarouselRenderPosition() {
     });
 }
 
-window.addEventListener('DOMContentLoaded', initializeLuxuryBannerCarousel);
-
-// Real-time listener checks to clear inline form warnings immediately on user key typing
-    const clientNameInput = document.getElementById('invClientName');
-    if (clientNameInput) {
-        clientNameInput.addEventListener('input', () => {
-            const err = document.getElementById('invNameValidationError');
-            if (err) { err.style.display = "none"; err.innerText = ""; }
-        });
-    }
-
-    const clientPhoneInput = document.getElementById('invClientPhone');
-    if (clientPhoneInput) {
-        clientPhoneInput.addEventListener('input', () => {
-            const err = document.getElementById('invPhoneValidationError');
-            if (err) { err.style.display = "none"; err.innerText = ""; }
-        });
-    }
-
-    const clientAddressInput = document.getElementById('invClientAddress');
-    if (clientAddressInput) {
-        clientAddressInput.addEventListener('input', () => {
-            const err = document.getElementById('invAddressValidationError');
-            if (err) { err.style.display = "none"; err.innerText = ""; }
-        });
-    }
-// =========================================================================
-// ANGEL JEWELLERY — VAULT SALE DISTRIBUTION GRID (PATTERN HARMONIZED)
-// =========================================================================
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
     const saleGrid = document.getElementById('saleProductGrid');
@@ -1187,13 +1105,11 @@ function renderVaultSaleSection() {
     if (!saleSection || !saleGrid) return;
 
     const saleItems = productDatabase.filter(product => product.originalPrice && product.originalPrice > product.price);
-
     if (saleItems.length === 0) {
         saleSection.style.display = 'none';
         return;
     }
 
-    // Unveils the master section row framework cleanly
     saleSection.style.display = 'block';
     saleGrid.innerHTML = "";
 
@@ -1204,7 +1120,6 @@ function renderVaultSaleSection() {
         const saleCard = document.createElement('div');
         saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
         
-        // Dynamic ribbon indicator configuration tags
         let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
 
         const pricingLayoutHTML = `
@@ -1214,7 +1129,6 @@ function renderVaultSaleSection() {
             </p>
         `;
 
-        // Inner template cards override backdrop settings to cast beautiful drop shadows onto your tile textures
         saleCard.innerHTML = `
             <div class="product-img-wrapper" style="background: #ffffff;">
                 ${badgeHTML}
@@ -1239,28 +1153,22 @@ function renderVaultSaleSection() {
     });
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — TRENDING DISTRIBUTION GRID ENGINE
-// =========================================================================
 function renderTrendingSection() {
     const trendingSection = document.getElementById('trendingSection');
     const trendingGrid = document.getElementById('trendingProductGrid');
     
     if (!trendingSection || !trendingGrid) return;
 
-    // Filter database for items containing a trending tag or badge (e.g., 'Trending', 'New In', or custom properties)
     const trendingItems = productDatabase.filter(product => 
         (product.badge && product.badge.toLowerCase() === 'trending') || 
         product.trending === true
     );
 
-    // Keep hidden if no items are explicitly matching the criteria
     if (trendingItems.length === 0) {
         trendingSection.style.display = 'none';
         return;
     }
 
-    // Unveil the patterned framework canvas layout
     trendingSection.style.display = 'block';
     trendingGrid.innerHTML = "";
 
@@ -1272,9 +1180,8 @@ function renderTrendingSection() {
         trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
         
         let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
-
-        // Checking for special pricing layers inside the trending cards
         let pricingLayoutHTML = "";
+        
         if (product.originalPrice && product.originalPrice > product.price) {
             pricingLayoutHTML = `
                 <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
@@ -1286,7 +1193,6 @@ function renderTrendingSection() {
             pricingLayoutHTML = `<p class="product-price" style="margin: 0;">${formatCurrency(product.price)}</p>`;
         }
 
-        // Mirrors the clean, white card footprint layered flawlessly on top of the patterned bg-3 canvas
         trendingCard.innerHTML = `
             <div class="product-img-wrapper" style="background: #ffffff;">
                 ${badgeHTML}
@@ -1310,49 +1216,28 @@ function renderTrendingSection() {
         trendingGrid.appendChild(trendingCard);
     });
 }
+
 // =========================================================================
-// ANGEL JEWELLERY — BULLETPROOF MOBILE MENU AUTO-CLOSE TRIGGER
+// ANGEL JEWELLERY — AUTOMATIC MOBILE NAVIGATION DESK CLOSURE ENGINE
 // =========================================================================
 (function() {
     function forceMobileMenuClose() {
-        // 1. Identify all potential mobile drawer elements from your codebase
-        const mobileNavMenu = document.getElementById('navMenu') || 
-                              document.getElementById('mobileNavContainer') || 
-                              document.querySelector('.nav-menu');
+        const mobileNavMenu = document.getElementById('navMenu');
+        const menuToggleButton = document.getElementById('menuToggle');
         
-        const menuToggleButton = document.getElementById('menuToggle') || 
-                                 document.getElementById('mobileMenuToggleBtn');
-        
-        // 2. Remove the visibility 'active' or 'open' classes instantly
         if (mobileNavMenu) {
             mobileNavMenu.classList.remove('active');
-            mobileNavMenu.classList.remove('open');
         }
-        
-        // 3. Reset the hamburger button icon state back to standard bars
         if (menuToggleButton) {
-            menuToggleButton.classList.remove('open');
             const toggleIcon = menuToggleButton.querySelector('i');
-            if (toggleIcon) {
-                toggleIcon.className = "fas fa-bars"; 
-            }
-        }
-        
-        // 4. Hide any backdrop tint layer if one is active
-        const overlayMask = document.getElementById('navOverlayMask') || document.getElementById('cartOverlay');
-        if (overlayMask) {
-            overlayMask.style.display = 'none';
+            if (toggleIcon) toggleIcon.className = "fas fa-bars"; 
         }
     }
 
-    // Bind click handlers to all links when the page layout finishes loading
     window.addEventListener('DOMContentLoaded', () => {
-        // Target all links that jump to page sections (e.g., #saleSection, #trendingSection)
-        const allNavLinks = document.querySelectorAll('nav a, .nav-menu a, #navMenu a, [href^="#"]');
-        
+        const allNavLinks = document.querySelectorAll('#navMenu a, [href^="#"]');
         allNavLinks.forEach(link => {
             link.addEventListener('click', () => {
-                // Introduce a tiny micro-delay so the page can initiate its smooth scroll before the menu vanishes
                 setTimeout(forceMobileMenuClose, 150);
             });
         });
