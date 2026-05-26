@@ -7,7 +7,7 @@ let shoppingCart = [];
 let wishlistMemory = [];     
 let activeDiscount = { code: "", type: "", value: 0 };
 
-const FREE_SHIPPING_THRESHOLD = 25000; 
+const FREE_SHIPPING_THRESHOLD = 1000; 
 
 const couponRegistry = {
     "ANGEL10": { type: "percentage", value: 10 },
@@ -1310,3 +1310,51 @@ function renderTrendingSection() {
         trendingGrid.appendChild(trendingCard);
     });
 }
+// =========================================================================
+// ANGEL JEWELLERY — BULLETPROOF MOBILE MENU AUTO-CLOSE TRIGGER
+// =========================================================================
+(function() {
+    function forceMobileMenuClose() {
+        // 1. Identify all potential mobile drawer elements from your codebase
+        const mobileNavMenu = document.getElementById('navMenu') || 
+                              document.getElementById('mobileNavContainer') || 
+                              document.querySelector('.nav-menu');
+        
+        const menuToggleButton = document.getElementById('menuToggle') || 
+                                 document.getElementById('mobileMenuToggleBtn');
+        
+        // 2. Remove the visibility 'active' or 'open' classes instantly
+        if (mobileNavMenu) {
+            mobileNavMenu.classList.remove('active');
+            mobileNavMenu.classList.remove('open');
+        }
+        
+        // 3. Reset the hamburger button icon state back to standard bars
+        if (menuToggleButton) {
+            menuToggleButton.classList.remove('open');
+            const toggleIcon = menuToggleButton.querySelector('i');
+            if (toggleIcon) {
+                toggleIcon.className = "fas fa-bars"; 
+            }
+        }
+        
+        // 4. Hide any backdrop tint layer if one is active
+        const overlayMask = document.getElementById('navOverlayMask') || document.getElementById('cartOverlay');
+        if (overlayMask) {
+            overlayMask.style.display = 'none';
+        }
+    }
+
+    // Bind click handlers to all links when the page layout finishes loading
+    window.addEventListener('DOMContentLoaded', () => {
+        // Target all links that jump to page sections (e.g., #saleSection, #trendingSection)
+        const allNavLinks = document.querySelectorAll('nav a, .nav-menu a, #navMenu a, [href^="#"]');
+        
+        allNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Introduce a tiny micro-delay so the page can initiate its smooth scroll before the menu vanishes
+                setTimeout(forceMobileMenuClose, 150);
+            });
+        });
+    });
+})();

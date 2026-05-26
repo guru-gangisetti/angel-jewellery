@@ -107,7 +107,7 @@ header.scrolled .logo img { height: 45px; }
     border-radius: 4px;
     font-weight: 500;
 }
-.filter-btn:hover, .filter-btn.active { border-color: var(--purple-primary); color: #ffffff; background: var(--purple-primary); }
+.filter-btn:hover, .filter-btn.active { border-color: var(--purple-primary); color: #ffffff; background: var(--purple-primary); font-weight: 700;}
 
 /* LUXURY SEARCH INTERFACE CONFIGURATIONS */
 .search-container { max-width: 420px; margin: 0 auto 24px auto; position: relative; }
@@ -128,7 +128,7 @@ header.scrolled .logo img { height: 45px; }
 /* COMPACT LUXURY CARD ARCHITECTURE */
 .product-card { 
     background: #ffffff; 
-    border: 1px solid var(--pink-accent) !important;
+    border: 1px solid var(--purple-primary) !important;
     border-radius: 8px; 
     overflow: hidden; 
     transition: var(--transition); 
@@ -211,8 +211,7 @@ header.scrolled .logo img { height: 45px; }
 }
 #cartDrawer { right: -100%; }
 #wishlistDrawer { right: -100%; }
-
-.cart-header { 
+.cart-header {
     padding: 24px; border-bottom: 1px solid var(--border-subtle); 
     display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);
 }
@@ -337,7 +336,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 @media (max-width: 768px) {
     header { padding: 16px 0; }
     .logo img { height: 45px; }
-    .catalog-controls { top: 78px; padding: 16px 0 !important; }
+    .catalog-controls { top: 70px; padding: 16px 0 !important; }
     .nav-menu {
         position: fixed; top: 0; right: -100%; width: 80%; height: 100vh;
         background: #ffffff; flex-direction: column; justify-content: center;
@@ -358,7 +357,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     #cartDrawer, #wishlistDrawer { max-width: 100% !important; width: 100vw !important; right: -100vw; }
     #cartDrawer[style*="right: 0"], #wishlistDrawer[style*="right: 0"] { right: 0 !important; }
     .cart-item-row { padding-right: 40px !important; }
-    .cart-item-row .fa-trash { right: 15px !important; }
+    .cart-item-row .fa-trash { right: 30px !important; }
 }
 
 /* --- LIGHT THEME INVENTORY COMFORT SLIDER --- */

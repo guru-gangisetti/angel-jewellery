@@ -151,55 +151,56 @@
     </section>
      <!-- tredning section ends-->
 
-   <div id="cartDrawer">
+  <div id="cartDrawer">
+        
         <div class="cart-header">
             <h3>Your Selection</h3>
             <i class="fas fa-times" id="closeCartBtn"></i>
         </div>
         
         <div id="cartItemsContainer">
-            
             <div id="cartItemsList"></div>
+        </div> 
 
-            <div class="cart-footer-embedded" id="cartFooterSection">
-                
-                <div id="shippingProgressBox" class="shipping-progress-wrapper">
-                    <p id="shippingProgressText"></p>
-                    <div class="shipping-bar-track">
-                        <div id="shippingBarFill" class="shipping-bar-fill"></div>
-                    </div>
+        <div class="cart-footer-embedded" id="cartFooterSection">
+            
+            <div id="shippingProgressBox" class="shipping-progress-wrapper">
+                <p id="shippingProgressText"></p>
+                <div class="shipping-bar-track">
+                    <div id="shippingBarFill" class="shipping-bar-fill"></div>
                 </div>
+            </div>
 
-                <div class="cart-form-group">
-                    <label class="gift-checkbox-container">
-                        <input type="checkbox" id="giftCheckbox">
-                        <span class="custom-checkbox"></span>
-                        <span style="letter-spacing: 1px; font-weight: 600;">This order is a luxury gift</span>
-                    </label>
-                    <div id="giftMessageWrapper">
-                        <textarea id="giftMessageInput" rows="2" placeholder="Write your personalized gift message here..."></textarea>
-                    </div>
+            <div class="cart-form-group">
+                <label class="gift-checkbox-container">
+                    <input type="checkbox" id="giftCheckbox">
+                    <span class="custom-checkbox"></span>
+                    <span style="letter-spacing: 1px; font-weight: 600;">This order is a luxury gift</span>
+                </label>
+                <div id="giftMessageWrapper">
+                    <textarea id="giftMessageInput" rows="2" placeholder="Write your personalized gift message here..."></textarea>
                 </div>
+            </div>
 
-                <div class="cart-form-group">
-                    <label><i class="fas fa-ticket-alt"></i> Offers & Coupons</label>
-                    <div class="coupon-input-wrapper">
-                        <input type="text" id="couponInput" placeholder="Enter coupon code...">
-                        <button id="applyCouponBtn">Apply</button>
-                    </div>
-                    <p id="couponStatusMessage"></p>
-                    <div class="coupon-helper-tags" id="couponHelpersGroup"></div>
+            <div class="cart-form-group">
+                <label><i class="fas fa-ticket-alt"></i> Offers & Coupons</label>
+                <div class="coupon-input-wrapper">
+                    <input type="text" id="couponInput" placeholder="Enter coupon code...">
+                    <button id="applyCouponBtn">Apply</button>
                 </div>
+                <p id="couponStatusMessage"></p>
+                <div class="coupon-helper-tags" id="couponHelpersGroup"></div>
+            </div>
 
-                <div id="cartTotalQty" class="cart-totals-box"></div>
-                
-                <button id="checkoutBtn" class="btn-luxury checkout-action-btn" onclick="openInvoiceScreen()" style="width: 100%; background: var(--purple-primary); border: 1px solid var(--purple-primary); color: #ffffff; padding: 16px; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;">
-                    <i class="fas fa-lock"></i> Secure Checkout Panel
-                </button>
+            <div id="cartTotalQty" class="cart-totals-box"></div>
+            
+            <button id="checkoutBtn" class="btn-luxury checkout-action-btn" onclick="openInvoiceScreen()">
+                <i class="fas fa-lock"></i> Secure Checkout Panel
+            </button>
 
-            </div> 
         </div> 
     </div> 
+    
     <div id="cartOverlay"></div>
     <div id="wishlistDrawer">
         <div class="cart-header">
