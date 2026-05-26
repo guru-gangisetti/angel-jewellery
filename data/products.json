@@ -40,6 +40,14 @@
       "price": 236,
       "image": "images/56447.jpg",
       "badge": "New In"
+    },
+    {
+      "id": 2333,
+      "title": "Excellent Haram",
+      "category": "rings",
+      "price": 33332,
+      "image": "images/666eb5c9-b6e8-417e-a649-df1004111bc1.webp",
+      "badge": "New In"
     }
   ]
 }
