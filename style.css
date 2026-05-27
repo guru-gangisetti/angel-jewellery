@@ -42,7 +42,7 @@ img { max-width: 100%; display: block; }
 .gold-text { color: var(--purple-primary); font-weight: 600; }
 
 /* --- TIERED LUXURY HEADER NAVIGATION --- */
-header { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; padding: 24px 0; background: var(--bg-dark); transition: var(--transition); border-bottom: 1px solid var(--border-subtle); }
+header { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; padding: 14px 0; background: var(--bg-dark); transition: var(--transition); border-bottom: 1px solid var(--border-subtle); }
 header.scrolled { padding: 12px 0; box-shadow: 0 4px 30px rgba(32, 44, 85, 0.04); backdrop-filter: blur(15px); background: rgba(255, 255, 255, 0.96); }
 .nav-container { display: flex; justify-content: space-between; align-items: center; }
 

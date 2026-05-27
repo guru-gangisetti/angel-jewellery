@@ -976,15 +976,36 @@ function closeTrackingScreenOverlay() {
 // =========================================================================
 // ANGEL JEWELLERY — ADMINISTRATIVE CONSOLE WITH DATA SEGREGATION TABS
 // =========================================================================
+// =========================================================================
+// ANGEL JEWELLERY — SECURE ADMINISTRATIVE AUTHENTICATION ENTRY GATE
+// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
     
+    // ➔ THE GATEKEEPER PHRASE: Set your master operational passkey string here
+    const MASTER_ADMIN_SECRET_KEY = "1234"; 
+
+    // Present a clean browser entry validation block
+    const inputtedPasskeyAttempt = prompt("🔒 Access Restricted: Enter Administrative Passcode:");
+
+    // Security Fallback: Exit instantly if the user clicks 'Cancel' or leaves it empty
+    if (inputtedPasskeyAttempt === null) return;
+
+    // Strict Handshake Validation Check
+    if (inputtedPasskeyAttempt.trim() !== MASTER_ADMIN_SECRET_KEY) {
+        alert("❌ Security Alert: Invalid administrative credentials provided.");
+        return; // Halt system compilation immediately
+    }
+
+    // ➔ KEY VALIDATION SUCCESSFUL: Run your native spreadsheet database extraction loops
     const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
     const statusMsg = document.getElementById('adminConsoleStatus');
+    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     
-    if (!adminOverlay || !statusMsg) return;
+    if (!adminOverlay || !statusMsg || !ordersContainer) return;
     
-    statusMsg.innerText = "Extracting complete operational transaction matrix from Google server...";
+    ordersContainer.innerHTML = ""; 
+    statusMsg.innerText = "Fetching all orders...";
     adminOverlay.style.display = 'flex';
 
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi")
@@ -993,10 +1014,7 @@ function openAdminMasterConsole(event) {
             return response.json();
         })
         .then(allOrdersArray => {
-            // Cache the raw dataset row objects for persistent filtering use
             adminOrdersCache = allOrdersArray || [];
-            
-            // Run the interface text updates and render fields
             renderSegregatedAdminOrders();
         })
         .catch(err => {
@@ -1004,7 +1022,6 @@ function openAdminMasterConsole(event) {
             statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate spreadsheet rows.";
         });
 }
-
 // ➔ NEW INTERFACE CONTROLLER: Route tab button toggles smoothly
 function switchAdminConsoleTab(targetTabKey) {
     currentAdminActiveTab = targetTabKey;
