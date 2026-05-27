@@ -49,8 +49,67 @@ header.scrolled { padding: 12px 0; box-shadow: 0 4px 30px rgba(32, 44, 85, 0.04)
 .logo img { height: 60px; width: auto; transition: var(--transition); }
 header.scrolled .logo img { height: 45px; }
 
+/* =========================================================================
+   ANGEL JEWELLERY — GRADIENT BRANDING TYPOGRAPHY HOOKS
+   ========================================================================= */
+.logo-brand-anchor {
+    display: flex;
+    align-items: center;
+    gap: 14px; /* Creates clean proportional spacing beside logo graphic */
+    text-decoration: none !important;
+    transition: transform 0.3s ease;
+}
+
+.logo-brand-anchor:hover {
+    transform: scale(1.02); /* Elegant subtle hover lift gesture */
+}
+
+.brand-typography-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3.5px; /* Recreates high-fashion editorial vector spacing */
+    line-height: 1;
+    white-space: nowrap;
+    
+    /* ➔ THE METALLIC MULTI-TONE GRADIENT MATRIX */
+    background: linear-gradient(
+        135deg, 
+        #d4af37 0%,   /* Rich Luxury Burnished Gold */
+        #b8860b 25%,  /* Deep Deep Gold Accent Shading */
+        #ff1493 55%,  /* High-Fashion Deep Pink Glow */
+        #4b0082 85%,  /* Deep Royal Velvet Indigo Purple */
+        #202c55 100%  /* Core Identity Deep Midnight Sapphire Base */
+    );
+    
+    /* Enforces clipping mask behavior patterns across text vector lines */
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-fill-color: transparent !important;
+    
+    /* Anti-aliasing text optimization smoothing anchors */
+    -webkit-font-smoothing: antialiased;
+    filter: drop-shadow(0px 2px 4px rgba(32, 44, 85, 0.03));
+}
+
+/* =========================================================================
+   RESPONSIVE SCALING ADAPTATIONS — MOBILE VIEWPORTS
+   ========================================================================= */
+@media (max-width: 768px) {
+    .logo-brand-anchor {
+        gap: 8px; /* Restricts padding margin leaks on small viewport rims */
+    }
+    
+    .brand-typography-title {
+        font-size: 1.15rem !important; /* Dynamically downscales font volume to prevent nav row breakage */
+        letter-spacing: 1.5px !important;
+    }
+}
+
 .nav-menu { display: flex; gap: 40px; }
-.nav-link { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--text-dark-primary); position: relative; }
+.nav-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--text-dark-primary); position: relative; }
 .nav-link::after { content: ''; position: absolute; bottom: -6px; left: 0; width: 0; height: 2px; background: var(--pink-accent); transition: var(--transition); }
 .nav-link:hover::after { width: 100%; }
 .nav-link:hover { color: var(--pink-accent); }
@@ -90,7 +149,7 @@ header.scrolled .logo img { height: 45px; }
 .filter-btn {
     background: var(--bg-surface); 
     border: 1px solid var(--border-subtle); 
-    color: var(--text-muted);
+    color: var(--text-dark-primary);
     padding: 8px 22px; 
     font-family: var(--font-body); 
     font-size: 0.75rem; 
@@ -256,7 +315,7 @@ header.scrolled .logo img { height: 45px; }
 .cart-item-row { display: flex; gap: 16px; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-subtle); margin: 0; position: relative; }
 .cart-item-row img { width: 64px; height: 64px; object-fit: cover; border: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 4px; }
 .cart-item-title { font-size: 0.88rem; font-family: var(--font-body); font-weight: 500; color: var(--text-dark-primary); margin-bottom: 2px; text-align: left; }
-.cart-item-meta { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+.cart-item-meta { font-size: 0.7rem; color: var(--text-dark-primary); text-transform: uppercase; letter-spacing: 1px; text-align: left; }
 .cart-item-price { font-size: 0.9rem; color: var(--purple-primary); font-weight: 600; margin-top: 2px; text-align: left; }
 
 .cart-item-controls { display: flex; align-items: center; gap: 14px; margin-top: 8px; font-size: 0.75rem; background: var(--bg-surface); width: fit-content; padding: 4px 12px; border: 1px solid var(--border-subtle); border-radius: 4px; }
@@ -378,7 +437,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px 12px; }
     .product-title { font-size: 0.85rem; min-height: 34px; }
     .product-price { font-size: 0.95rem; }
-    .btn-order-wa { padding: 9px 0; font-size: 0.65rem; }
+    .btn-order-wa { padding: 9px 0; font-size: 0.6rem; }
     
     .product-actions-overlay { bottom: 0; opacity: 1; background: rgba(255,255,255,0.95); padding: 8px; gap: 6px; }
     .btn-mini-action { padding: 6px 0; font-size: 0.6rem; }

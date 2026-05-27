@@ -18,9 +18,15 @@
 
     <header id="header">
         <div class="container nav-container">
-            <a href="#" class="logo">
-                <img src="angel-logo.png" alt="Angel Jewellery Luxury Logo">
-            </a>
+           <div class="logo-branding-container">
+                <a href="index.html" class="logo-brand-anchor">
+                    <div class="logo">
+                        <img src="angel-logo.png" alt="Angel Jewellery Masterpiece Identity">
+                    </div>
+                    
+                    <span class="brand-typography-title">Angel Jewellery</span>
+                </a>
+            </div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#" class="nav-link">Home</a></li>
                 <li><a href="#productGrid" class="nav-link nav-link-catalog">Full Catalog</a></li>
@@ -161,7 +167,7 @@
                 </div>
             </div>
 
-            <div class="cart-form-group">
+            <!-- <div class="cart-form-group">
                 <label class="gift-checkbox-container">
                     <input type="checkbox" id="giftCheckbox">
                     <span class="custom-checkbox"></span>
@@ -170,7 +176,7 @@
                 <div id="giftMessageWrapper" style="display: none;">
                     <textarea id="giftMessageInput" rows="2" placeholder="Write your personalized gift message here..."></textarea>
                 </div>
-            </div>
+            </div> -->
 
             <div class="cart-form-group">
                 <label><i class="fas fa-ticket-alt"></i> Offers & Coupons</label>
@@ -205,7 +211,7 @@
     <section class="story-section-wrapper" id="story">
         <div class="container story-grid">
             <div class="story-image-pane">
-                <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800" alt="Crafting Angel Jewellery">
+                <img src="assets/our-story.png" alt="Crafting Angel Jewellery">
             </div>
             <div class="story-text-pane">
                 <span class="story-tagline">The Heritage of Elegance</span>
@@ -229,7 +235,7 @@
             <h2 style="font-size: 2rem; font-weight: 600; color: var(--purple-primary); margin: 0 0 15px 0;">Track Your Order</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 450px; margin: 0 auto 30px auto; line-height: 1.5;">Input your registered contact mobile number to compile your secure digital receipt metrics and payment records.</p>
             <div style="display: flex; gap: 10px; margin-bottom: 25px; box-sizing: border-box; width: 100%;">
-                <input type="tel" id="trackingPhoneInput" placeholder="Enter Contact Number (e.g. 9290066290)" style="flex: 1; padding: 14px 18px; background: #f9f9fb; border: 1px solid #e8e8ef; color: #111116; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; outline: none;">
+                <input type="tel" id="trackingPhoneInput" placeholder="Enter Contact Number" style="flex: 1; padding: 14px 18px; background: #f9f9fb; border: 1px solid #e8e8ef; color: #111116; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; outline: none;">
                 <button onclick="executeLiveOrderTrackingSearch()" style="background: var(--purple-primary); color: #fff; border: none; padding: 14px 28px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;">Search</button>
             </div>
             <p id="trackingStatusMessage" style="display: none; font-size: 0.85rem; margin-bottom: 25px; font-weight: 600;"></p>

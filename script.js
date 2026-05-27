@@ -217,10 +217,10 @@ function updateCartUI() {
         progressBarFill.style.width = `${structuralPercentage}%`;
         
         if (grandSubtotal >= FREE_SHIPPING_THRESHOLD) {
-            progressText.innerHTML = `✨ <span style="color:#25d366; font-weight:600;">Premium Shipping Unlocked!</span> Free Insured Courier Delivery`;
+            progressText.innerHTML = `✨ <span style="color:#25d366; font-weight:600;">Free Shipping Unlocked!</span>`;
         } else {
             const gapAmount = FREE_SHIPPING_THRESHOLD - grandSubtotal;
-            progressText.innerHTML = `Add <span style="color:var(--pink-accent); font-weight:600;">${formatCurrency(gapAmount)}</span> more for Free Insured Delivery`;
+            progressText.innerHTML = `Add <span style="color:var(--pink-accent); font-weight:600;">${formatCurrency(gapAmount)}</span> more for Free Delivery`;
         }
     }
     
