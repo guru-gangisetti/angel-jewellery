@@ -8,6 +8,7 @@ let wishlistMemory = [];
 let adminOrdersCache = [];       
 let currentAdminActiveTab = "pending";
 let activeDiscount = { code: "", type: "", value: 0 };
+let adminConsoleSearchQueryString = "";
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
 
@@ -798,6 +799,9 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     document.getElementById('confWhatsAppBtn').onclick = () => {
         window.open(generatedLink, '_blank');
     };
+
+    // ➔ NEW: Extract raw item image paths and combine them with commas for sheet columns
+    const orderImageUrlsString = shoppingCart.map(item => item.image || '').filter(url => url !== '').join(', ');
     
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
         method: "POST",
@@ -813,6 +817,10 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
                     "Phone": phone,
                     "Address": address,
                     "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
+                    
+                    // ➔ NEW COLUMN LOG: Added Order Images to data payload properties
+                    "Order Images": orderImageUrlsString,
+                    
                     "Total Paid": formatCurrency(finalTotalCost),
                     "Status": "Paid"
                 }
@@ -1040,38 +1048,99 @@ function switchAdminConsoleTab(targetTabKey) {
     renderSegregatedAdminOrders();
 }
 
-// ➔ NEW ENGINE CORE: Separates data rows and builds cards dynamically
+function handleAdminConsoleSearch(queryValue) {
+    adminConsoleSearchQueryString = queryValue.trim().toLowerCase();
+    renderSegregatedAdminOrders();
+}
+
+function copyShippingLabelToClipboard(name, phone, address, buttonElement) {
+    const formattedLabelText = `CONSIGNEE: ${name}\nPHONE: ${phone}\nADDRESS: ${address}`;
+    
+    navigator.clipboard.writeText(formattedLabelText).then(() => {
+        const originalButtonHtml = buttonElement.innerHTML;
+        buttonElement.style.background = "#25d366";
+        buttonElement.style.borderColor = "#25d366";
+        buttonElement.style.color = "#ffffff";
+        buttonElement.innerHTML = `<i class="fas fa-check"></i> Copied!`;
+        
+        setTimeout(() => {
+            buttonElement.style.background = "transparent";
+            buttonElement.style.borderColor = "var(--border-subtle, #e8e8ef)";
+            buttonElement.style.color = "var(--text-dark-primary, #111116)";
+            buttonElement.innerHTML = originalButtonHtml;
+        }, 2000);
+    }).catch(err => console.error("Clipboard copy failed:", err));
+}
+
 function renderSegregatedAdminOrders() {
     const statusMsg = document.getElementById('adminConsoleStatus');
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     const pendingCountSpan = document.getElementById('adminPendingCount');
     const shippedCountSpan = document.getElementById('adminShippedCount');
+    
+    const pendingValueHeading = document.getElementById('analyticsPendingValue');
+    const shippedValueHeading = document.getElementById('analyticsShippedValue');
 
     if (!ordersContainer || !adminOrdersCache) return;
 
     ordersContainer.innerHTML = "";
 
-    // 1. Separate the dataset pool cleanly based on row values
+    // 1. Calculate Complete Operational Balances Across the Entire Cache Pool
+    let accumulatedPendingSum = 0;
+    let accumulatedShippedSum = 0;
+
+    adminOrdersCache.forEach(order => {
+        // Strip non-numeric characters from your Total Paid string (e.g., "Rs. 15,500" -> 15500)
+        const numericValue = parseFloat((order['Total Paid'] || '').replace(/[^0-9.]/g, '')) || 0;
+        const statusStr = (order['Status'] || '').trim().toLowerCase();
+        
+        if (statusStr === 'shipped') {
+            accumulatedShippedSum += numericValue;
+        } else {
+            accumulatedPendingSum += numericValue;
+        }
+    });
+
+    // Render currency totals to your analytics deck slots
+    if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
+    if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
+
+    // 2. Separate data records based on core fulfillment statuses
     const pendingOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() !== 'shipped');
     const shippedOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() === 'shipped');
 
-    // 2. Refresh tab counters dynamically
     if (pendingCountSpan) pendingCountSpan.innerText = pendingOrdersList.length;
     if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
 
-    // 3. Determine which list variant is currently being displayed
-    const targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
+    let targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
+
+    // 3. APPLY SEARCH FILTERS IN REAL-TIME IF ACTIVE
+    if (adminConsoleSearchQueryString) {
+        targetDisplayDataset = targetDisplayDataset.filter(order => {
+            const clientName = (order['Client Name'] || '').toLowerCase();
+            const phoneNum = (order['Phone'] || '').toLowerCase();
+            const paymentId = (order['Payment ID'] || '').toLowerCase();
+            const destination = (order['Address'] || '').toLowerCase();
+            
+            return clientName.includes(adminConsoleSearchQueryString) || 
+                   phoneNum.includes(adminConsoleSearchQueryString) || 
+                   paymentId.includes(adminConsoleSearchQueryString) ||
+                   destination.includes(adminConsoleSearchQueryString);
+        });
+    }
 
     if (statusMsg) {
-        statusMsg.innerHTML = `Viewing <span style="color:var(--pink-accent); font-weight:700; text-transform:uppercase;">${currentAdminActiveTab}</span> stack. Total rows matched: <strong>${targetDisplayDataset.length}</strong>`;
+        statusMsg.innerHTML = `Viewing <span style="color:var(--pink-accent); font-weight:700; text-transform:uppercase;">${currentAdminActiveTab}</span> matrix. Total rows matched: <strong>${targetDisplayDataset.length}</strong>`;
     }
 
     if (targetDisplayDataset.length === 0) {
-        ordersContainer.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:var(--bg-surface); border-radius:4px; border:1px dashed var(--border-subtle)">No transactions recorded under this filter tab checkpoint.</div>`;
+        ordersContainer.innerHTML = `
+            <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:#f9f9fb; border-radius:6px; border:1px dashed var(--border-subtle)">
+                No orders match your active filter settings.
+            </div>`;
         return;
     }
 
-    // 4. Chronologically layout row nodes
     const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
 
     ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
@@ -1090,36 +1159,106 @@ function renderSegregatedAdminOrders() {
         let shippedActionButtonHTML = "";
         if (!isShipped) {
             shippedActionButtonHTML = `
-                <button onclick="updateGoogleSheetRowStatus('${order['Payment ID']}', this)" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 6px 12px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">
+                <button onclick="updateGoogleSheetRowStatus('${order['Payment ID']}', this)" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 8px 14px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;">
                     <i class="fas fa-shipping-fast"></i> Mark Shipped
                 </button>
             `;
         }
 
-        return `
-        <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start; text-align:left; box-shadow: 0 4px 12px rgba(0,0,0,0.01);">
-            <div style="flex: 1; min-width: 250px;">
-                <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace; font-weight:600;">Ref: ${order['Payment ID']}</span>
-                <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 600; color: var(--purple-primary);">${order['Client Name']}</h4>
-                <p style="margin: 0 0 4px 0; font-size: 0.88rem; color: #111116; font-weight:500;"><strong style="color:var(--pink-accent);">Items:</strong> ${order['Order Items']}</p>
-                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); font-weight:500;"><strong style="color:var(--text-dark-primary);">Ship To:</strong> ${order['Address']}</p>
-            </div>
-            
-            <div style="text-align: right; min-width: 170px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                <span style="font-size: 0.75rem; color: var(--text-muted); display:block; font-weight:600;">${order['Date']}</span>
-                <span style="font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); display:block;">${order['Total Paid']}</span>
-                
-                <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
-                    ${displayStatus}
-                </span>
+        const itemNamesArray = (order['Order Items'] || '').split(',').map(str => str.trim());
+        const itemImagesArray = (order['Order Images'] || '').split(',').map(str => str.trim());
 
-                <div style="display: flex; gap: 6px; margin-top: 4px; align-items: center;">
+        const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
+            if (!itemString) return '';
+            let parsedTitle = itemString;
+            let parsedQuantity = "1";
+            const qtyMatch = itemString.match(/\(x(\d+)\)/);
+            if (qtyMatch) {
+                parsedTitle = itemString.replace(qtyMatch[0], '').trim();
+                parsedQuantity = qtyMatch[1];
+            }
+            const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
+
+            return `
+                <tr style="border-bottom: 1px solid #f1f1f5;">
+                    <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
+                        <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                            <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                        </div>
+                    </td>
+                    <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
+                        ${parsedTitle}
+                    </td>
+                    <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
+                        ${parsedQuantity}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Clean values for safe insertion into the copy utility parameter block
+        const safeName = (order['Client Name'] || '').replace(/'/g, "\\'");
+        const safePhone = (order['Phone'] || '').replace(/'/g, "\\'");
+        const safeAddress = (order['Address'] || '').replace(/'/g, "\\'").replace(/\n/g, " ");
+
+        return `
+        <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 24px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+            
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 10px;">
+                <div>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 4px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
+                        Reference Transaction ID: <strong style="color: var(--purple-primary);">${order['Payment ID']}</strong>
+                    </span>
+                    <h4 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
+                        ${order['Client Name']}
+                    </h4>
+                </div>
+                <div style="text-align: right; display: flex; gap: 12px; align-items: center;">
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.78rem; color: var(--text-muted); display: block; font-weight: 600;">${order['Date']}</span>
+                        <span style="font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); display: block; margin-top: 2px;">${order['Total Paid']}</span>
+                    </div>
+                    <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.68rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
+                        ${displayStatus}
+                    </span>
+                </div>
+            </div>
+
+            <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
+                <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                    <thead>
+                        <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
+                            <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
+                            <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece Title Description</th>
+                            <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${inventoryRowsHTML}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #fafafa; padding: 12px 18px; border-radius: 6px; border: 1px solid #e8e8ef; gap: 15px;">
+                <div style="font-size: 0.82rem; color: #111116; font-weight: 500; flex: 1; min-width: 250px;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--pink-accent); margin-right: 6px;"></i>
+                    <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${order['Address']}
+                    <span style="margin: 0 8px; color: #ccc;">|</span>
+                    <i class="fas fa-phone-alt" style="color: var(--purple-primary); margin-right: 4px; font-size: 0.78rem;"></i> ${order['Phone']}
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle); padding: 8px 14px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Copy Shipping Address Tag to Clipboard">
+                        <i class="far fa-copy"></i> Copy Label
+                    </button>
+                    
                     <div id="shipped-action-slot-${order['Payment ID']}">${shippedActionButtonHTML}</div>
-                    <a href="${whatsappUpdateLink}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 6px 10px; font-size: 0.65rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display:inline-flex; align-items:center; gap:4px;" title="Send Status Alert via WhatsApp">
-                        <i class="fab fa-whatsapp"></i> Update Alert
+                    <a href="${whatsappUpdateLink}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 8px 14px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Send Status Alert via WhatsApp">
+                        <i class="fab fa-whatsapp" style="font-size: 0.85rem;"></i> Update Alert
                     </a>
                 </div>
             </div>
+
         </div>
         `;
     }).join('');
