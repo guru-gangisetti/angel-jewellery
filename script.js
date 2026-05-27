@@ -5,6 +5,8 @@
 let productDatabase = [];    
 let shoppingCart = [];       
 let wishlistMemory = [];     
+let adminOrdersCache = [];       
+let currentAdminActiveTab = "pending";
 let activeDiscount = { code: "", type: "", value: 0 };
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
@@ -856,7 +858,7 @@ function executeLiveOrderTrackingSearch() {
     
     statusMsg.style.display = "block";
     statusMsg.style.color = "var(--purple-primary)";
-    statusMsg.innerText = "Compiling live records archive from ledger data slots...";
+    statusMsg.innerText = "Searching...";
 
     const searchApiEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/search?Phone=${encodeURIComponent(plainPhoneNumberInput)}`;
 
@@ -873,14 +875,40 @@ function executeLiveOrderTrackingSearch() {
             }
 
             statusMsg.style.color = "#25d366";
-            statusMsg.innerText = `Discovered ${matchingOrdersArray.length} authenticated reservation order file(s):`;
+            statusMsg.innerText = `Found ${matchingOrdersArray.length} order(s):`;
+            
+            resultsContainer.innerHTML = matchingOrdersArray.map(order => {
+                // Read row status parameter values safely from your sheet row array values
+                const rawSheetStatus = (order['Status'] || '').trim().toLowerCase();
+                
+                // ➔ TWO-STAGE CHECKPOINT FILTER MATRIX:
+                // If it explicitly equals "shipped", lock it in. Otherwise, fall back to "Order Placed".
+                let displayStatusText = "Order Placed";
+                let badgeBgColor = "rgba(32, 44, 85, 0.08)"; // Elegant corporate navy tint
+                let badgeTextColor = "var(--purple-primary)";
 
-            resultsContainer.innerHTML = matchingOrdersArray.map(order => `
+                if (rawSheetStatus === 'shipped') {
+                    displayStatusText = "Shipped";
+                    badgeBgColor = "rgba(255, 20, 147, 0.1)"; // High-fashion vibrant pink accent tint
+                    badgeTextColor = "var(--pink-accent)";
+                }
+
+                return `
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-muted); font-weight:600;">
                         <span>Ref ID: <strong style="color: var(--purple-primary); font-family: monospace;">${order['Payment ID']}</strong></span>
                         <span>${order['Date']}</span>
                     </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; background: #ffffff; padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 4px;">
+                        <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">
+                            <i class="fas fa-box-open" style="margin-right: 6px; color: var(--purple-primary);"></i> Order Status
+                        </span>
+                        <span style="background: ${badgeBgColor}; color: ${badgeTextColor}; font-size: 0.7rem; padding: 6px 14px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s ease;">
+                            ${displayStatusText}
+                        </span>
+                    </div>
+
                     <div style="margin-bottom: 15px;">
                         <h4 style="margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px; font-weight:700;">Masterpieces Secured</h4>
                         <p style="margin: 0; color: #111116; font-size: 0.95rem; font-weight: 500; line-height: 1.5;">${order['Order Items']}</p>
@@ -889,16 +917,13 @@ function executeLiveOrderTrackingSearch() {
                         <p style="margin: 0 0 4px 0;"><span style="color: var(--text-muted);">Consignee:</span> ${order['Client Name']}</p>
                         <p style="margin: 0;"><span style="color: var(--text-muted);">Destination:</span> ${order['Address']}</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted var(--border-subtle); padding-top: 12px; margin-top: 15px;">
-                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Payment Status</span>
-                        <span style="background: rgba(37, 211, 102, 0.1); color: #25d366; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Paid via Gateway</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); border-top:1px solid var(--border-subtle); padding-top:10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top:1px solid var(--border-subtle); padding-top:10px; margin-top: 15px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary);">
                         <span>Settled Balance:</span>
                         <span>${order['Total Paid']}</span>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         })
         .catch(err => {
             console.error("Live ledger sync execution drop:", err);
@@ -948,16 +973,17 @@ function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — ADMINISTRATIVE CONSOLE WITH DATA SEGREGATION TABS
+// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
     
     const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
     const statusMsg = document.getElementById('adminConsoleStatus');
-    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     
-    if (!adminOverlay || !statusMsg || !ordersContainer) return;
+    if (!adminOverlay || !statusMsg) return;
     
-    ordersContainer.innerHTML = ""; 
     statusMsg.innerText = "Extracting complete operational transaction matrix from Google server...";
     adminOverlay.style.display = 'flex';
 
@@ -967,36 +993,119 @@ function openAdminMasterConsole(event) {
             return response.json();
         })
         .then(allOrdersArray => {
-            if (!allOrdersArray || allOrdersArray.length === 0) {
-                statusMsg.innerText = "The database file contains zero active order logs.";
-                return;
-            }
-
-            statusMsg.innerHTML = `Connected. Total Orders Processed: <span style="color:#25d366; font-weight:700;">${allOrdersArray.length}</span>`;
-            const chronologicallyReversedStack = allOrdersArray.reverse();
-
-            ordersContainer.innerHTML = chronologicallyReversedStack.map(order => `
-                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start; text-align:left;">
-                    <div style="flex: 1; min-width: 250px;">
-                        <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace; font-weight:600;">Ref: ${order['Payment ID']}</span>
-                        <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 600; color: var(--purple-primary);">${order['Client Name']}</h4>
-                        <p style="margin: 0 0 4px 0; font-size: 0.88rem; color: #111116; font-weight:500;"><strong style="color:var(--pink-accent);">Items:</strong> ${order['Order Items']}</p>
-                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); font-weight:500;"><strong style="color:var(--text-dark-primary);">Ship To:</strong> ${order['Address']}</p>
-                    </div>
-                    <div style="text-align: right; min-width: 150px; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); display:block; margin-bottom:10px; font-weight:600;">${order['Date']}</span>
-                        <span style="font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); display:block; margin-bottom:12px;">${order['Total Paid']}</span>
-                        <a href="https://wa.me/${order['Phone'].replace(/[^0-9]/g, '')}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 6px 14px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display:inline-flex; align-items:center; gap:6px;">
-                            <i class="fab fa-whatsapp"></i> Chat Client
-                        </a>
-                    </div>
-                </div>
-            `).join('');
+            // Cache the raw dataset row objects for persistent filtering use
+            adminOrdersCache = allOrdersArray || [];
+            
+            // Run the interface text updates and render fields
+            renderSegregatedAdminOrders();
         })
         .catch(err => {
             console.error("Admin dashboard runtime drop:", err);
             statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate spreadsheet rows.";
         });
+}
+
+// ➔ NEW INTERFACE CONTROLLER: Route tab button toggles smoothly
+function switchAdminConsoleTab(targetTabKey) {
+    currentAdminActiveTab = targetTabKey;
+    
+    const pendingBtn = document.getElementById('adminTabPendingBtn');
+    const shippedBtn = document.getElementById('adminTabShippedBtn');
+    
+    if (targetTabKey === 'pending') {
+        pendingBtn.style.cssText = "background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+        shippedBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+    } else {
+        shippedBtn.style.cssText = "background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+        pendingBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+    }
+    
+    renderSegregatedAdminOrders();
+}
+
+// ➔ NEW ENGINE CORE: Separates data rows and builds cards dynamically
+function renderSegregatedAdminOrders() {
+    const statusMsg = document.getElementById('adminConsoleStatus');
+    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
+    const pendingCountSpan = document.getElementById('adminPendingCount');
+    const shippedCountSpan = document.getElementById('adminShippedCount');
+
+    if (!ordersContainer || !adminOrdersCache) return;
+
+    ordersContainer.innerHTML = "";
+
+    // 1. Separate the dataset pool cleanly based on row values
+    const pendingOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() !== 'shipped');
+    const shippedOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() === 'shipped');
+
+    // 2. Refresh tab counters dynamically
+    if (pendingCountSpan) pendingCountSpan.innerText = pendingOrdersList.length;
+    if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
+
+    // 3. Determine which list variant is currently being displayed
+    const targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
+
+    if (statusMsg) {
+        statusMsg.innerHTML = `Viewing <span style="color:var(--pink-accent); font-weight:700; text-transform:uppercase;">${currentAdminActiveTab}</span> stack. Total rows matched: <strong>${targetDisplayDataset.length}</strong>`;
+    }
+
+    if (targetDisplayDataset.length === 0) {
+        ordersContainer.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:var(--bg-surface); border-radius:4px; border:1px dashed var(--border-subtle)">No transactions recorded under this filter tab checkpoint.</div>`;
+        return;
+    }
+
+    // 4. Chronologically layout row nodes
+    const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
+
+    ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
+        const rawStatus = (order['Status'] || '').trim();
+        const isShipped = rawStatus.toLowerCase() === 'shipped';
+        
+        const displayStatus = isShipped ? "Shipped" : "Order Placed";
+        const badgeStyle = isShipped 
+            ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
+            : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+
+        const cleanPhone = order['Phone'].replace(/[^0-9]/g, '');
+        const clientMessage = `Hello ${order['Client Name']},\n\nYour Angel Jewellery order (Ref: ${order['Payment ID']}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
+        const whatsappUpdateLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(clientMessage)}`;
+
+        let shippedActionButtonHTML = "";
+        if (!isShipped) {
+            shippedActionButtonHTML = `
+                <button onclick="updateGoogleSheetRowStatus('${order['Payment ID']}', this)" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 6px 12px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">
+                    <i class="fas fa-shipping-fast"></i> Mark Shipped
+                </button>
+            `;
+        }
+
+        return `
+        <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 20px; box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: flex-start; text-align:left; box-shadow: 0 4px 12px rgba(0,0,0,0.01);">
+            <div style="flex: 1; min-width: 250px;">
+                <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px; font-family:monospace; font-weight:600;">Ref: ${order['Payment ID']}</span>
+                <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 600; color: var(--purple-primary);">${order['Client Name']}</h4>
+                <p style="margin: 0 0 4px 0; font-size: 0.88rem; color: #111116; font-weight:500;"><strong style="color:var(--pink-accent);">Items:</strong> ${order['Order Items']}</p>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); font-weight:500;"><strong style="color:var(--text-dark-primary);">Ship To:</strong> ${order['Address']}</p>
+            </div>
+            
+            <div style="text-align: right; min-width: 170px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display:block; font-weight:600;">${order['Date']}</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); display:block;">${order['Total Paid']}</span>
+                
+                <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
+                    ${displayStatus}
+                </span>
+
+                <div style="display: flex; gap: 6px; margin-top: 4px; align-items: center;">
+                    <div id="shipped-action-slot-${order['Payment ID']}">${shippedActionButtonHTML}</div>
+                    <a href="${whatsappUpdateLink}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 6px 10px; font-size: 0.65rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display:inline-flex; align-items:center; gap:4px;" title="Send Status Alert via WhatsApp">
+                        <i class="fab fa-whatsapp"></i> Update Alert
+                    </a>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
 }
 
 function closeAdminMasterConsole() {
@@ -1243,3 +1352,62 @@ function renderTrendingSection() {
         });
     });
 })();
+
+// =========================================================================
+// ANGEL JEWELLERY — BACKGROUND CLOUD REALTIME GOOGLE SHEET STATUS UPDATER
+// =========================================================================
+function updateGoogleSheetRowStatus(paymentId, buttonElement) {
+    if (!paymentId || !buttonElement) return;
+
+    // Change button text visually to provide processing feedback
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Syncing...`;
+
+    // Target the precise row using its unique Razorpay Payment ID column parameter value match
+    const sheetDbUpdateEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/Payment%20ID/${encodeURIComponent(paymentId)}`;
+
+    fetch(sheetDbUpdateEndpoint, {
+        method: 'PATCH', // Using PATCH to update only the designated Status cell box
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            data: {
+                "Status": "Shipped" // Forces the spreadsheet cell box target value update
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(payloadResult => {
+        if (payloadResult && payloadResult.updated >= 1) {
+            console.log(`Sheet ledger successfully synchronized for ID: ${paymentId}`);
+
+            // 1. Instantly transition the console badge UI layer from blue to pink
+            const cachedOrderObjectIndex = adminOrdersCache.findIndex(o => o['Payment ID'] === paymentId);
+            if (cachedOrderObjectIndex > -1) {
+                adminOrdersCache[cachedOrderObjectIndex]['Status'] = 'Shipped';
+            }
+            setTimeout(renderSegregatedAdminOrders, 400);
+
+            // 2. Remove the "Mark Shipped" button from view since action task completed
+            const buttonSlot = document.getElementById(`shipped-action-slot-${paymentId}`);
+            if (buttonSlot) buttonSlot.innerHTML = "";
+
+            // 3. Optional Toast Notification feedback alert trigger
+            const dynamicToast = document.createElement('div');
+            dynamicToast.className = "copied-toast";
+            dynamicToast.innerHTML = `<i class="fas fa-check-circle"></i> Ledger Status Synced!`;
+            document.body.appendChild(dynamicToast);
+            setTimeout(() => { dynamicToast.remove(); }, 2400);
+
+        } else {
+            throw new Error("Spreadsheet validation key row mapping verification reject error.");
+        }
+    })
+    .catch(err => {
+        console.error("Critical spreadsheet record edit synchronization error dropped:", err);
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Retry`;
+        alert("Failed to update status on server cloud. Verify network and try again.");
+    });
+}
