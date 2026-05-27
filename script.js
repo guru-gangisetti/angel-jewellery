@@ -1130,11 +1130,11 @@ function closeAdminMasterConsole() {
 }
 
 // =========================================================================
-// ANGEL JEWELLERY — MASTER RUNTIME ENGINE BANNER CAROUSEL (PAUSE CAPABLE)
+// ANGEL JEWELLERY — BANNER CAROUSEL GLOBAL REACTION CORES (FIXED)
 // =========================================================================
 let currentCarouselActiveIndex = 0;
 let carouselAutoRotationTimerHandle = null;
-let isCarouselAutoPlayPaused = false; 
+let isCarouselAutoPlayPaused = false;
 
 function initializeLuxuryBannerCarousel() {
     const headerElement = document.getElementById('header');
@@ -1223,6 +1223,9 @@ function updateCarouselRenderPosition() {
         dot.style.background = index === currentCarouselActiveIndex ? 'var(--purple-primary)' : '#e8e8ef';
     });
 }
+document.addEventListener("DOMContentLoaded", () => {
+    initializeLuxuryBannerCarousel();
+});
 
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
