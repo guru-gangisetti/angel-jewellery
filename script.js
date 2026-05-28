@@ -847,6 +847,9 @@ function exitConfirmationAndReset() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — CLIENT TRACKING DESK (HIGH-FIDELITY TABLES WITH LIVE STATUS)
+// =========================================================================
 function executeLiveOrderTrackingSearch() {
     const inputField = document.getElementById('trackingPhoneInput');
     const statusMsg = document.getElementById('trackingStatusMessage');
@@ -866,7 +869,14 @@ function executeLiveOrderTrackingSearch() {
     
     statusMsg.style.display = "block";
     statusMsg.style.color = "var(--purple-primary)";
-    statusMsg.innerText = "Searching...";
+    statusMsg.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; gap: 12px;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--purple-primary);"></i>
+            <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; color: var(--text-muted, #777); text-transform: uppercase;">
+                Loading...
+            </span>
+        </div>
+    `;
 
     const searchApiEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/search?Phone=${encodeURIComponent(plainPhoneNumberInput)}`;
 
@@ -883,32 +893,65 @@ function executeLiveOrderTrackingSearch() {
             }
 
             statusMsg.style.color = "#25d366";
-            statusMsg.innerText = `Found ${matchingOrdersArray.length} order(s):`;
-            
+            statusMsg.innerText = `Discovered ${matchingOrdersArray.length} authenticated reservation order file(s):`;
+
             resultsContainer.innerHTML = matchingOrdersArray.map(order => {
-                // Read row status parameter values safely from your sheet row array values
                 const rawSheetStatus = (order['Status'] || '').trim().toLowerCase();
                 
-                // ➔ TWO-STAGE CHECKPOINT FILTER MATRIX:
-                // If it explicitly equals "shipped", lock it in. Otherwise, fall back to "Order Placed".
                 let displayStatusText = "Order Placed";
-                let badgeBgColor = "rgba(32, 44, 85, 0.08)"; // Elegant corporate navy tint
+                let badgeBgColor = "rgba(32, 44, 85, 0.08)"; 
                 let badgeTextColor = "var(--purple-primary)";
 
                 if (rawSheetStatus === 'shipped') {
                     displayStatusText = "Shipped";
-                    badgeBgColor = "rgba(255, 20, 147, 0.1)"; // High-fashion vibrant pink accent tint
+                    badgeBgColor = "rgba(255, 20, 147, 0.1)"; 
                     badgeTextColor = "var(--pink-accent)";
                 }
 
+                // Parse individual items and image token arrays synchronously for the table
+                const itemNamesArray = (order['Order Items'] || '').split(',').map(str => str.trim());
+                const itemImagesArray = (order['Order Images'] || '').split(',').map(str => str.trim());
+
+                // Generate matching customer inventory table content rows
+                const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
+                    if (!itemString) return '';
+                    
+                    let parsedTitle = itemString;
+                    let parsedQuantity = "1";
+                    const qtyMatch = itemString.match(/\(x(\d+)\)/);
+                    if (qtyMatch) {
+                        parsedTitle = itemString.replace(qtyMatch[0], '').trim();
+                        parsedQuantity = qtyMatch[1];
+                    }
+
+                    const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
+
+                    return `
+                        <tr style="border-bottom: 1px solid #f1f1f5;">
+                            <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
+                                <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                                    <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                                </div>
+                            </td>
+                            <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
+                                ${parsedTitle}
+                            </td>
+                            <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
+                                ${parsedQuantity}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
                 return `
-                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-muted); font-weight:600;">
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; font-size: 0.8rem; color: var(--text-muted); font-weight:600; gap: 10px; flex-wrap: wrap;">
                         <span>Ref ID: <strong style="color: var(--purple-primary); font-family: monospace;">${order['Payment ID']}</strong></span>
                         <span>${order['Date']}</span>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; background: #ffffff; padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 4px;">
                         <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">
                             <i class="fas fa-box-open" style="margin-right: 6px; color: var(--purple-primary);"></i> Order Status
                         </span>
@@ -917,15 +960,27 @@ function executeLiveOrderTrackingSearch() {
                         </span>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px; font-weight:700;">Masterpieces Secured</h4>
-                        <p style="margin: 0; color: #111116; font-size: 0.95rem; font-weight: 500; line-height: 1.5;">${order['Order Items']}</p>
+                    <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
+                        <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                            <thead>
+                                <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
+                                    <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
+                                    <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece Title</th>
+                                    <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${inventoryRowsHTML}
+                            </tbody>
+                        </table>
                     </div>
-                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 12px; font-size: 0.85rem; color: var(--text-dark-primary); font-weight:500;">
-                        <p style="margin: 0 0 4px 0;"><span style="color: var(--text-muted);">Consignee:</span> ${order['Client Name']}</p>
-                        <p style="margin: 0;"><span style="color: var(--text-muted);">Destination:</span> ${order['Address']}</p>
+
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; font-size: 0.85rem; color: var(--text-dark-primary); font-weight:500; display: flex; flex-direction: column; gap: 4px;">
+                        <p style="margin: 0;"><span style="color: var(--text-muted); font-weight:600;">Consignee:</span> ${order['Client Name']}</p>
+                        <p style="margin: 0;"><span style="color: var(--text-muted); font-weight:600;">Destination:</span> ${order['Address']}</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top:1px solid var(--border-subtle); padding-top:10px; margin-top: 15px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary);">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 12px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary);">
                         <span>Settled Balance:</span>
                         <span>${order['Total Paid']}</span>
                     </div>
@@ -1013,8 +1068,15 @@ function openAdminMasterConsole(event) {
     if (!adminOverlay || !statusMsg || !ordersContainer) return;
     
     ordersContainer.innerHTML = ""; 
-    statusMsg.innerText = "Fetching all orders...";
     adminOverlay.style.display = 'flex';
+    statusMsg.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: left; padding: 10px 0; gap: 10px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--pink-accent);"></i>
+            <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; color: var(--purple-primary);">
+                Loading...
+            </span>
+        </div>
+    `;
 
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi")
         .then(response => {
@@ -1202,7 +1264,7 @@ function renderSegregatedAdminOrders() {
         const safeAddress = (order['Address'] || '').replace(/'/g, "\\'").replace(/\n/g, " ");
 
         return `
-        <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 24px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+        <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 24px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
             
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 10px;">
                 <div>
@@ -1229,7 +1291,7 @@ function renderSegregatedAdminOrders() {
                     <thead>
                         <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
                             <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
-                            <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece Title Description</th>
+                            <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item</th>
                             <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Quantity</th>
                         </tr>
                     </thead>
@@ -1244,17 +1306,18 @@ function renderSegregatedAdminOrders() {
                     <i class="fas fa-map-marker-alt" style="color: var(--pink-accent); margin-right: 6px;"></i>
                     <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${order['Address']}
                     <span style="margin: 0 8px; color: #ccc;">|</span>
-                    <i class="fas fa-phone-alt" style="color: var(--purple-primary); margin-right: 4px; font-size: 0.78rem;"></i> ${order['Phone']}
                 </div>
                 
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle); padding: 8px 14px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Copy Shipping Address Tag to Clipboard">
                         <i class="far fa-copy"></i> Copy Label
                     </button>
-                    
+                    <a href="tel:${cleanPhone}" style="background: #ffffff; color: var(--purple-primary); border: 1px solid var(--purple-primary); padding: 8px 14px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Place direct phone call to client">
+                        <i class="fas fa-phone-alt"></i> ${order['Phone']}
+                    </a>
                     <div id="shipped-action-slot-${order['Payment ID']}">${shippedActionButtonHTML}</div>
                     <a href="${whatsappUpdateLink}" target="_blank" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 8px 14px; font-size: 0.7rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;" title="Send Status Alert via WhatsApp">
-                        <i class="fab fa-whatsapp" style="font-size: 0.85rem;"></i> Update Alert
+                        <i class="fab fa-whatsapp" style="font-size: 0.85rem;"></i> Chat with Client
                     </a>
                 </div>
             </div>
