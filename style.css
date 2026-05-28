@@ -98,8 +98,35 @@ header.scrolled .logo img { height: 45px; }
    RESPONSIVE SCALING ADAPTATIONS — MOBILE VIEWPORTS
    ========================================================================= */
 @media (max-width: 768px) {
+    /* 1. Force the anchor container to hold structural shape evenly on mobile */
     .logo-brand-anchor {
-        gap: 8px; /* Restricts padding margin leaks on small viewport rims */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important; /* Locks structural margins tightly */
+    }
+
+    /* 2. FORCE THE LOGO MARK TO STAY VISIBLE & SCALE PROPORTIONATELY */
+    .logo-brand-anchor .logo {
+        display: block !important; /* Completely overrides any rogue display: none statements */
+        width: 32px !important;    /* Clean, compact size for mobile navigation bars */
+        height: 32px !important;   /* Matches height to maintain aspect ratio */
+        min-width: 32px !important; /* Prevents flexbox container squishing bugs */
+    }
+
+    .logo-brand-anchor .logo img {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Protects logo symmetry from distortion */
+    }
+
+    /* 3. DYNAMICALLY REDUCE TITLE FONT VOLUMES FOR COMPACT DISPLAY SCREEN RIMS */
+    .brand-typography-title {
+        display: inline-block !important;
+        font-size: 1.05rem !important; /* Scaled down perfectly to prevent double line wrapping */
+        letter-spacing: 1.2px !important; /* Tightens kerning slightly to optimize screen real estate */
+        white-space: nowrap !important;  /* Strict rule keeping branding crisp on a single row line */
     }
     
     .brand-typography-title {
@@ -114,7 +141,7 @@ header.scrolled .logo img { height: 45px; }
 .nav-link:hover::after { width: 100%; }
 .nav-link:hover { color: var(--pink-accent); }
 
-.nav-icons { display: flex; gap: 24px; font-size: 1.2rem; align-items: center; color: var(--purple-primary); }
+.nav-icons { display: flex; gap: 10px; font-size: 1.2rem; align-items: center; color: var(--purple-primary); }
 .nav-icons a { display: flex; align-items: center; justify-content: center; color: var(--purple-primary); }
 .nav-icons a:hover { color: var(--pink-accent); }
 .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--text-dark-primary); }
