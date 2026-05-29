@@ -2,44 +2,195 @@
   "products": [
     {
       "id": 1,
-      "title": "Royal Gold Premium Choker",
+      "title": "Royal Gold Premium Necklace",
       "category": "necklace",
-      "price": 45000,
-      "image": "/images/choker-01.jpg",
+      "price": 2000,
+      "image": "/images/necklace.webp",
       "badge": "trending"
     },
     {
-      "id": 2,
-      "title": "Excellent Gold Bracelet",
-      "category": "bracelets",
-      "price": 1500,
-      "image": "/images/bracelets.jpg",
-      "badge": "sold out"
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225.jpeg",
+      "badge": "trending"
     },
     {
-      "id": 333,
-      "title": "new one",
-      "category": "rings",
-      "price": 4444,
-      "originalPrice": 5000,
-      "image": "/images/angel-logo-bg.png",
+      "id": 5292027,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225-1.jpeg",
+      "badge": "trending"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225-3.jpeg",
+      "badge": "trending"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225-4.jpeg",
+      "badge": "new in"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225-6.jpeg",
+      "badge": "trending"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "necklace",
+      "price": 2500,
+      "image": "/images/necklace-5292026-1225-7.jpeg",
+      "badge": "trending"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Pendent",
+      "price": 2500,
+      "image": "/images/pendent-chains-1.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Pendent",
+      "price": 2500,
+      "image": "/images/pendent-chains-2.jpeg",
       "badge": "sale"
     },
     {
-      "id": 1212,
-      "title": "safsaf",
-      "category": "necklace",
-      "image": "images/ring-03.jpg",
-      "badge": "new in",
-      "price": 234
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Pendent",
+      "price": 2500,
+      "image": "/images/pendent-chains-3.jpeg",
+      "badge": "New In"
     },
     {
-      "id": 65,
-      "title": "Sbdjb",
-      "category": "rings",
-      "price": 236,
-      "image": "images/56447.jpg",
-      "badge": "new in"
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Pendent",
+      "price": 2500,
+      "image": "/images/pendent-chains-4.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Pendent",
+      "price": 2500,
+      "image": "/images/pendent-chains-5.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-2.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-3.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-4.jpeg",
+      "badge": "trending"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-5.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-6.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-7.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-8.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Mini Haram",
+      "price": 2500,
+      "image": "/images/mini-haram-9.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Ear Rings",
+      "price": 250,
+      "image": "/images/earrings-5292026-1227-1.jpeg",
+      "badge": "New In"
+    },{
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Ear Rings",
+      "price": 250,
+      "image": "/images/earrings-5292026-1227.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Ear Rings",
+      "price": 250,
+      "image": "/images/earrings-5292026-1227-2.jpeg",
+      "badge": "New In"
+    },
+    {
+      "id": 5292026,
+      "title": "Royal Lakshmi devi Necklace",
+      "category": "Ear Rings",
+      "price": 250,
+      "image": "/images/earrings-5292026-1227-5.jpeg",
+      "badge": "Sale"
     }
+    
   ]
 }
