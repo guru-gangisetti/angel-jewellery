@@ -9,6 +9,8 @@ let adminOrdersCache = [];
 let currentAdminActiveTab = "pending";
 let activeDiscount = { code: "", type: "", value: 0 };
 let adminConsoleSearchQueryString = "";
+// ➔ THE CRITICAL FIX: Aligned from "All Collection" to "all" to match your tab builder and prevent initial view drops
+let currentSelectedFilterCategoryKey = "all"; 
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
 
@@ -19,26 +21,65 @@ const couponRegistry = {
     "LAUNCH2026": { type: "percentage", value: 15 }
 };
 
+// Ensure the core database array exists globally
+if (typeof productDatabase === 'undefined') {
+     productDatabase = []; 
+}
+
+// Inject standard button transition/hover utility rules cleanly into the runtime context
+if (typeof document !== 'undefined' && !document.getElementById('angelJewelryButtonHoverStyleTag')) {
+    const styleSheetNode = document.createElement("style");
+    styleSheetNode.id = "angelJewelryButtonHoverStyleTag";
+    styleSheetNode.innerHTML = `
+        .btn-order-wa {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+        .btn-order-wa:hover:not([disabled]) {
+            background: var(--pink-accent, #ff1493) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.25) !important;
+            transform: translateY(-1px);
+        }
+    `;
+    document.head.appendChild(styleSheetNode);
+}
+
 async function loadProductDatabaseEngine() {
     try {
-        const targetResponse = await fetch('data/products.json');
-        if (!targetResponse.ok) throw new Error('Data stream failed verification handles');
+        console.log("Synchronizing data matrix cleanly via master repository stream...");
+
+        // 1. Fetch straight from your verified 24-item master data file
+        const databaseResponse = await fetch('data/products.json');
         
-        const fileContent = await targetResponse.json();
-        
-        if (fileContent && typeof fileContent === 'object' && Array.isArray(fileContent.products)) {
-            productDatabase = fileContent.products;
-        } else if (Array.isArray(fileContent)) {
-            productDatabase = fileContent;
-        } else {
-            productDatabase = [];
+        if (!databaseResponse.ok) {
+            throw new Error(`Master database file returned status code: ${databaseResponse.status}`);
         }
-        
+
+        const databasePayload = await databaseResponse.json();
+
+        // 2. Safely unpack items whether they are in an array property wrapper or raw list
+        productDatabase = databasePayload.products || databasePayload.items || (Array.isArray(databasePayload) ? databasePayload : []);
+
+        console.log(`Synchronization successful. Main database pool compiled: ${productDatabase.length} items.`);
+
+        // 3. Generate your category filter controls dynamically right from the master dataset
+        if (typeof generateDynamicCatalogFilters === 'function') {
+            generateDynamicCatalogFilters();
+        }
+
+        // 4. Render your beautiful jewelry products catalog layout grid
         filterCatalog();
+
     } catch (error) {
-        console.error('Critical catalog database execution drop:', error);
-        const grid = document.getElementById('productGrid');
-        if (grid) grid.innerHTML = `<div class="no-results">Unable to load catalog matrix at this moment.</div>`;
+        console.error('Critical database loading interruption caught:', error);
+        const productGrid = document.getElementById('productGrid');
+        if (productGrid) {
+            productGrid.innerHTML = `
+                <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-muted);">
+                    <i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:10px; color:var(--pink-accent);"></i>
+                    <p>Unable to load the catalog display grid right now. Please refresh the page.</p>
+                </div>`;
+        }
     }
 }
 
@@ -46,82 +87,300 @@ function formatCurrency(amount) {
     return '₹' + amount.toLocaleString('en-IN');
 }
 
-function displayProducts(productsList) {
-    const gridContainer = document.getElementById('productGrid');
-    if (!gridContainer) return;
+// =========================================================================
+// ANGEL JEWELLERY — HARMONIZED INDESTRUCTIBLE SEARCH & FILTER ENGINE
+// =========================================================================
+function filterCatalog(passedSearchQuery) {
+    const productGrid = document.getElementById('productGrid');
     
-    gridContainer.innerHTML = "";
+    // A. READ SEARCH INPUT CONTENT Safely across inputs and passed arguments
+    let searchStringQuery = "";
+    if (passedSearchQuery !== undefined && passedSearchQuery !== null) {
+        searchStringQuery = String(passedSearchQuery);
+    } else {
+        const liveInputEl = document.getElementById('searchInput');
+        searchStringQuery = liveInputEl ? liveInputEl.value : "";
+    }
+    searchStringQuery = searchStringQuery.trim().toLowerCase();
 
-    if (productsList.length === 0) {
-        gridContainer.innerHTML = `<div class="no-results">No masterpieces match your criteria.</div>`;
+    // B. COMBINED FILTER MATRIX ZONE
+    if (productGrid && productDatabase && productDatabase.length > 0) {
+        let filteredResults = productDatabase.filter(product => {
+            if (!product) return false;
+
+            // --- CRITERIA A: TAB CATEGORY SELECTION MATCHING ---
+            let matchesCategoryTab = true;
+            if (typeof currentSelectedFilterCategoryKey !== 'undefined' && currentSelectedFilterCategoryKey && currentSelectedFilterCategoryKey !== 'all') {
+                const productCat = product.category || product.type || product.tag || '';
+                const cleanProductCategory = String(productCat).trim().toLowerCase();
+                const cleanSelectedTabKey = currentSelectedFilterCategoryKey.trim().toLowerCase();
+                
+                matchesCategoryTab = cleanProductCategory === cleanSelectedTabKey || 
+                                     cleanProductCategory.includes(cleanSelectedTabKey) || 
+                                     cleanSelectedTabKey.includes(cleanProductCategory);
+            }
+
+            // --- CRITERIA B: LIVE SEARCH TEXT MATCHING ---
+            let matchesSearchText = true;
+            if (searchStringQuery !== "") {
+                const titleStr = String(product.title || product.name || '').toLowerCase();
+                const descStr = String(product.description || product.desc || '').toLowerCase();
+                const catStr = String(product.category || product.type || '').toLowerCase();
+
+                matchesSearchText = titleStr.includes(searchStringQuery) || 
+                                    descStr.includes(searchStringQuery) || 
+                                    catStr.includes(searchStringQuery);
+            }
+
+            // --- CRITERIA C: HIDE SOLD OUT OPTION CHECK ---
+            const hideSoldOutCheckbox = document.getElementById('hideSoldOutCheckbox');
+            if (hideSoldOutCheckbox && hideSoldOutCheckbox.checked) {
+                const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+                if (isSoldOut) return false;
+            }
+
+            return matchesCategoryTab && matchesSearchText;
+        });
+
+        // C. RENDERING CANVAS: Map your loaded items directly into your HTML grid
+        if (filteredResults.length === 0) {
+            productGrid.innerHTML = `
+                <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted, #777); font-weight: 500; font-family: 'Montserrat', sans-serif;">
+                    <i class="fas fa-search" style="font-size: 2rem; color: #e8e8ef; display: block; margin-bottom: 12px;"></i>
+                    No masterpieces discoverable matching your criteria.
+                </div>`;
+        } else {
+            productGrid.innerHTML = filteredResults.map(product => {
+                const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+                const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
+                
+                const badgeHTML = product.badge 
+                    ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>`
+                    : '';
+                    
+                const rawPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+                const displayPrice = rawPriceValue > 0 ? `₹${rawPriceValue.toLocaleString('en-IN')}` : 'Price on Request';
+                const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+                return `
+                    <div class="product-card" 
+                         onclick="openQuickViewShield(${product.id})" 
+                         style="background: #ffffff; border: 1px solid var(--border-subtle, #e8e8ef); border-radius: 4px; padding: 16px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
+                        
+                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 2px; margin-bottom: 14px;">
+                            ${badgeHTML}
+                            
+                            <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                                    onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                                    aria-label="Add to wishlist"
+                                    style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
+                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'}; transition: color 0.2s ease;"></i>
+                            </button>
+
+                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
+                        </div>
+                        
+                        <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h3 style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
+                                <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0;">${displayPrice}</p>
+                            </div>
+                            
+                            <button class="btn-order-wa" 
+                                    onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
+                                    ${isSoldOut ? 'disabled' : ''} 
+                                    style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
+                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                                ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // D. HOMEPAGE SHOWCASE ROUTERS — Fired independently with zero rendering block conflicts
+    if (productDatabase && productDatabase.length > 0) {
+        if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
+        if (typeof renderTrendingSection === 'function') renderTrendingSection();
+    }
+}
+
+// =========================================================================
+// 2. VAULT SALE SECTION RENDERER
+// =========================================================================
+function renderVaultSaleSection() {
+    const saleSection = document.getElementById('saleSection');
+    const saleGrid = document.getElementById('saleProductGrid');
+    
+    if (!saleSection || !saleGrid || !productDatabase) return;
+
+    const saleItems = productDatabase.filter(product => {
+        if (!product) return false;
+
+        const currentBadgeText = String(product.badge || '').trim().toLowerCase();
+        if (currentBadgeText === 'sale' || currentBadgeText.includes('discount') || currentBadgeText.includes('off')) {
+            return true;
+        }
+
+        if (product.sale === true || product.isSale === true || product.onSale === true) {
+            return true;
+        }
+
+        const rawOriginalPrice = product.originalPrice || product.original_price || product.oldPrice;
+        if (rawOriginalPrice) {
+            const cleanCurrentPrice = typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
+            const cleanOriginalPrice = typeof rawOriginalPrice === 'number' ? rawOriginalPrice : parseFloat(String(rawOriginalPrice).replace(/[^0-9.]/g, '')) || 0;
+            return cleanOriginalPrice > cleanCurrentPrice;
+        }
+
+        return false;
+    });
+
+    console.log(`Vault Sale Module Evaluation: Found ${saleItems.length} matching offer items.`);
+
+    if (saleItems.length === 0) {
+        saleSection.style.display = 'none';
         return;
     }
 
-    productsList.forEach(product => {
-        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-        const isFavorited = wishlistMemory.includes(product.id);
-        
-        const designCard = document.createElement('div');
-        designCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        
-        let badgeHTML = "";
-        if (product.badge) {
-            const urgencyClass = isSoldOut ? 'sold-out-alert' : (product.badge.toLowerCase() === 'new in' ? '' : 'urgency-alert');
-            badgeHTML = `<span class="product-badge ${urgencyClass}">${product.badge}</span>`;
-        }
+    saleSection.style.display = 'block';
+    saleGrid.innerHTML = "";
 
-        designCard.innerHTML = `
-            <div class="product-img-wrapper">
+    saleItems.forEach(product => {
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
+        
+        const saleCard = document.createElement('div');
+        saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
+        
+        saleCard.style.cursor = 'pointer';
+        saleCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
+        
+        const badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
+
+        const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+        const fallbackOldPrice = product.originalPrice || product.original_price || product.oldPrice;
+        
+        const originalPriceValue = fallbackOldPrice 
+            ? (typeof fallbackOldPrice === 'number' ? fallbackOldPrice : parseFloat(fallbackOldPrice) || currentPriceValue)
+            : Math.ceil(currentPriceValue * 1.25);
+
+        const pricingLayoutHTML = `
+            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
+                <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(currentPriceValue)}</span>
+                <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(originalPriceValue)}</span>
+            </p>
+        `;
+
+        const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+        saleCard.innerHTML = `
+            <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
                 ${badgeHTML}
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
+                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                        aria-label="Add to wishlist" 
+                        style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'};"></i>
                 </button>
                 <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
-                <div class="product-actions-overlay">
-                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
-                </div>
             </div>
-            <div class="product-info">
-                <p class="product-category">${product.category}</p>
-                <h3 class="product-title">${product.title}</h3>
-                <p class="product-price">${formatCurrency(product.price)}</p>
-                
-                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''}>
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
+            <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
+                <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Jewellery'} • Special Offer</p>
+                <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
+                <div style="text-align: center; margin-bottom: 14px;">${pricingLayoutHTML}</div>
+                <button class="btn-order-wa" 
+                        onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
+                        ${isSoldOut ? 'disabled' : ''} 
+                        style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                    ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
                 </button>
             </div>
         `;
-        gridContainer.appendChild(designCard);
+        saleGrid.appendChild(saleCard);
     });
 }
 
-function filterCurrentDataset() {
-    const activeFilterBtn = document.querySelector('.filter-btn.active');
-    const activeFilter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
+// =========================================================================
+// 3. TRENDING SECTION RENDERER
+// =========================================================================
+function renderTrendingSection() {
+    const trendingSection = document.getElementById('trendingSection');
+    const trendingGrid = document.getElementById('trendingProductGrid');
     
-    const searchInput = document.getElementById('searchInput');
-    const searchKeyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    
-    const hideSoldOutCheckbox = document.getElementById('hideSoldOutCheckbox');
-    const hideSoldOutActive = hideSoldOutCheckbox ? hideSoldOutCheckbox.checked : false;
+    if (!trendingSection || !trendingGrid) return;
 
-    return productDatabase.filter(product => {
-        const matchesCategory = (activeFilter === 'all' || product.category === activeFilter);
-        const matchesSearch = product.title.toLowerCase().includes(searchKeyword) || 
-                              product.category.toLowerCase().includes(searchKeyword);
-                              
+    const trendingItems = productDatabase.filter(product => 
+        (product.badge && product.badge.toLowerCase() === 'trending') || 
+        product.trending === true
+    );
+
+    if (trendingItems.length === 0) {
+        trendingSection.style.display = 'none';
+        return;
+    }
+
+    trendingSection.style.display = 'block';
+    trendingGrid.innerHTML = "";
+
+    trendingItems.forEach(product => {
         const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-        const passesStockCheck = hideSoldOutActive ? !isSoldOut : true;
+        const isFavorited = wishlistMemory.includes(product.id);
+        
+        const trendingCard = document.createElement('div');
+        trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
+        
+        trendingCard.style.cursor = 'pointer';
+        trendingCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
+        
+        let badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
+        
+        let pricingLayoutHTML = "";
+        const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
 
-        return matchesCategory && matchesSearch && passesStockCheck;
+        if (product.originalPrice && product.originalPrice > product.price) {
+            pricingLayoutHTML = `
+                <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
+                    <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(currentPriceValue)}</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
+                </p>
+            `;
+        } else {
+            pricingLayoutHTML = `<p class="product-price" style="margin: 0; text-align: center; font-weight: 700; color: var(--purple-primary);">${formatCurrency(currentPriceValue)}</p>`;
+        }
+
+        const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+        trendingCard.innerHTML = `
+            <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
+                ${badgeHTML}
+                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                        aria-label="Add to wishlist" 
+                        style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'};"></i>
+                </button>
+                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+            </div>
+            <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
+                <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
+                ${pricingLayoutHTML}
+                <button class="btn-order-wa" 
+                        onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
+                        ${isSoldOut ? 'disabled' : ''} 
+                        style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                    ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
+                </button>
+            </div>
+        `;
+        trendingGrid.appendChild(trendingCard);
     });
-}
-
-function filterCatalog() { 
-    displayProducts(filterCurrentDataset()); 
-    renderVaultSaleSection();
-    renderTrendingSection();
-}
+}        
 
 function addToCartEngine(id) {
     const targetItem = productDatabase.find(p => p.id === id);
@@ -314,19 +573,6 @@ function updateWishlistUI() {
     });
 }
 
-function applyStrictIndianPhoneValidationRules(inputElementId) {
-    const phoneInputField = document.getElementById(inputElementId);
-    if (!phoneInputField) return;
-
-    phoneInputField.addEventListener('input', function(e) {
-        let numericString = this.value.replace(/[^0-9]/g, ''); 
-        if (numericString.length > 10) {
-            numericString = numericString.slice(0, 10); 
-        }
-        this.value = numericString;
-    });
-}
-
 function mountCouponHelperBadges() {
     const helpersGroup = document.getElementById('couponHelpersGroup');
     if (!helpersGroup) return;
@@ -437,7 +683,6 @@ function toggleCartDrawer() {
         drawer.style.right = "-100%";
         if (overlay) overlay.style.display = "none";
     } else {
-        // Enforce closing the opposite layout sheet first to avoid layering locks
         const wishlist = document.getElementById('wishlistDrawer');
         if (wishlist) wishlist.style.right = "-100%";
         
@@ -502,20 +747,20 @@ window.addEventListener('DOMContentLoaded', () => {
     applyStrictIndianPhoneValidationRules('invClientPhone');
     applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
+    // ➔ INTEGRATED: Search parameter routing alignment
     const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.addEventListener('input', filterCatalog);
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterCatalog(this.value);
+        });
+    }
     
     const hideSoldOutCheckbox = document.getElementById('hideSoldOutCheckbox');
-    if (hideSoldOutCheckbox) hideSoldOutCheckbox.addEventListener('change', filterCatalog);
-    
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    if (hideSoldOutCheckbox) {
+        hideSoldOutCheckbox.addEventListener('change', function() {
             filterCatalog();
         });
-    });
+    }
 
     const cartBtn = document.getElementById('cartBtn');
     const closeCartBtn = document.getElementById('closeCartBtn');
@@ -800,7 +1045,6 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         window.open(generatedLink, '_blank');
     };
 
-    // ➔ NEW: Extract raw item image paths and combine them with commas for sheet columns
     const orderImageUrlsString = shoppingCart.map(item => item.image || '').filter(url => url !== '').join(', ');
     
     fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
@@ -817,10 +1061,7 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
                     "Phone": phone,
                     "Address": address,
                     "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
-                    
-                    // ➔ NEW COLUMN LOG: Added Order Images to data payload properties
                     "Order Images": orderImageUrlsString,
-                    
                     "Total Paid": formatCurrency(finalTotalCost),
                     "Status": "Paid"
                 }
@@ -847,9 +1088,6 @@ function exitConfirmationAndReset() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — CLIENT TRACKING DESK (HIGH-FIDELITY TABLES WITH LIVE STATUS)
-// =========================================================================
 function executeLiveOrderTrackingSearch() {
     const inputField = document.getElementById('trackingPhoneInput');
     const statusMsg = document.getElementById('trackingStatusMessage');
@@ -908,11 +1146,9 @@ function executeLiveOrderTrackingSearch() {
                     badgeTextColor = "var(--pink-accent)";
                 }
 
-                // Parse individual items and image token arrays synchronously for the table
                 const itemNamesArray = (order['Order Items'] || '').split(',').map(str => str.trim());
                 const itemImagesArray = (order['Order Images'] || '').split(',').map(str => str.trim());
 
-                // Generate matching customer inventory table content rows
                 const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
                     if (!itemString) return '';
                     
@@ -1010,57 +1246,35 @@ function openTrackingScreenOverlay(event) {
     }
 }
 
-// Global Validation Enforcer Utility to attach to any input field element
 function applyStrictIndianPhoneValidationRules(inputElementId) {
     const phoneInputField = document.getElementById(inputElementId);
     if (!phoneInputField) return;
 
-    // Real-time listener strips non-numeric characters instantly on type
     phoneInputField.addEventListener('input', function(e) {
-        let numericString = this.value.replace(/[^0-9]/g, ''); // RegEx drops letters, spaces, and symbols
+        let numericString = this.value.replace(/[^0-9]/g, ''); 
         if (numericString.length > 10) {
-            numericString = numericString.slice(0, 10); // Cuts off any input past the 10th digit
+            numericString = numericString.slice(0, 10); 
         }
         this.value = numericString;
     });
 }
 
-// Initialize validation tracking hooks on launch
-window.addEventListener('DOMContentLoaded', () => {
-    // Apply validation to both the Checkout Form input and the Tracking overlay input box
-    applyStrictIndianPhoneValidationRules('invClientPhone');
-    applyStrictIndianPhoneValidationRules('trackingPhoneInput');
-});
-
 function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — ADMINISTRATIVE CONSOLE WITH DATA SEGREGATION TABS
-// =========================================================================
-// =========================================================================
-// ANGEL JEWELLERY — SECURE ADMINISTRATIVE AUTHENTICATION ENTRY GATE
-// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
-    
-    // ➔ THE GATEKEEPER PHRASE: Set your master operational passkey string here
     const MASTER_ADMIN_SECRET_KEY = "1234"; 
 
-    // Present a clean browser entry validation block
     const inputtedPasskeyAttempt = prompt("🔒 Access Restricted: Enter Administrative Passcode:");
-
-    // Security Fallback: Exit instantly if the user clicks 'Cancel' or leaves it empty
     if (inputtedPasskeyAttempt === null) return;
 
-    // Strict Handshake Validation Check
     if (inputtedPasskeyAttempt.trim() !== MASTER_ADMIN_SECRET_KEY) {
         alert("❌ Security Alert: Invalid administrative credentials provided.");
-        return; // Halt system compilation immediately
+        return; 
     }
 
-    // ➔ KEY VALIDATION SUCCESSFUL: Run your native spreadsheet database extraction loops
     const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
     const statusMsg = document.getElementById('adminConsoleStatus');
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
@@ -1092,7 +1306,7 @@ function openAdminMasterConsole(event) {
             statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate spreadsheet rows.";
         });
 }
-// ➔ NEW INTERFACE CONTROLLER: Route tab button toggles smoothly
+
 function switchAdminConsoleTab(targetTabKey) {
     currentAdminActiveTab = targetTabKey;
     
@@ -1147,12 +1361,10 @@ function renderSegregatedAdminOrders() {
 
     ordersContainer.innerHTML = "";
 
-    // 1. Calculate Complete Operational Balances Across the Entire Cache Pool
     let accumulatedPendingSum = 0;
     let accumulatedShippedSum = 0;
 
     adminOrdersCache.forEach(order => {
-        // Strip non-numeric characters from your Total Paid string (e.g., "Rs. 15,500" -> 15500)
         const numericValue = parseFloat((order['Total Paid'] || '').replace(/[^0-9.]/g, '')) || 0;
         const statusStr = (order['Status'] || '').trim().toLowerCase();
         
@@ -1163,11 +1375,9 @@ function renderSegregatedAdminOrders() {
         }
     });
 
-    // Render currency totals to your analytics deck slots
     if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
     if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
 
-    // 2. Separate data records based on core fulfillment statuses
     const pendingOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() !== 'shipped');
     const shippedOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() === 'shipped');
 
@@ -1176,7 +1386,6 @@ function renderSegregatedAdminOrders() {
 
     let targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
 
-    // 3. APPLY SEARCH FILTERS IN REAL-TIME IF ACTIVE
     if (adminConsoleSearchQueryString) {
         targetDisplayDataset = targetDisplayDataset.filter(order => {
             const clientName = (order['Client Name'] || '').toLowerCase();
@@ -1244,7 +1453,7 @@ function renderSegregatedAdminOrders() {
             return `
                 <tr style="border-bottom: 1px solid #f1f1f5;">
                     <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                        <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                        <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 xauto;">
                             <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                         </div>
                     </td>
@@ -1258,7 +1467,6 @@ function renderSegregatedAdminOrders() {
             `;
         }).join('');
 
-        // Clean values for safe insertion into the copy utility parameter block
         const safeName = (order['Client Name'] || '').replace(/'/g, "\\'");
         const safePhone = (order['Phone'] || '').replace(/'/g, "\\'");
         const safeAddress = (order['Address'] || '').replace(/'/g, "\\'").replace(/\n/g, " ");
@@ -1331,9 +1539,6 @@ function closeAdminMasterConsole() {
     document.getElementById('adminMasterConsoleOverlay').style.display = 'none';
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — BANNER CAROUSEL GLOBAL REACTION CORES (FIXED)
-// =========================================================================
 let currentCarouselActiveIndex = 0;
 let carouselAutoRotationTimerHandle = null;
 let isCarouselAutoPlayPaused = false;
@@ -1425,177 +1630,27 @@ function updateCarouselRenderPosition() {
         dot.style.background = index === currentCarouselActiveIndex ? 'var(--purple-primary)' : '#e8e8ef';
     });
 }
+
 document.addEventListener("DOMContentLoaded", () => {
     initializeLuxuryBannerCarousel();
 });
 
-function renderVaultSaleSection() {
-    const saleSection = document.getElementById('saleSection');
-    const saleGrid = document.getElementById('saleProductGrid');
-    
-    if (!saleSection || !saleGrid) return;
-
-    const saleItems = productDatabase.filter(product => product.originalPrice && product.originalPrice > product.price);
-    if (saleItems.length === 0) {
-        saleSection.style.display = 'none';
-        return;
-    }
-
-    saleSection.style.display = 'block';
-    saleGrid.innerHTML = "";
-
-    saleItems.forEach(product => {
-        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-        const isFavorited = wishlistMemory.includes(product.id);
-        
-        const saleCard = document.createElement('div');
-        saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        
-        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
-
-        const pricingLayoutHTML = `
-            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
-                <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(product.price)}</span>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
-            </p>
-        `;
-
-        saleCard.innerHTML = `
-            <div class="product-img-wrapper" style="background: #ffffff;">
-                ${badgeHTML}
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-                </button>
-                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
-                <div class="product-actions-overlay">
-                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
-                </div>
-            </div>
-            <div class="product-info" style="background: #ffffff;">
-                <p class="product-category" style="color: var(--pink-accent); font-weight:600;">${product.category} • Special Offer</p>
-                <h3 class="product-title">${product.title}</h3>
-                ${pricingLayoutHTML}
-                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px; background: #ffffff;">
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
-                </button>
-            </div>
-        `;
-        saleGrid.appendChild(saleCard);
-    });
-}
-
-function renderTrendingSection() {
-    const trendingSection = document.getElementById('trendingSection');
-    const trendingGrid = document.getElementById('trendingProductGrid');
-    
-    if (!trendingSection || !trendingGrid) return;
-
-    const trendingItems = productDatabase.filter(product => 
-        (product.badge && product.badge.toLowerCase() === 'trending') || 
-        product.trending === true
-    );
-
-    if (trendingItems.length === 0) {
-        trendingSection.style.display = 'none';
-        return;
-    }
-
-    trendingSection.style.display = 'block';
-    trendingGrid.innerHTML = "";
-
-    trendingItems.forEach(product => {
-        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-        const isFavorited = wishlistMemory.includes(product.id);
-        
-        const trendingCard = document.createElement('div');
-        trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        
-        let badgeHTML = product.badge ? `<span class="product-badge urgency-alert" style="background: var(--pink-accent) !important;">${product.badge}</span>` : '';
-        let pricingLayoutHTML = "";
-        
-        if (product.originalPrice && product.originalPrice > product.price) {
-            pricingLayoutHTML = `
-                <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
-                    <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(product.price)}</span>
-                    <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
-                </p>
-            `;
-        } else {
-            pricingLayoutHTML = `<p class="product-price" style="margin: 0;">${formatCurrency(product.price)}</p>`;
-        }
-
-        trendingCard.innerHTML = `
-            <div class="product-img-wrapper" style="background: #ffffff;">
-                ${badgeHTML}
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" onclick="toggleWishlistEngine(event, ${product.id}, this)" aria-label="Add to wishlist">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart"></i>
-                </button>
-                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
-                <div class="product-actions-overlay">
-                    <button class="btn-mini-action" onclick="openQuickViewShield(${product.id})"><i class="fas fa-eye"></i> Quick View</button>
-                </div>
-            </div>
-            <div class="product-info" style="background: #ffffff;">
-                <p class="product-category">${product.category}</p>
-                <h3 class="product-title">${product.title}</h3>
-                ${pricingLayoutHTML}
-                <button class="btn-order-wa" onclick="${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${product.title}');`}" ${isSoldOut ? 'disabled' : ''} style="margin-top:15px; background: #ffffff;">
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : ''}"></i> ${isSoldOut ? 'Restocking Soon' : 'Add To Cart'}
-                </button>
-            </div>
-        `;
-        trendingGrid.appendChild(trendingCard);
-    });
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — AUTOMATIC MOBILE NAVIGATION DESK CLOSURE ENGINE
-// =========================================================================
-(function() {
-    function forceMobileMenuClose() {
-        const mobileNavMenu = document.getElementById('navMenu');
-        const menuToggleButton = document.getElementById('menuToggle');
-        
-        if (mobileNavMenu) {
-            mobileNavMenu.classList.remove('active');
-        }
-        if (menuToggleButton) {
-            const toggleIcon = menuToggleButton.querySelector('i');
-            if (toggleIcon) toggleIcon.className = "fas fa-bars"; 
-        }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        const allNavLinks = document.querySelectorAll('#navMenu a, [href^="#"]');
-        allNavLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                setTimeout(forceMobileMenuClose, 150);
-            });
-        });
-    });
-})();
-
-// =========================================================================
-// ANGEL JEWELLERY — BACKGROUND CLOUD REALTIME GOOGLE SHEET STATUS UPDATER
-// =========================================================================
 function updateGoogleSheetRowStatus(paymentId, buttonElement) {
     if (!paymentId || !buttonElement) return;
 
-    // Change button text visually to provide processing feedback
     buttonElement.disabled = true;
     buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Syncing...`;
 
-    // Target the precise row using its unique Razorpay Payment ID column parameter value match
     const sheetDbUpdateEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/Payment%20ID/${encodeURIComponent(paymentId)}`;
 
     fetch(sheetDbUpdateEndpoint, {
-        method: 'PATCH', // Using PATCH to update only the designated Status cell box
+        method: 'PATCH', 
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             data: {
-                "Status": "Shipped" // Forces the spreadsheet cell box target value update
+                "Status": "Shipped" 
             }
         })
     })
@@ -1604,18 +1659,15 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
         if (payloadResult && payloadResult.updated >= 1) {
             console.log(`Sheet ledger successfully synchronized for ID: ${paymentId}`);
 
-            // 1. Instantly transition the console badge UI layer from blue to pink
             const cachedOrderObjectIndex = adminOrdersCache.findIndex(o => o['Payment ID'] === paymentId);
             if (cachedOrderObjectIndex > -1) {
                 adminOrdersCache[cachedOrderObjectIndex]['Status'] = 'Shipped';
             }
             setTimeout(renderSegregatedAdminOrders, 400);
 
-            // 2. Remove the "Mark Shipped" button from view since action task completed
             const buttonSlot = document.getElementById(`shipped-action-slot-${paymentId}`);
             if (buttonSlot) buttonSlot.innerHTML = "";
 
-            // 3. Optional Toast Notification feedback alert trigger
             const dynamicToast = document.createElement('div');
             dynamicToast.className = "copied-toast";
             dynamicToast.innerHTML = `<i class="fas fa-check-circle"></i> Ledger Status Synced!`;
@@ -1632,4 +1684,130 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
         buttonElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Retry`;
         alert("Failed to update status on server cloud. Verify network and try again.");
     });
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — DYNAMIC FILTER ENGINE ASSEMBLER (ZERO STATIC CONFIGS)
+// =========================================================================
+function generateDynamicCatalogFilters() {
+    const filtersDock = document.getElementById('dynamicCatalogFiltersDock');
+    if (!filtersDock || !productDatabase || productDatabase.length === 0) return;
+
+    const uniqueCategoriesList = new Set();
+    productDatabase.forEach(product => {
+        if (product.category) {
+            uniqueCategoriesList.add(product.category.trim().toLowerCase());
+        }
+    });
+
+    const compiledCategoriesArray = Array.from(uniqueCategoriesList);
+    filtersDock.innerHTML = ""; 
+
+    const universalAllButton = document.createElement('button');
+    universalAllButton.className = "filter-category-tab-btn";
+    universalAllButton.innerText = "All Masterpieces";
+    
+    applyCustomFilterTabButtonStyles(universalAllButton, currentSelectedFilterCategoryKey === 'all');
+    
+    universalAllButton.onclick = () => {
+        currentSelectedFilterCategoryKey = "all";
+        refreshFilterTabStylesAndTriggerRender();
+    };
+    filtersDock.appendChild(universalAllButton);
+
+    compiledCategoriesArray.forEach(categoryKey => {
+        const structuralCategoryTabButton = document.createElement('button');
+        structuralCategoryTabButton.className = "filter-category-tab-btn";
+        
+        const capitalizedButtonLabel = categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+        structuralCategoryTabButton.innerText = capitalizedButtonLabel;
+        
+        structuralCategoryTabButton.setAttribute('data-category-target', categoryKey);
+        applyCustomFilterTabButtonStyles(structuralCategoryTabButton, currentSelectedFilterCategoryKey === categoryKey);
+        
+        structuralCategoryTabButton.onclick = () => {
+            currentSelectedFilterCategoryKey = categoryKey;
+            refreshFilterTabStylesAndTriggerRender();
+        };
+        
+        filtersDock.appendChild(structuralCategoryTabButton);
+    });
+}
+
+function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
+    if (isCurrentlySelected) {
+        buttonNode.style.cssText = `
+            background: var(--purple-primary, #202c55);
+            color: #ffffff;
+            border: 1px solid var(--purple-primary, #202c55);
+            padding: 10px 22px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(32, 44, 85, 0.15);
+        `;
+    } else {
+        buttonNode.style.cssText = `
+            background: #ffffff;
+            color: var(--text-dark-primary, #111116);
+            border: 1px solid var(--border-subtle, #e8e8ef);
+            padding: 10px 22px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        `;
+    }
+}
+
+function refreshFilterTabStylesAndTriggerRender() {
+    const allTabButtons = document.querySelectorAll('.filter-category-tab-btn');
+    
+    allTabButtons.forEach(btn => {
+        const buttonTargetKey = btn.getAttribute('data-category-target') || 'all';
+        applyCustomFilterTabButtonStyles(btn, currentSelectedFilterCategoryKey === buttonTargetKey);
+    });
+
+    // Automatically sync keyword lookup fields upon category changes
+    const liveInputEl = document.getElementById('searchInput');
+    const currentSearchText = liveInputEl ? liveInputEl.value : "";
+    
+    if (typeof filterCatalog === 'function') {
+        filterCatalog(currentSearchText);
+    }
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — PREMIUM DYNAMIC BADGE COLOR DICTIONARY
+// =========================================================================
+function getBadgeCustomStyles(badgeText) {
+    const text = String(badgeText || '').trim().toLowerCase();
+    
+    let bgColor = 'var(--purple-primary, #202c55)';
+    let textColor = '#ffffff';
+
+    if (text === 'sale' || text.includes('off') || text.includes('discount')) {
+        bgColor = '#d9383a'; 
+    } 
+    else if (text === 'trending' || text === 'hot' || text === 'popular') {
+        bgColor = '#cca43b'; // Champange Gold for premium trending feel
+    } 
+    else if (text === 'new' || text === 'arrival') {
+        bgColor = '#2a7b6a'; 
+    } 
+    else if (text === 'limited' || text.includes('exclusive')) {
+        bgColor = 'var(--pink-accent, #ff1493)'; 
+    } 
+    else if (text === 'sold out' || text.includes('restock')) {
+        bgColor = '#6c757d'; 
+    }
+
+    return `background: ${bgColor} !important; color: ${textColor} !important;`;
 }

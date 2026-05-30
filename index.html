@@ -89,15 +89,17 @@
         <div class="container">
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search luxury designs...">
+                <input type="text" id="searchInput" oninput="filterCatalog(this.value)" class="search-input" placeholder="Search luxury designs...">
             </div>
             <div class="filter-wrapper" id="filterContainer">
-                <button class="filter-btn active" data-filter="all">All Masterpieces</button>
+                <!-- <button class="filter-btn active" data-filter="all">All Masterpieces</button>
                 <button class="filter-btn" data-filter="necklace">Necklaces</button>
                 <button class="filter-btn" data-filter="earrings">Earrings</button>
                 <button class="filter-btn" data-filter="rings">Rings</button>
-                <button class="filter-btn" data-filter="bracelets">Bracelets</button>
-                
+                <button class="filter-btn" data-filter="bracelets">Bracelets</button> -->
+                <div class="catalog-filter-container" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding: 20px 0;">
+                    <div id="dynamicCatalogFiltersDock" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;"></div>
+                </div>
                 <div class="inventory-toggle-wrapper">
                     <label class="switch-container">
                         <input type="checkbox" id="hideSoldOutCheckbox">
@@ -364,7 +366,7 @@
             </div>
             <div style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;">
                 <button id="confWhatsAppBtn" style="width: 100%; background: #25d366; color: #fff; border: none; padding: 18px; font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2); box-sizing: border-box;">
-                    <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Notify Concierge on WhatsApp
+                    <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Notify Angel Jewellery on WhatsApp
                 </button>
                 <button onclick="exitConfirmationAndReset()" style="width: 100%; background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 14px; font-size: 0.75rem; font-weight:600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.3s; box-sizing: border-box;">
                     Return to Storefront Home

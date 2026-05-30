@@ -163,7 +163,7 @@ header.scrolled .logo img { height: 45px; }
 
 /* --- FLOATING CONTROLS FILTER BAR --- */
 .catalog-controls { 
-    padding: 24px 0 20px 0; 
+    padding: 24px 0 10px 0; 
     background: rgba(255, 255, 255, 0.96); 
     position: sticky; 
     top: 59px; 
