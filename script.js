@@ -161,6 +161,9 @@ function filterCatalog(passedSearchQuery) {
                 const rawPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
                 const displayPrice = rawPriceValue > 0 ? `₹${rawPriceValue.toLocaleString('en-IN')}` : 'Price on Request';
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+                
+                // Fallback validation for category string data attributes
+                const displayCategory = product.category || product.type || 'Luxury Collection';
 
                 return `
                     <div class="product-card" 
@@ -182,6 +185,10 @@ function filterCatalog(passedSearchQuery) {
                         
                         <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
+                                <!-- INJECTED CATEGORY BADGE TAG DESIGN TO MATCH THE SALE/TRENDING GRIDS -->
+                                <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 600; margin: 0 0 4px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat', sans-serif; text-align: center;">
+                                    ${displayCategory}
+                                </p>
                                 <h3 style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
                                 <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0;">${displayPrice}</p>
                             </div>
@@ -710,35 +717,25 @@ function toggleWishlistDrawer() {
 
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
-    const catalogControls = document.querySelector('.catalog-controls');
-    const storySection = document.getElementById('story');
     const backToTopBtn = document.getElementById('backToTopBtn');
     
-    if (window.scrollY > 50) {
+    // Smoothly apply shadow branding context as the page rolls past threshold
+    if (window.scrollY > 15) {
         if (header) header.classList.add('scrolled');
     } else {
         if (header) header.classList.remove('scrolled');
     }
     
+    // Back to top floating utility button toggle
     if (backToTopBtn) {
         if (window.scrollY > 400) backToTopBtn.classList.add('visible');
         else backToTopBtn.classList.remove('visible');
     }
     
-    if (catalogControls && storySection) {
-        const storyTop = storySection.getBoundingClientRect().top + window.scrollY;
-        const readingZoneThreshold = storyTop - 240; 
-        
-        if (window.scrollY >= readingZoneThreshold) {
-            catalogControls.style.opacity = '0';
-            catalogControls.style.pointerEvents = 'none';
-            catalogControls.style.transform = 'translateY(-10px)';
-        } else {
-            catalogControls.style.opacity = '1';
-            catalogControls.style.pointerEvents = 'all';
-            catalogControls.style.transform = 'translateY(0)';
-        }
-    }
+    /* 
+       REMOVED INTERRUPTIVE SCROLL COLLAPSE LOGIC FOR THE CONTROLS 
+       This prevents the navigation bars and filters from disappearing on scroll.
+    */
 });
 
 window.addEventListener('DOMContentLoaded', () => {
