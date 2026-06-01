@@ -1601,7 +1601,7 @@ function renderSegregatedAdminOrders() {
             const partner = order['Courier'] || 'Standard Logistics';
             const trackingNum = order['Tracking Number'] || 'N/A';
             logisticsMetadataHTML = `
-                <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
+                <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; text-align: center">
                     <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
                 </div>
             `;
@@ -1716,8 +1716,8 @@ function renderSegregatedAdminOrders() {
                             <input type="radio" name="courier-${order['Payment ID']}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
                         </label>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="tracking-input-${order['Payment ID']}" placeholder="Tracking Reference Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
+                    <div class="tracking-form" style="display: flex; gap: 8px;">
+                        <input type="text" id="tracking-input-${order['Payment ID']}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
                         <button onclick="updateGoogleSheetRowStatus('${order['Payment ID']}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
                         <button onclick="hideCourierAllocationPanel('${order['Payment ID']}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
                     </div>

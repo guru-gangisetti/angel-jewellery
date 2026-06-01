@@ -664,4 +664,15 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .cart-item-row { padding-right: 40px !important; }
     .cart-item-row .fa-trash { right: 20px !important; }
     #cartItemsContainer { max-height: calc(100vh - 420px); }
+
+    .tracking-form{
+        display: inline-block !important;
+    }
+     .tracking-form input{
+        width: 165px !important;
+        margin-bottom: 10px !important;
+    }
+    .tracking-enter-contact{
+        display: inline-grid !important;
+    }
 }
