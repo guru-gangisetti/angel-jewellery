@@ -190,7 +190,7 @@ function filterCatalog(passedSearchQuery) {
                                     ${displayCategory}
                                 </p>
                                 <h3 style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
-                                <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0;">${displayPrice}</p>
+                                <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
                             </div>
                             
                             <button class="btn-order-wa" 
@@ -717,6 +717,7 @@ function toggleWishlistDrawer() {
 
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
+    const catalogControls = document.querySelector('.catalog-controls');
     const backToTopBtn = document.getElementById('backToTopBtn');
     
     // Smoothly apply shadow branding context as the page rolls past threshold
@@ -726,16 +727,26 @@ window.addEventListener('scroll', () => {
         if (header) header.classList.remove('scrolled');
     }
     
-    // Back to top floating utility button toggle
-    if (backToTopBtn) {
-        if (window.scrollY > 400) backToTopBtn.classList.add('visible');
-        else backToTopBtn.classList.remove('visible');
+    // FORCE STICKY BACKUP: Calculate runtime trigger gaps for older mobile browser support
+    if (catalogControls) {
+        // Gap threshold logic based on mobile/desktop header state variations
+        const activeHeaderGap = header && header.classList.contains('scrolled') ? 60 : 70;
+        
+        if (window.scrollY > activeHeaderGap) {
+            catalogControls.classList.add('sticky-fixed-active');
+        } else {
+            catalogControls.classList.remove('sticky-fixed-active');
+        }
     }
     
-    /* 
-       REMOVED INTERRUPTIVE SCROLL COLLAPSE LOGIC FOR THE CONTROLS 
-       This prevents the navigation bars and filters from disappearing on scroll.
-    */
+    // Back to top floating utility button toggle
+    if (backToTopBtn) {
+        if (window.scrollY > 400) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+    }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1850,34 +1861,33 @@ function generateDynamicCatalogFilters() {
 }
 
 function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
+    // Shared structural foundation layouts
+    const baseStyles = `
+        padding: 6px 14px;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap; /* Stops titles from breaking into multiple lines */
+        display: inline-block;
+    `;
+
     if (isCurrentlySelected) {
-        buttonNode.style.cssText = `
+        buttonNode.style.cssText = baseStyles + `
             background: var(--purple-primary, #202c55);
             color: #ffffff;
             border: 1px solid var(--purple-primary, #202c55);
-            padding: 10px 22px;
-            font-size: 0.78rem;
+            box-shadow: 0 2px 6px rgba(32, 44, 85, 0.12);
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(32, 44, 85, 0.15);
         `;
     } else {
-        buttonNode.style.cssText = `
-            background: #ffffff;
+        buttonNode.style.cssText = baseStyles + `
+            background: #f4f4f7;
             color: var(--text-dark-primary, #111116);
-            border: 1px solid var(--border-subtle, #e8e8ef);
-            padding: 10px 22px;
-            font-size: 0.78rem;
+            border: 1px solid transparent;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
         `;
     }
 }
