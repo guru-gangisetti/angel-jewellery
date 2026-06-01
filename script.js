@@ -168,7 +168,7 @@ function filterCatalog(passedSearchQuery) {
                 return `
                     <div class="product-card" 
                          onclick="openQuickViewShield(${product.id})" 
-                         style="background: #ffffff; border: 1px solid var(--border-subtle, #e8e8ef); border-radius: 4px; padding: 16px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
+                         style="background: #ffffff; border: 1px solid var(--purple-primary, #e8e8ef); border-radius: 8px; padding: 16px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
                         
                         <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 2px; margin-bottom: 14px;">
                             ${badgeHTML}
@@ -180,7 +180,7 @@ function filterCatalog(passedSearchQuery) {
                                 <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'}; transition: color 0.2s ease;"></i>
                             </button>
 
-                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
+                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px" onerror="this.src='assets/placeholder.png'">
                         </div>
                         
                         <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
