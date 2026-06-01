@@ -1206,7 +1206,7 @@ function executeLiveOrderTrackingSearch() {
                 }).join('');
 
                 return `
-                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+                <div style="background: var(--bg-surface); border: 1px solid var(--purple-primary); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; font-size: 0.8rem; color: var(--text-muted); font-weight:600; gap: 10px; flex-wrap: wrap;">
                         <span>Ref ID: <strong style="color: var(--purple-primary); font-family: monospace;">${order['Payment ID']}</strong></span>
@@ -1642,7 +1642,7 @@ function renderSegregatedAdminOrders() {
         const safeAddress = (order['Address'] || '').replace(/'/g, "\\'").replace(/\n/g, " ");
 
         return `
-        <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+        <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
             
             <div class="admin-card-header">
                 <div class="admin-header-left">
