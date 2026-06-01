@@ -1922,7 +1922,7 @@ function getBadgeCustomStyles(badgeText) {
         bgColor = '#d9383a'; 
     } 
     else if (text === 'trending' || text === 'hot' || text === 'popular') {
-        bgColor = '#cca43b'; // Champange Gold for premium trending feel
+        bgColor = '#04693a'; // Champange Gold for premium trending feel
     } 
     else if (text === 'new' || text === 'arrival') {
         bgColor = '#2a7b6a'; 

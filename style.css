@@ -16,6 +16,8 @@
     /* Branding Touch Color Matrix */
     --purple-primary: #202c55;      
     --pink-accent: #ff1493;         
+    --brick-red: #d9383a;
+    --trend-green: #04693a;
     --pink-glow: rgba(255, 20, 147, 0.05);
     
     --font-display: 'Cinzel', serif;
@@ -318,6 +320,21 @@ header.scrolled ~ #catalog,
     transform: translateY(-6px); 
     border-color: var(--purple-primary);
     box-shadow: 0 16px 35px rgba(32, 44, 85, 0.06); 
+}
+.sale-section-wrapper .product-card { 
+    border: 1px solid var(--brick-red) !important;
+    border-radius: 8px !important; 
+}
+.sale-section-wrapper .product-img-wrapper img{
+    border-radius: 8px !important; 
+}
+
+.trending-section-wrapper .product-card { 
+    border: 1px solid var(--trend-green) !important;
+    border-radius: 8px !important; 
+}
+.trending-section-wrapper .product-img-wrapper img{
+    border-radius: 8px !important; 
 }
 
 .product-image-container, .product-img-wrapper { 
