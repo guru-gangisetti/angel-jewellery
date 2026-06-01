@@ -1659,7 +1659,7 @@ function renderSegregatedAdminOrders() {
                         <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${order['Total Paid']}</span>
                     </div>
                     <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                        <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
+                        <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
                             ${displayStatus}
                         </span>
                         ${logisticsMetadataHTML}
