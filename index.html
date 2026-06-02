@@ -364,20 +364,53 @@
         </div>
     </div>
 
-    <div id="quickviewModalShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(32,44,85,0.12); backdrop-filter: blur(15px); z-index: 4000; align-items: center; justify-content: center; padding: 20px;">
-        <div class="qv-modal-card" style="background: #ffffff; border: 1px solid #e8e8ef; max-width: 780px; width: 100%; border-radius: 8px; display: flex; position: relative; overflow: hidden; box-shadow: 0 25px 60px rgba(32,44,85,0.08);">
-            <i class="fas fa-times" onclick="closeQuickViewShield()" style="position: absolute; top: 20px; right: 20px; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; z-index: 10; transition: var(--transition);"></i>
-            <div class="qv-image-pane" style="width: 50%; background: var(--bg-surface); display: flex; align-items: center; justify-content: center;">
-                <img id="qvImage" src="" alt="Masterpiece Loading" style="width: 100%; height: 100%; object-fit: cover;">
+<!-- =========================================================================
+     ANGEL JEWELLERY — CLEAN QUICK VIEW MODAL (TAGS STRIPPED)
+     ========================================================================= -->
+<div id="quickviewModalShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(32,44,85,0.12); backdrop-filter: blur(15px); z-index: 4000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+    <div class="qv-modal-card" style="background: #ffffff; border: 1px solid #e8e8ef; max-width: 780px; width: 100%; border-radius: 8px; display: flex; flex-direction: column; position: relative; overflow-y: auto; box-shadow: 0 25px 60px rgba(32,44,85,0.08); max-height: 90vh; box-sizing: border-box;">
+        
+        <!-- Modal Exit Trigger -->
+        <i class="fas fa-times" onclick="closeQuickViewShield()" style="position: absolute; top: 20px; right: 20px; color: var(--text-muted, #777); cursor: pointer; font-size: 1.2rem; z-index: 10; transition: all 0.2s ease;"></i>
+        
+        <!-- Top Section: Core Product Details Layout Panel -->
+        <div style="display: flex; flex-wrap: wrap; width: 100%; border-bottom: 1px solid #f1f1f5; box-sizing: border-box;">
+            
+            <!-- Left Side: Interactive Preview Gallery Container -->
+            <div class="qv-image-pane" style="width: 50%; min-width: 300px; background: var(--bg-surface, #fafafa); display: flex; align-items: center; justify-content: center; aspect-ratio: 1/1; box-sizing: border-box; overflow: hidden;">
+                <img id="qvImage" src="" alt="Masterpiece Loading" style="width: 100%; height: 100%; object-fit: cover; display: block; padding: 10px;">
             </div>
-            <div class="qv-details-pane" style="width: 50%; padding: 40px; display: flex; flex-direction: column; justify-content: center; text-align: left;">
-                <p id="qvCategory" style="font-size: 0.65rem; color: var(--pink-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 700;"></p>
-                <h2 id="qvTitle" style="color: var(--text-dark-primary); font-size: 1.5rem; margin-bottom: 12px; font-weight: 600; line-height: 1.3; font-family: var(--font-body);"></h2>
-                <p id="qvPrice" style="font-size: 1.3rem; color: var(--purple-primary); margin-bottom: 25px; font-weight: 700;"></p>
-                <button id="qvAddToCartBtn" class="btn-luxury" style="width: 100%; padding: 15px 0; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px;"></button>
+            
+       <!-- Right Side: Text Summary and Cart Action Hub -->
+        <div class="qv-details-pane" style="width: 50%; min-width: 300px; padding: 35px; display: flex; flex-direction: column; justify-content: center; text-align: left; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <p id="qvCategory" style="font-size: 0.65rem; color: var(--pink-accent, #ff1493); letter-spacing: 2px; text-transform: uppercase; margin: 0; font-weight: 700; font-family: 'Montserrat', sans-serif;"></p>
+                
+                <!-- ➔ NEW SLOT: Dynamic Vault Scarcity Tag Element -->
+                <span id="qvVaultScarcityIndicator" style="font-family: 'Montserrat', sans-serif; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 2px;"></span>
+            </div>
+            
+            <h2 id="qvTitle" style="color: var(--text-dark-primary, #111116); font-size: 1.4rem; margin: 0 0 12px 0; font-weight: 600; line-height: 1.3; font-family: 'Montserrat', sans-serif;"></h2>
+            <p id="qvPrice" style="font-size: 1.25rem; color: var(--purple-primary, #202c55); margin: 0 0 25px 0; font-weight: 700; font-family: 'Montserrat', sans-serif;"></p>
+            <button id="qvAddToCartBtn" class="btn-luxury" style="width: 100%; padding: 14px 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: var(--purple-primary, #202c55); color: #ffffff; border: none; border-radius: 4px; cursor: pointer; transition: all 0.2s ease; font-family: 'Montserrat', sans-serif;"></button>
+        </div>
+            
+        </div>
+
+        <!-- Base Section: The "You May Also Pair This With" Complementary Carousel Strip Panel -->
+        <div id="qvPairingRecommendationSection" style="background: #fafafa; padding: 20px 25px; text-align: left; box-sizing: border-box; width: 100%; display: none;">
+           <h4 style="font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--purple-primary, #202c55); margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+                ✨ Curated Additions For Your Collection
+            </h4>
+            
+            <!-- Horizontal Scroll Matrix Track Wrapper -->
+            <div id="qvPairingCarouselTrack" style="display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 10px 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; width: 100%; box-sizing: border-box;">
+                <!-- Matching database items will append here on runtime -->
             </div>
         </div>
+        
     </div>
+</div>
 
     <a href="https://wa.me/919985044066?text=Hello%20Angel%20Jewellery!" target="_blank" id="whatsappFloatingBubble" aria-label="Chat with Support">
         <i class="fab fa-whatsapp"></i>

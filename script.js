@@ -632,6 +632,9 @@ function triggerCartNotification(title) {
     setTimeout(() => { toast.remove(); }, 2400);
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — STABLE QUICK VIEW ENGINE WITH VAULT SCARCITY MANAGER
+// =========================================================================
 function openQuickViewShield(id) {
     const product = productDatabase.find(p => p.id === id);
     if (!product) return;
@@ -639,6 +642,7 @@ function openQuickViewShield(id) {
     const modalShield = document.getElementById('quickviewModalShield');
     if (!modalShield) return;
 
+    // 1. Populate Primary Meta Elements
     document.getElementById('qvImage').src = product.image;
     document.getElementById('qvTitle').innerText = product.title;
     document.getElementById('qvCategory').innerText = product.category.toUpperCase();
@@ -652,6 +656,47 @@ function openQuickViewShield(id) {
             `;
         } else {
             priceContainer.innerText = formatCurrency(product.price);
+        }
+    }
+
+    // =========================================================================
+    // ➔ NEW LOGIC: VAULT SCARCITY REAL-TIME EVALUATOR
+    // =========================================================================
+    const scarcityIndicator = document.getElementById('qvVaultScarcityIndicator');
+    if (scarcityIndicator) {
+        const itemBadgeLower = String(product.badge || '').trim().toLowerCase();
+        
+        // 1. Determine stock level gracefully (checks properties, drops back to helper configurations)
+        let simulatedStock = typeof product.stock === 'number' ? product.stock : 12;
+        if (itemBadgeLower === 'sold out') simulatedStock = 0;
+        else if (itemBadgeLower === 'limited' || itemBadgeLower.includes('exclusive')) simulatedStock = 2;
+        else if (itemBadgeLower === 'hot' || itemBadgeLower === 'trending') simulatedStock = 4;
+
+        // 2. Render targeted premium copy based on current allocation thresholds
+        if (simulatedStock === 0) {
+            scarcityIndicator.style.display = "inline-block";
+            scarcityIndicator.style.background = "rgba(108, 117, 125, 0.1)";
+            scarcityIndicator.style.color = "#6c757d";
+            scarcityIndicator.innerHTML = `<i class="fas fa-lock"></i> Stock Closed`;
+        } 
+        else if (simulatedStock <= 2) {
+            scarcityIndicator.style.display = "inline-block";
+            scarcityIndicator.style.background = "rgba(217, 56, 58, 0.1)";
+            scarcityIndicator.style.color = "#d9383a";
+            scarcityIndicator.innerHTML = `<i class="fas fa-hourglass-half fa-spin-slow" style="margin-right: 4px;"></i> Only few Left In Stock`;
+        } 
+        else if (simulatedStock <= 5) {
+            scarcityIndicator.style.display = "inline-block";
+            scarcityIndicator.style.background = "rgba(204, 164, 59, 0.1)";
+            scarcityIndicator.style.color = "#cca43b";
+            scarcityIndicator.innerHTML = `<i class="fas fa-fire" style="margin-right: 4px;"></i> High Demand Item`;
+        } 
+        else {
+            // Reassuring luxury message for stable pieces
+            scarcityIndicator.style.display = "inline-block";
+            scarcityIndicator.style.background = "rgba(42, 123, 106, 0.1)";
+            scarcityIndicator.style.color = "#2a7b6a";
+            scarcityIndicator.innerHTML = `<i class="fas fa-shield-alt" style="margin-right: 4px;"></i> Stock Guaranteed`;
         }
     }
     
@@ -673,7 +718,61 @@ function openQuickViewShield(id) {
             };
         }
     }
+
+    // 2. GENERATE THE COMPLEMENTARY LOOK RECOMMENDATIONS
+    const recommendationSection = document.getElementById('qvPairingRecommendationSection');
+    const carouselTrack = document.getElementById('qvPairingCarouselTrack');
+
+    if (carouselTrack && productDatabase && productDatabase.length > 0) {
+        carouselTrack.innerHTML = ""; 
+
+        const currentCategory = String(product.category || '').trim().toLowerCase();
+        const structuralPairingMatches = productDatabase.filter(item => {
+            return item && item.id !== product.id && String(item.category || '').trim().toLowerCase() === currentCategory;
+        });
+
+        if (structuralPairingMatches.length === 0) {
+            if (recommendationSection) recommendationSection.style.display = "none";
+        } else {
+            if (recommendationSection) recommendationSection.style.display = "block";
+
+            const displayLimitStack = structuralPairingMatches.slice(0, 4);
+
+            carouselTrack.innerHTML = displayLimitStack.map(pairingItem => {
+                const itemPriceRaw = typeof pairingItem.price === 'number' ? pairingItem.price : parseFloat(pairingItem.price) || 0;
+                
+                return `
+                    <div class="pairing-carousel-card" 
+                         onclick="openQuickViewShield(${pairingItem.id})"
+                         style="flex: 0 0 calc(50% - 7px); min-width: 140px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 4px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); box-sizing: border-box;">
+                        
+                        <div style="width: 48px; height: 48px; min-width: 48px; aspect-ratio: 1/1; overflow: hidden; border-radius: 2px; background: #fafafa;">
+                            <img src="${pairingItem.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
+                        </div>
+                        
+                        <div style="overflow: hidden; flex-grow: 1; text-align: left;">
+                            <h5 style="margin: 0 0 3px 0; font-size: 0.72rem; font-weight: 600; color: var(--text-dark-primary, #111116); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat', sans-serif;">${pairingItem.title}</h5>
+                            <p style="margin: 0; font-size: 0.75rem; font-weight: 700; color: var(--purple-primary, #202c55); font-family: 'Montserrat', sans-serif;">₹${itemPriceRaw.toLocaleString('en-IN')}</p>
+                        </div>
+                        
+                        <i class="fas fa-chevron-right" style="font-size: 0.65rem; color: #ccc; margin-left: auto; padding-right: 2px;"></i>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
     modalShield.style.display = "flex";
+
+    try {
+        modalShield.scrollTo({ top: 0, behavior: 'smooth' });
+        const internalCardElement = modalShield.querySelector('.qv-modal-card');
+        if (internalCardElement && typeof internalCardElement.scrollTo === 'function') {
+            internalCardElement.scrollTo({ top: 0 });
+        }
+    } catch (scrollError) {
+        modalShield.scrollTop = 0;
+    }
 }
 
 function closeQuickViewShield() {
