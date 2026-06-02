@@ -1030,6 +1030,32 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const filterControlsBox = document.querySelector(".catalog-controls");
+    const masterProductGridCanvas = document.getElementById("productGrid"); 
+
+    if (filterControlsBox && masterProductGridCanvas) {
+        
+        const observerOptions = {
+            root: null,      
+            rootMargin: "0px 0px -10% 0px", 
+            threshold: 0     
+        };
+
+        const catalogScrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Main item list is actively visible on viewport screen -> Show Controls
+                    filterControlsBox.classList.remove("hide-controls");
+                } else {
+                    // User has scrolled completely beyond the item grid -> Hide Controls
+                    filterControlsBox.classList.add("hide-controls");
+                }
+            });
+        }, observerOptions);
+
+        catalogScrollObserver.observe(masterProductGridCanvas);
+    }
 });
 
 let globalPayableAmountInPaise = 0; 

@@ -697,3 +697,15 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         display: inline-grid !important;
     }
 }
+.catalog-controls {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translateY(0);
+}
+.catalog-controls.hide-controls {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px); 
+    pointer-events: none;
+}
