@@ -1018,6 +1018,18 @@ window.addEventListener('DOMContentLoaded', () => {
     if (preloader) {
         setTimeout(() => { preloader.style.opacity = '0'; setTimeout(() => { preloader.remove(); }, 600); }, 400);
     }
+
+    const trackingInputField = document.getElementById("trackingPhoneInput");
+    const trackingActionButton = document.getElementById("trackBtn");
+
+    if (trackingInputField && trackingActionButton) {
+        trackingInputField.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                trackingActionButton.click();
+            }
+        });
+    }
 });
 
 let globalPayableAmountInPaise = 0; 
