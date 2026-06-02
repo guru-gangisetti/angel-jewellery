@@ -193,12 +193,32 @@ function filterCatalog(passedSearchQuery) {
                                 <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
                             </div>
                             
-                            <button class="btn-order-wa" 
+                           <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
                                     onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
                                     ${isSoldOut ? 'disabled' : ''} 
-                                    style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
-                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
-                                ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
+                                    style="width: 100%; 
+                                            padding: 11px 0; 
+                                            font-size: 0.72rem; 
+                                            font-weight: 700; 
+                                            text-transform: uppercase; 
+                                            letter-spacing: 1.5px; 
+                                            cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; 
+                                            border-radius: 4px; 
+                                            display: inline-flex; 
+                                            align-items: center; 
+                                            justify-content: center; 
+                                            gap: 6px; 
+                                            margin-top: 5px;
+                                            font-family: 'Montserrat', sans-serif;
+                                            transition: all 0.3s ease;
+                                            background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55) !important'}; 
+                                            color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; 
+                                            border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};
+                                            box-shadow: ${isSoldOut ? 'none !important' : ''};">
+                                
+                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem; ${isSoldOut ? 'opacity: 0.8;' : ''}"></i> 
+                                ${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}
+
                             </button>
                         </div>
                     </div>
@@ -700,24 +720,66 @@ function openQuickViewShield(id) {
         }
     }
     
-    const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-    const qvBtn = document.getElementById('qvAddToCartBtn');
-    
-    if (qvBtn) {
-        if (isSoldOut) {
-            qvBtn.innerText = "Restocking Soon";
-            qvBtn.disabled = true;
-            qvBtn.onclick = null;
-        } else {
-            qvBtn.innerText = "Add To Cart";
-            qvBtn.disabled = false;
-            qvBtn.onclick = () => {
-                addToCartEngine(product.id);
-                closeQuickViewShield();
-                triggerCartNotification(product.title);
-            };
-        }
+    // =========================================================================
+    // ANGEL JEWELLERY — LUXURY ACTION BUTTON STATE MANAGER
+    // =========================================================================
+const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+const qvBtn = document.getElementById('qvAddToCartBtn');
+
+if (qvBtn) {
+    if (isSoldOut) {
+        qvBtn.innerHTML = `<i class="fas fa-lock" style="font-size: 0.65rem; margin-right: 6px; opacity: 0.8;"></i> Restocking soon!`;
+        qvBtn.disabled = true;
+        qvBtn.onclick = null;
+
+        qvBtn.style.cssText = `
+            width: 100%; 
+            padding: 14px 0; 
+            font-size: 0.72rem; 
+            font-weight: 700; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #f4f4f7 !important; 
+            color: #8a8da0 !important; 
+            border: 1px solid #e2e4ed !important; 
+            border-radius: 4px; 
+            cursor: not-allowed; 
+            font-family: 'Montserrat', sans-serif;
+            box-shadow: none !important;
+            transition: all 0.3s ease;
+        `;
+    } else {
+        qvBtn.innerHTML = `Add To Cart`;
+        qvBtn.disabled = false;
+        qvBtn.onclick = () => {
+            addToCartEngine(product.id);
+            closeQuickViewShield();
+            triggerCartNotification(product.title);
+        };
+        qvBtn.style.cssText = `
+            width: 100%; 
+            padding: 14px 0; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            background: var(--purple-primary, #202c55) !important; 
+            color: #ffffff !important; 
+            border: none !important; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+        `;
     }
+}
 
     // 2. GENERATE THE COMPLEMENTARY LOOK RECOMMENDATIONS
     const recommendationSection = document.getElementById('qvPairingRecommendationSection');

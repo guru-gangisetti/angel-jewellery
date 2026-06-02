@@ -35,6 +35,6 @@ collections:
                   label: "Inventory Alert Tag Badge", 
                   name: "badge", 
                   widget: "select", 
-                  options: ["Sale", "New In", "Sold Out"],
+                  options: ["Sale", "New In", "Sold Out", Limited, Trending],
                   required: false 
                 }
