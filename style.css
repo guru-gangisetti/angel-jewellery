@@ -166,6 +166,10 @@ header.scrolled .logo img { height: 45px; }
     transition: top 0.2s ease, position 0.2s ease;
 }
 
+.catalog-controls .filter-category-tab-btn:hover{
+    border: 1px solid var(--purple-primary) !important;
+}
+
 header.scrolled ~ .catalog-controls,
 header.scrolled + .catalog-controls,
 header.scrolled ~ #catalog,
