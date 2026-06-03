@@ -150,6 +150,21 @@ header.scrolled .logo img { height: 45px; }
 .carousel-slide h3 { color: #ffffff !important; }
 .carousel-slide img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
 
+.manifesto-graphic-asset {
+    opacity: 0.98;
+    will-change: transform, opacity;
+}
+
+.manifesto-graphic-asset:hover {
+    opacity: 1;
+    transform: scale(1.005);
+}
+@media (max-width: 768px) {
+    .brand-manifesto-banner-container {
+        padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
+    }
+}
+
 /* --- SEAMLESS HYBRID STICKY CATALOG CONTROLS STRIP --- */
 .catalog-controls {
     position: -webkit-sticky !important; 
@@ -590,6 +605,17 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         top: 60px !important;
         padding: 8px 12px !important;
     }
+    .main-collection-header-vault {
+        padding: 40px 16px 20px 16px !important; 
+    }
+    
+    .collection-main-title {
+        font-size: 1.65rem !important;
+    }
+    .collection-mini-badge {
+        font-size: 0.65rem !important;
+        letter-spacing: 2px !important;
+    }
     header.scrolled ~ .catalog-controls,
     .catalog-controls.sticky-fixed-active {
         top: 55px !important; 
@@ -705,7 +731,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 }
 .catalog-controls.hide-controls {
     opacity: 0;
-    visibility: hidden;
+    display: none;
     transform: translateY(-10px); 
     pointer-events: none;
 }
