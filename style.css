@@ -824,11 +824,56 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .luxury-brand-footer {
         padding: 50px 16px 110px 16px !important;
     }
-    #phoneFloatingBubble {
-        bottom: 85px;
-        right: 20px;
-        height: 48px;
-        width: 48px;
+   #phoneFloatingBubble {
+        position: fixed !important;
+        bottom: 80px !important; 
+        right: 20px !important;  
+        height: 50px !important; 
+        width: 50px !important;  
+        max-width: 50px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #202c55 !important;
+        box-sizing: border-box !important;
+    }
+    #whatsappFloatingBubble, 
+    .whatsapp-floating-bubble,
+    [id*="whatsapp"] {
+        position: fixed !important;
+        bottom: 20px !important; 
+        right: 20px !important;  
+        height: 50px !important; 
+        width: 50px !important;  
+        max-width: 50px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    #whatsappFloatingBubble i,
+    #phoneFloatingBubble i {
+        font-size: 1.25rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        height: auto !important;
+    }
+    #phoneFloatingBubble .bubble-phone-number,
+    .bubble-tooltip {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 }
 .catalog-controls {
