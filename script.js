@@ -1063,6 +1063,25 @@ window.addEventListener('DOMContentLoaded', () => {
         const defaultText = "Hello Angel Jewellery!";
         whatsappBubble.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(defaultText)}`;
     }
+
+    // Hydrate the brand-new structural footer contact links automatically
+    const footerPhoneAnchor = document.getElementById("footerPhoneLink");
+    const footerWhatsappSocialAnchor = document.getElementById("footerWhatsappSocial");
+
+    if (footerPhoneAnchor) {
+        footerPhoneAnchor.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
+    }
+
+    if (footerWhatsappSocialAnchor) {
+        const footerWelcomeMessage = "Hello Angel Jewellery! I am looking for details from your footer section links.";
+        footerWhatsappSocialAnchor.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(footerWelcomeMessage)}`;
+    }
+
+    const interactivePhoneBubble = document.getElementById("phoneFloatingBubble");
+
+    if (interactivePhoneBubble) {
+        interactivePhoneBubble.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
+    }
 });
 
 let globalPayableAmountInPaise = 0; 

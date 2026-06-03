@@ -544,6 +544,69 @@ header.scrolled ~ #catalog,
 }
 #whatsappFloatingBubble:hover .bubble-tooltip { opacity: 1; transform: translateX(-5px); }
 
+#phoneFloatingBubble {
+   position: fixed;
+    bottom: 100px;
+    right: 30px;
+    background: #202c55;
+    color: #ffffff !important;
+    text-decoration: none;
+    height: 54px;
+    width: 54px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(32, 44, 85, 0.2);
+    z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+.bubble-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+#phoneFloatingBubble .fa-phone-alt {
+    font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", Arial, sans-serif !important;
+    font-weight: 900 !important;
+    font-style: normal;
+    display: inline-block;
+    font-size: 1.15rem;
+    min-width: 20px;
+    text-align: center;
+    color: #ffffff !important;
+}
+
+#phoneFloatingBubble i {
+    font-size: 1.2rem;
+    color: #ffffff !important;
+    display: inline-block;
+    transition: transform 0.3s ease;
+    margin: 0;
+    padding: 0;
+}
+
+#phoneFloatingBubble i {
+    font-size: 1.15rem;
+    transition: transform 0.3s ease;
+}
+
+.bubble-phone-number {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: none;
+    opacity: 0;
+    color: #ffffff;
+    transition: opacity 0.3s ease;
+}
+
 /* --- EDITORIAL BRAND STORY PANELS --- */
 .story-section-wrapper { padding: 100px 0; background: #ffffff; border-top: 1px solid var(--border-subtle); }
 .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
@@ -564,6 +627,18 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .copyright { font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 500; }
 .footer-socials { display: flex; gap: 24px; font-size: 1.3rem; color: var(--purple-primary); }
 .footer-socials a:hover { color: var(--pink-accent); }
+.footer-social-icon:hover {
+    background: var(--purple-primary, #202c55);
+    color: #ffffff !important;
+    border-color: var(--purple-primary, #202c55) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(32, 44, 85, 0.1);
+}
+
+#footerPhoneLink:hover, 
+#footerSupportLink:hover {
+    color: var(--purple-primary, #202c55) !important;
+}
 
 /* --- DELIVERY METRIC SLIDERS --- */
 .shipping-progress-wrapper { background: #ffffff; border: 1px solid var(--border-subtle); padding: 14px 18px; margin-bottom: 5px; border-radius: 4px; }
@@ -588,6 +663,30 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .catalog-controls .container { gap: 15px; }
 }
 
+@media (min-width: 769px) {
+    #phoneFloatingBubble:hover {
+        width: 220px;
+        border-radius: 50px;
+        background: #ff1493;
+        box-shadow: 0 12px 28px rgba(255, 20, 147, 0.25);
+        padding: 0 20px;
+    }
+    
+    #phoneFloatingBubble:hover .bubble-content-wrapper {
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    #phoneFloatingBubble:hover .bubble-phone-number {
+        display: inline-block;
+        opacity: 1;
+    }
+    
+    #phoneFloatingBubble:hover i {
+        transform: rotate(15deg) scale(1.1);
+    }
+}
+
 /* =========================================================================
    MEDIA QUERIES — MOBILE DISPLAY PHONES COMPRESSION OVERRIDES (< 768px)
    ========================================================================= */
@@ -606,7 +705,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         padding: 8px 12px !important;
     }
     .main-collection-header-vault {
-        padding: 40px 16px 20px 16px !important; 
+        padding: 10px !important; 
     }
     
     .collection-main-title {
@@ -721,6 +820,15 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     }
     .tracking-enter-contact{
         display: inline-grid !important;
+    }
+    .luxury-brand-footer {
+        padding: 50px 16px 110px 16px !important;
+    }
+    #phoneFloatingBubble {
+        bottom: 85px;
+        right: 20px;
+        height: 48px;
+        width: 48px;
     }
 }
 .catalog-controls {

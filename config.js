@@ -18,8 +18,8 @@ const ANGEL_STORE_CONFIG = {
 
     // 3. Direct Support Core Routing Hotlines
     CONCIERGE_CHANNELS: {
-        WHATSAPP_PHONE_RAW: "919985044066",
-        WHATSAPP_LINK_URI: "https://wa.me/919985044066"
+        WHATSAPP_PHONE_RAW: "919160133199",
+        WHATSAPP_LINK_URI: "https://wa.me/919160133199"
     }
 };
 
