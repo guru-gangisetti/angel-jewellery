@@ -1056,6 +1056,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
         catalogScrollObserver.observe(masterProductGridCanvas);
     }
+
+    // 1. Locate your floating contact element node
+    const whatsappBubble = document.getElementById("whatsappFloatingBubble");
+    if (whatsappBubble) {
+        const defaultText = "Hello Angel Jewellery!";
+        whatsappBubble.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(defaultText)}`;
+    }
 });
 
 let globalPayableAmountInPaise = 0; 
@@ -1133,7 +1140,7 @@ function initiateRazorpayPaymentProcess(event) {
     const nameErrorElement = document.getElementById('invNameValidationError');
     const phoneErrorElement = document.getElementById('invPhoneValidationError');
     const addressErrorElement = document.getElementById('invAddressValidationError');
-
+    const indiaPhoneRegex = /^(?:\+91|91)?[6-9]\d{9}$/;
     let isFormSubmissionValid = true;
 
     if (nameErrorElement) { nameErrorElement.innerText = ""; nameErrorElement.style.display = "none"; }
@@ -1158,7 +1165,14 @@ function initiateRazorpayPaymentProcess(event) {
         isFormSubmissionValid = false;
     } else if (phone.length !== 10) {
         if (phoneErrorElement) {
-            phoneErrorElement.innerText = "Please input a precise 10-digit mobile contact number.";
+            phoneErrorElement.innerText = "Please enter 10-digit contact number. \n (For Ex: 9999988888)";
+            phoneErrorElement.style.display = "block";
+        }
+        if (isFormSubmissionValid) { document.getElementById('invClientPhone').focus(); }
+        isFormSubmissionValid = false;
+    }else if (!indiaPhoneRegex.test(phone)) {
+        if (phoneErrorElement) {
+            phoneErrorElement.innerText = "Please enter 10-digit contact number. \n (For Ex: 9999988888)";
             phoneErrorElement.style.display = "block";
         }
         if (isFormSubmissionValid) { document.getElementById('invClientPhone').focus(); }
@@ -1181,11 +1195,11 @@ function initiateRazorpayPaymentProcess(event) {
     localStorage.setItem('angel_customer_address', address);
 
     const paymentOptions = {
-        "key": "rzp_test_StZ7M1D8qRHUIN", 
+        "key": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.RAZORPAY_KEY_ID, 
         "amount": globalPayableAmountInPaise, 
-        "currency": "INR",
-        "name": "Angel Jewellery",
-        "description": "Premium High-Fashion Order Settlement",
+        "currency": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.CURRENCY_CODE,
+        "name": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.MERCHANT_NAME,
+        "description": "Angel Jewellery Checkout Window",
         "image": "angel-logo.png", 
         "handler": function (transactionResponse) {
             executePostPaidWhatsAppDispatch(transactionResponse.razorpay_payment_id, name, phone, address);
@@ -1195,7 +1209,7 @@ function initiateRazorpayPaymentProcess(event) {
             "contact": phone
         },
         "theme": {
-            "color": "#202c55" 
+            "color": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.THEME_HEX_COLOR 
         }
     };
 
@@ -1246,7 +1260,7 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     messageText += `📍 *Delivery Address:* \n${address}\n\n`;
     messageText += `💬 _Payment token validated. Please share to generate courier delivery slip profiles._`;
 
-    const generatedLink = `https://wa.me/919985044066?text=${encodeURIComponent(messageText)}`;
+    const generatedLink = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(messageText)}`;
     
     document.getElementById('confWhatsAppBtn').onclick = () => {
         window.open(generatedLink, '_blank');
@@ -1254,9 +1268,10 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
 
     const orderImageUrlsString = shoppingCart.map(item => item.image || '').filter(url => url !== '').join(', ');
     
-    fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi", {
+    fetch(ANGEL_STORE_CONFIG.DATABASE.SHEETDB_API_URL, {
         method: "POST",
         headers: {
+            'Accept': 'application/json',
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -1308,7 +1323,7 @@ function executeLiveOrderTrackingSearch() {
     if (!plainPhoneNumberInput) {
         statusMsg.style.display = "block";
         statusMsg.style.color = "var(--pink-accent)";
-        statusMsg.innerText = "Please provide a valid contact registration number.";
+        statusMsg.innerText = "Please provide a valid contact number.";
         return;
     }
     
