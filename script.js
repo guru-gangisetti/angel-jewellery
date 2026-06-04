@@ -189,7 +189,7 @@ function filterCatalog(passedSearchQuery) {
                                 <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 600; margin: 0 0 4px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat', sans-serif; text-align: center;">
                                     ${displayCategory}
                                 </p>
-                                <h3 style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
+                                <h3 style="font-size: 0.88rem; font-weight: 600; margin: 8px 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif; text-align: center;">${product.title}</h3>
                                 <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
                             </div>
                             
@@ -211,7 +211,7 @@ function filterCatalog(passedSearchQuery) {
                                             margin-top: 5px;
                                             font-family: 'Montserrat', sans-serif;
                                             transition: all 0.3s ease;
-                                            background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55) !important'}; 
+                                            background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; 
                                             color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; 
                                             border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};
                                             box-shadow: ${isSoldOut ? 'none !important' : ''};">
@@ -728,7 +728,7 @@ const qvBtn = document.getElementById('qvAddToCartBtn');
 
 if (qvBtn) {
     if (isSoldOut) {
-        qvBtn.innerHTML = `<i class="fas fa-lock" style="font-size: 0.65rem; margin-right: 6px; opacity: 0.8;"></i> Restocking soon!`;
+        qvBtn.innerHTML = `<i class="fas fa-lock" style="font-size: 0.65rem; padding-left: 5px; margin-right: 6px; opacity: 0.8;"></i> Restocking soon!`;
         qvBtn.disabled = true;
         qvBtn.onclick = null;
 
@@ -770,7 +770,7 @@ if (qvBtn) {
             align-items: center; 
             justify-content: center; 
             gap: 10px; 
-            background: var(--purple-primary, #202c55) !important; 
+            background: var(--purple-primary, #202c55); 
             color: #ffffff !important; 
             border: none !important; 
             border-radius: 4px; 

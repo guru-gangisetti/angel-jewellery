@@ -420,7 +420,10 @@ header.scrolled ~ #catalog,
     border: 1px solid var(--purple-primary); color: #ffffff; font-size: 0.8rem; text-transform: uppercase;
     letter-spacing: 2px; font-weight: 600; cursor: pointer; transition: var(--transition); border-radius: 4px;
 }
-.btn-luxury:hover { background: var(--pink-accent); border-color: var(--pink-accent); color: #ffffff; transform: translateY(-2px); }
+.btn-luxury:hover { background: var(--pink-accent, #ff1493) !important; border-color: var(--pink-accent); color: #ffffff !important; transform: translateY(-2px); }
+.pairing-carousel-card:hover{
+    border: 1px solid var(--pink-accent) !important;
+}
 
 /* =========================================================================
    LUXURY SCROLL-ISOLATED SIDEBAR DRAWERS
@@ -533,7 +536,7 @@ header.scrolled ~ #catalog,
 #whatsappFloatingBubble {
     position: fixed; bottom: 30px; right: 30px; background: #25d366; color: #fff;
     width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 1.8rem; box-shadow: 0 8px 24px rgba(37,211,102,0.25); z-index: 2500; cursor: pointer; transition: var(--transition);
+    font-size: 1.8rem; box-shadow: 0 8px 24px rgba(37,211,102,0.25); z-index: 9999; cursor: pointer; transition: var(--transition);
 }
 #whatsappFloatingBubble:hover { transform: scale(1.08); background: #20ba5a; }
 .bubble-tooltip {
