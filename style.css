@@ -320,7 +320,7 @@ header.scrolled ~ #catalog,
 .switch-container input:checked + .switch-slider:before { transform: translateX(16px) !important; }
 
 /* --- PRODUCT DISPLAY GRID MATRIX --- */
-.products-section { padding: 30px 0 80px 0; background: var(--bg-dark); min-height: 400px; }
+.products-section { padding: 30px 0 80px 0; background: var(--bg-dark); min-height: 400px; background: #fcf0de; border-radius: 8px;}
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 30px 20px; }
 
 /* COMPACT LUXURY CARD ARCHITECTURE */
