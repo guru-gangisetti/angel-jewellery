@@ -232,6 +232,10 @@ function filterCatalog(passedSearchQuery) {
         if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
         if (typeof renderTrendingSection === 'function') renderTrendingSection();
     }
+    document.getElementById('collection-main-title').scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
 }
 
 // =========================================================================
