@@ -27,7 +27,7 @@ collections:
                   label: "Design Category", 
                   name: "category", 
                   widget: "select", 
-                  options: ["necklace", "earrings", "rings", "bracelets"] 
+                  options: ["necklace", "earrings", "rings", "bracelets","kada","watch", "Mini Haram"] 
                 }
               - { label: "Retail Value Price (₹)", name: "price", widget: "number", value_type: "int" }
               - { label: "Display Photograph Media", name: "image", widget: "image" }
