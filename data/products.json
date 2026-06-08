@@ -207,7 +207,8 @@
       "price": 250,
       "image": "/images/earrings-5292026-1227-1.jpeg",
       "badge": "New In"
-    },{
+    },
+    {
       "id": 22,
       "title": "Royal Lakshmi devi Necklace",
       "category": "Ear Rings",
@@ -238,7 +239,14 @@
       "price": 950,
       "image": "/images/jaadu-kundan-1.jpeg",
       "badge": "trending"
+    },
+    {
+      "category": "kada",
+      "id": 6001,
+      "title": "Premium gold kada",
+      "price": 500,
+      "image": "images/kada-60001.jpeg",
+      "badge": "New In"
     }
-    
   ]
 }
