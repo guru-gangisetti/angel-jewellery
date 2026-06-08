@@ -241,7 +241,9 @@ header.scrolled ~ #catalog,
     background: #ffffff; 
     box-shadow: 0 0 0 4px var(--pink-glow); 
 }
-
+#clearSearchActionBtn:hover {
+    color: var(--purple-primary, #202c55) !important;
+}
 .filter-wrapper { 
     display: flex !important; 
     flex-direction: row !important;

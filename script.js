@@ -917,7 +917,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
     // ➔ INTEGRATED: Search parameter routing alignment
-    const searchInput = document.getElementById('searchInput');
+    let searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             filterCatalog(this.value);
@@ -1081,6 +1081,37 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (interactivePhoneBubble) {
         interactivePhoneBubble.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
+    }
+
+     searchInput = document.getElementById("searchInput");
+    let clearButton = document.getElementById("clearSearchActionBtn");
+
+    if (searchInput && clearButton) {
+        
+        // 1. Evaluate input lengths on input text entry sequences
+        searchInput.addEventListener("input", () => {
+            if (searchInput.value.trim().length > 0) {
+                clearButton.style.display = "flex"; // Fade-in button presence
+            } else {
+                clearButton.style.display = "none";  // Hide away safely if text row gets cleared manually
+            }
+        });
+
+        // 2. Bind clearing handler algorithms to execution clicks
+        clearButton.addEventListener("click", () => {
+            searchInput.value = "";              // Wipe input payload clear
+            clearButton.style.display = "none";  // Instantly drop visibility state flags
+            searchInput.focus();                 // Pop cursor text insertion frame focus back to customer entry
+            
+            // ➔ CRITICAL LOGIC: Trigger your existing filtering code loop
+            // to instantly restore all items to the product grid layout container.
+            if (typeof filterProducts === "function") {
+                filterProducts(""); 
+            } else {
+                // If your system relies on launching direct fake custom input triggers instead:
+                searchInput.dispatchEvent(new Event("input"));
+            }
+        });
     }
 });
 

@@ -108,7 +108,10 @@
         <div class="container">
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" oninput="filterCatalog(this.value)" class="search-input" placeholder="Search luxury designs...">
+                <input type="text" id="searchInput" oninput="filterCatalog(this.value)" class="search-input" placeholder="Search your design...">
+                <button type="button" id="clearSearchActionBtn" aria-label="Clear Search String Input" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a0a0b0; cursor: pointer; font-size: 1rem; padding: 4px; align-items: center; display: none; justify-content: center; transition: color 0.2s ease; outline: none;">
+                    <i style="margin: 0 0 0 -15px;" class="fas fa-times"></i>
+                </button>
             </div>
             <div class="filter-wrapper" id="filterContainer">
                 <!-- <button class="filter-btn active" data-filter="all">All Masterpieces</button>
