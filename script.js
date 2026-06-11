@@ -2099,7 +2099,7 @@ function generateDynamicCatalogFilters() {
 
     const universalAllButton = document.createElement('button');
     universalAllButton.className = "filter-category-tab-btn";
-    universalAllButton.innerText = "All Masterpieces";
+    universalAllButton.innerText = "All";
     
     applyCustomFilterTabButtonStyles(universalAllButton, currentSelectedFilterCategoryKey === 'all');
     
