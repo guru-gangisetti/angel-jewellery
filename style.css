@@ -159,6 +159,17 @@ header.scrolled .logo img { height: 45px; }
     opacity: 1;
     transform: scale(1.005);
 }
+
+.trending-showcase-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(32, 44, 85, 0.15) !important;
+    box-shadow: 0 15px 35px rgba(32, 44, 85, 0.05) !important;
+}
+
+.trending-acquire-action-btn:hover {
+    background: #ff1493 !important; /* Glows brand accent pink on desktop cursor hover states */
+    box-shadow: 0 6px 15px rgba(255, 20, 147, 0.2);
+}
 @media (max-width: 768px) {
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
@@ -881,6 +892,18 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         display: none !important;
         opacity: 0 !important;
         visibility: hidden !important;
+    }
+    .trending-curation-showroom-section {
+        padding: 50px 16px !important; /* Compresses white layout spaces for tight tracking screens */
+    }
+    
+    #trendingShowroomGridCanvas {
+        grid-template-columns: 1fr !important; /* Collapses beautifully into stacked item rows on phone */
+        gap: 25px !important;
+    }
+    
+    .trending-showcase-card {
+        padding: 20px !important; /* Maximizes frame display area grids */
     }
 }
 .catalog-controls {

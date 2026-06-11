@@ -232,10 +232,10 @@ function filterCatalog(passedSearchQuery) {
         if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
         if (typeof renderTrendingSection === 'function') renderTrendingSection();
     }
-    document.getElementById('collection-main-title').scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
+    // document.getElementById('collection-main-title').scrollIntoView({
+    //                     behavior: "smooth",
+    //                     block: "start"
+    //                 });
 }
 
 // =========================================================================
@@ -1117,6 +1117,165 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const gridContainer = document.getElementById("trendingShowroomGridCanvas");
+    
+    if (!gridContainer || !ANGEL_STORE_CONFIG.TRENDING_COLLECTION) return;
+
+    const curationItems = ANGEL_STORE_CONFIG.TRENDING_COLLECTION;
+
+    // 1. Build and compile item cards inside the grid layout frame dynamically
+    gridContainer.innerHTML = curationItems.map((item, itemIdx) => {
+        const defaultVariant = item.variants[0]; // First element defaults to current view
+        
+        // Map individual gemstone swatches inline directly inside the current string scope
+        const swatchesHtml = item.variants.map((variant, varIdx) => `
+            <button type="button" class="showroom-swatch-dot" 
+                data-item-idx="${itemIdx}" 
+                data-var-idx="${varIdx}" 
+                style="width: 20px; height: 20px; border-radius: 50%; background-color: ${variant.hexColor}; border: 2px solid ${varIdx === 0 ? '#202c55' : '#ffffff'}; box-shadow: 0 0 0 1.5px ${varIdx === 0 ? '#202c55' : 'rgba(32,44,85,0.15)'}; cursor: pointer; padding: 0; outline: none; transition: all 0.3s ease;">
+            </button>
+        `).join('');
+
+        return `
+            <div class="trending-showcase-card" id="trendingCard_${itemIdx}" data-selected-var-idx="0" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 4px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(32,44,85,0.01); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-sizing: border-box; text-align: center;">
+                
+                <div style="width: 100%; background: #ffffff; padding: 10px; box-sizing: border-box; position: relative; overflow: hidden; margin-bottom: 20px;">
+                    <img id="trendingVisual_${itemIdx}" src="${defaultVariant.imageFile}" alt="${item.title}" style="width: 100%; height: auto; max-height: 280px; object-fit: contain; display: block; margin: 0 auto; transition: opacity 0.25s ease;">
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #77778b; margin: 0 0 10px 0;">
+                        Gemstone: <span id="trendingGemstoneLabel_${itemIdx}" style="color: #ff1493; font-weight: 800;">${defaultVariant.colorName}</span>
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                        ${swatchesHtml}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 22px;">
+                    <h3 style="color: #202c55; font-size: 1.15rem; font-weight: 600; margin: 0 0 6px 0; letter-spacing: 0.5px;">${item.title}</h3>
+                    <p style="color: #6c757d; font-size: 0.8rem; line-height: 1.5; margin: 0 0 12px 0; padding: 0 5px;">${item.description}</p>
+                    <p style="color: #202c55; font-size: 1.1rem; font-weight: 700; margin: 0;">${item.basePrice}</p>
+                </div>
+
+                <button type="button" class="trending-acquire-action-btn" data-item-idx="${itemIdx}" style="background: #202c55; color: #ffffff; width: 100%; height: 44px; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; outline: none;">
+                    ADD TO CART
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    // 2. Event Routing: Intercept color swatch selection sequences inside card panels
+    gridContainer.addEventListener("click", (event) => {
+        const swatch = event.target.closest(".showroom-swatch-dot");
+        if (!swatch) return;
+
+        const itemIdx = parseInt(swatch.getAttribute("data-item-idx"));
+        const varIdx = parseInt(swatch.getAttribute("data-var-idx"));
+        
+        const targetItem = curationItems[itemIdx];
+        const selectedVariant = targetItem.variants[varIdx];
+
+        const cardElement = document.getElementById(`trendingCard_${itemIdx}`);
+        const imageElement = document.getElementById(`trendingVisual_${itemIdx}`);
+        const labelElement = document.getElementById(`trendingGemstoneLabel_${itemIdx}`);
+
+        if (!cardElement || !imageElement || !labelElement) return;
+
+        // Save selected color index onto parent layout element data attributes state flags
+        cardElement.setAttribute("data-selected-var-idx", varIdx);
+
+        // Soft visual swap fade transition execution
+        imageElement.style.opacity = "0.2";
+        setTimeout(() => {
+            imageElement.src = selectedVariant.imageFile;
+            labelElement.textContent = selectedVariant.colorName;
+            imageElement.style.opacity = "1";
+        }, 150);
+
+        // Synchronize local border highlights across dots inside this specific array card box node only
+        const siblingSwatches = cardElement.querySelectorAll(".showroom-swatch-dot");
+        siblingSwatches.forEach((btn, idx) => {
+            if (idx === varIdx) {
+                btn.style.borderColor = "#ffffff";
+                btn.style.boxShadow = "0 0 0 1.5px #202c55";
+                btn.style.transform = "scale(1.1)";
+            } else {
+                btn.style.borderColor = "#ffffff";
+                btn.style.boxShadow = "0 0 0 1.5px rgba(32,44,85,0.15)";
+                btn.style.transform = "scale(1)";
+            }
+        });
+    });
+
+    
+  // =========================================================================
+    // 3. Checkout Additions Handler Routing Loop (FIXED ID AND QUANTITY CONTROLS)
+    // =========================================================================
+    gridContainer.addEventListener("click", (event) => {
+        const actionBtn = event.target.closest(".trending-acquire-action-btn");
+        if (!actionBtn) return;
+
+        const itemIdx = parseInt(actionBtn.getAttribute("data-item-idx"));
+        const cardElement = document.getElementById(`trendingCard_${itemIdx}`);
+        const currentVarIdx = parseInt(cardElement.getAttribute("data-selected-var-idx"));
+
+        const baseItem = curationItems[itemIdx];
+        const currentVariant = baseItem.variants[currentVarIdx];
+
+        // Compile clean item descriptors for shopping bags and logs
+        const compiledBespokeTitlePayload = `${baseItem.title} (${currentVariant.colorName})`;
+        
+        // Strip out text artifacts to derive clean numbers for pricing calculations
+        const numericCleanPriceValue = parseFloat(baseItem.basePrice.replace(/[^0-9.]/g, '')) || 0;
+
+        // ➔ THE FIX: Generated a stable numeric hash ID sequence so onClick parameters evaluate cleanly
+        const safeNumericVariantId = 202600 + (itemIdx * 10) + currentVarIdx;
+
+        // Construct matching structured mock object parameters
+        const structuredMockProductItem = {
+            id: safeNumericVariantId, 
+            title: compiledBespokeTitlePayload,
+            price: numericCleanPriceValue,
+            category: "Exclusive Selection",
+            image: currentVariant.imageFile
+        };
+
+        // Connect directly into your master shopping cart array core memory pipelines
+        if (typeof addToCartEngine === "function" || typeof shoppingCart !== "undefined") {
+            
+            // Query current selection state bounds against the active matrix array
+            const existingSelection = shoppingCart.find(item => item.id === safeNumericVariantId);
+            
+            if (existingSelection) {
+                existingSelection.quantity += 1;
+            } else {
+                shoppingCart.push({ ...structuredMockProductItem, quantity: 1 });
+            }
+            
+            // Re-render side drawer tracking components instantly
+            updateCartUI();
+
+            // Fire tactile micro-feedback button flash animations
+            actionBtn.textContent = "Secured In Bag";
+            actionBtn.style.background = "#ff1493";
+            actionBtn.style.borderColor = "#ff1493";
+            
+            if (typeof triggerCartNotification === "function") {
+                triggerCartNotification(compiledBespokeTitlePayload);
+            }
+            
+            setTimeout(() => {
+                actionBtn.textContent = "ADD TO CART";
+                actionBtn.style.background = "#202c55";
+                actionBtn.style.borderColor = "#202c55";
+            }, 1500);
+            
+        } else {
+            alert(`Added to Bag: ${compiledBespokeTitlePayload} - ${baseItem.basePrice}`);
+        }
+    });
 });
 
 let globalPayableAmountInPaise = 0; 
