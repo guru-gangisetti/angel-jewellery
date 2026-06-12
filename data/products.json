@@ -247,6 +247,14 @@
       "price": 500,
       "image": "images/kada-60001.jpeg",
       "badge": "New In"
+    },
+    {
+      "id": 6666666,
+      "title": "Newly added neckset",
+      "category": "necklace",
+      "image": "images/necklace-5292026-1225-1.jpeg",
+      "price": 19999,
+      "badge": "New In"
     }
   ]
 }
