@@ -2288,10 +2288,9 @@ function generateDynamicCatalogFilters() {
 }
 
 function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
-    // Shared structural foundation layouts
     const baseStyles = `
-        padding: 6px 14px;
-        font-size: 0.72rem;
+        padding: 10px 18px;
+        font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-radius: 20px;
@@ -2311,9 +2310,9 @@ function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
         `;
     } else {
         buttonNode.style.cssText = baseStyles + `
-            background: #f4f4f7;
+            background: #fff;
             color: var(--text-dark-primary, #111116);
-            border: 1px solid transparent;
+            border: 1px solid #111116;
             font-weight: 600;
         `;
     }

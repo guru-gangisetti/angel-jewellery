@@ -150,6 +150,49 @@ header.scrolled .logo img { height: 45px; }
 .carousel-slide h3 { color: #ffffff !important; }
 .carousel-slide img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
 
+/* =========================================================================
+   ANGEL JEWELLERY — LUXURY CONTINUOUS MARQUEE RIBBON OVERRIDE
+   ========================================================================= */
+.luxury-announcement-ribbon-wrapper {
+    box-shadow: 0 4px 15px rgba(32, 44, 85, 0.06);
+}
+
+.ribbon-text-node {
+    font-family: 'Montserrat', 'Poppins', sans-serif;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.ribbon-divider-dot {
+    color: var(--pink-accent, #ff1493);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+/* Connect the horizontal movement ticker tracks */
+.ribbon-ticker-track {
+    animation: luxuryRibbonRollLoop 50s linear infinite; /* Controls rotation transition speed */
+}
+
+/* Pause scroll velocity smoothly if a user hovers cursor to inspect a coupon code string */
+.luxury-announcement-ribbon-wrapper:hover .ribbon-ticker-track {
+    animation-play-state: paused;
+}
+
+/* Linear infinite layout math shift matrix */
+@keyframes luxuryRibbonRollLoop {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(-50%, 0, 0); /* Glides exactly halfway through before re-snapping invisibly */
+    }
+}
+
+
 .manifesto-graphic-asset {
     opacity: 0.98;
     will-change: transform, opacity;
