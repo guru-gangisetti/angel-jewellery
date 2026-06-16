@@ -569,10 +569,22 @@
                 </a>
             </div>
         </div>
+        <!-- =========================================================================
+             ANGEL JEWELLERY — LUXURY LEGAL INTERACTIVE FOOTER ROUTING ROW
+             ========================================================================= -->
+        <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px dotted rgba(32,44,85,0.1); padding: 15px 0 10px 0;">
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'privacy')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Privacy Policy</a>
+            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'shipping')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Shipping Policy</a>
+            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'refund')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Refund & Exchange</a>
+            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'terms')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Terms of Service</a>
+        </div>
+
         <div style="margin-top: 15px; opacity: 0.5;">
             <p style="color: #6c757d; font-size: 0.72rem; letter-spacing: 0.5px; margin: 0;">&copy; 2026 Angel Jewellery. All Rights Reserved. Crafted for Permanence.</p>
         </div>
-
     </div>
 </footer>
 
@@ -692,6 +704,32 @@
                     Submit Verified Review
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         ANGEL JEWELLERY — DYNAMIC INTERACTIVE CORE POLICY READER MODAL
+         ========================================================================= -->
+    <div id="angelStorePolicyModalViewer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 26, 54, 0.5); backdrop-filter: blur(8px); z-index: 9999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif;">
+        <div style="background: #ffffff; width: 100%; max-width: 600px; border-radius: 8px; border: 1px solid #e8e8ef; box-shadow: 0 20px 50px rgba(32,44,85,0.15); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; animation: scaleInFade 0.3s ease;">
+            
+            <!-- Header Panel -->
+            <div style="background: #202c55; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="angelPolicyModalHeaderTitle" style="color: #ffffff; margin: 0; font-size: 1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">
+                    Store Policy Document
+                </h3>
+                <i class="fas fa-times" onclick="closeAngelStorePolicyModal()" style="color: #ffffff; cursor: pointer; font-size: 1.1rem; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8"></i>
+            </div>
+
+            <!-- Dynamic Content Sheet (Scrollable) -->
+            <div id="angelPolicyModalScrollableBody" style="padding: 25px; overflow-y: auto; text-align: left; box-sizing: border-box; line-height: 1.6; font-size: 0.88rem; color: #4a4a5a;">
+                <!-- Content injected dynamically via script based on clicked item -->
+            </div>
+            
+            <!-- Close Bottom Action Bar -->
+            <div style="background: #fdfdfd; padding: 12px 24px; border-top: 1px solid #e8e8ef; text-align: right;">
+                <button type="button" onclick="closeAngelStorePolicyModal()" style="background: #202c55; color: #fff; border: none; padding: 8px 20px; font-family: 'Montserrat'; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Close Document</button>
+            </div>
         </div>
     </div>
 

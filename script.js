@@ -2800,3 +2800,79 @@ async function submitCustomerFeedbackPipeline(event) {
 document.addEventListener("DOMContentLoaded", () => {
     loadLiveCustomerFeedbackShowroom();
 });
+
+// =========================================================================
+// ANGEL JEWELLERY — STABLE STORE POLICY REGISTRY DATA OVERLAYS
+// =========================================================================
+const ANGEL_LEGAL_VAULT_POLICIES = {
+    privacy: {
+        title: "Privacy Policy",
+        html: `
+            <p><strong>Effective Date: June 2026</strong></p>
+            <p>Welcome to Angel Jewellery. Your privacy is critical to our luxury standard. This policy clarifies how your data is treated during interactions on our platform.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Data Collection & Usage</h4>
+            <p>We process essential customer coordinates (Full Name, verified Phone Number, Shipping Address, and Order logs) solely to arrange handoffs, custom sizing updates, and live dispatch tracking updates.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Vault Security Guarantee</h4>
+            <p>Angel Jewellery does not cache, sell, or rent client identity profiles to advertising third parties. Your order history records sit entirely inside encrypted logistics infrastructure maps.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Tracker Transparency</h4>
+            <p>We use temporary local cache assets strictly to manage items retained inside your shopping cart drawer and process real-time UI catalog folder states.</p>
+        `
+    },
+    shipping: {
+        title: "Shipping & Fulfillment Policy",
+        html: `
+            <p>Every piece curated by Angel Jewellery undergoes rigorous multi-tier verification before being sealed in our premium anti-tamper keepsake packaging.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Tariffs & Variable Rates</h4>
+            <ul style="padding-left:20px; margin: 10px 0;">
+                <li><strong>Orders over ₹1,000:</strong> 100% Free Shipping all across pan-India delivery corridors automatically.</li>
+                <li><strong>Orders below ₹1,000:</strong> Calculated dynamically at checkout point based on your structural region zone profiles.</li>
+            </ul>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Timestamps</h4>
+            <p>Orders are batched and handed to premium domestic freight networks (DTDC / Delhivery Express) within 24–48 hours. Transit speeds generally reach standard tier hubs across India in 3–5 operational business days.</p>
+        `
+    },
+    refund: {
+        title: "Refund, Return & Cancellation Matrix",
+        html: `
+            <p>Due to the fine handcrafted nature and luxury sanitization protocols of our artisan collections, Angel Jewellery maintains a strict structural return policy matrix.</p>
+            <h4 style="color:#d9383a; margin-top:15px; font-size:0.95rem;">1. Post-Dispatch Cancellation Lock</h4>
+            <p style="background:rgba(217,56,58,0.04); border-left:3px solid #d9383a; padding:8px 12px; font-weight:600;">Once your package has been fulfilled, tracking coordinates assigned, or handed to our courier partners, the order can neither be canceled, modified, nor recalled.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Absolute No-Exchange Rule</h4>
+            <p>To preserve pristine metal health guidelines for all patrons, items delivered securely cannot be exchanged or returned due to casual change-of-mind parameters.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Shipping Transit Damage Exceptions</h4>
+            <p>If a product arrives with a rare physical breakdown caused in transit, notify our Concierge desk via WhatsApp within 24 hours of box delivery with an unedited unboxing video to claim an identical luxury component replacement.</p>
+        `
+    },
+    terms: {
+        title: "Terms of Service",
+        html: `
+            <p>By entering, purchasing, or interacting with the Angel Jewellery showroom ecosystem, you agree to comply with our absolute standard operational terms:</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Inventory Discrepancy Control</h4>
+            <p>While our SheetDB link engines work in real-time, order queues that happen at the exact same split-second take priority by timestamp sequence. If an item runs out of stock mid-checkout, we will issue an immediate 100% gateway refund to your payment root source.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Intended Use and Copyright</h4>
+            <p>All catalog media assets, brand banners, and custom code modules remain the exclusive property of Angel Jewellery. Unauthorized duplication or commercial reselling is strictly prohibited.</p>
+        `
+    }
+};
+
+function openAngelStorePolicyModal(event, policyKey) {
+    if (event) event.preventDefault();
+    
+    const targetDoc = ANGEL_LEGAL_VAULT_POLICIES[policyKey];
+    if (!targetDoc) return;
+
+    const titleEl = document.getElementById('angelPolicyModalHeaderTitle');
+    const bodyEl = document.getElementById('angelPolicyModalScrollableBody');
+    const modalView = document.getElementById('angelStorePolicyModalViewer');
+
+    if (titleEl && bodyEl && modalView) {
+        titleEl.innerText = targetDoc.title;
+        bodyEl.innerHTML = targetDoc.html;
+        modalView.style.display = 'flex';
+    }
+}
+
+function closeAngelStorePolicyModal() {
+    const modalView = document.getElementById('angelStorePolicyModalViewer');
+    if (modalView) modalView.style.display = 'none';
+}
