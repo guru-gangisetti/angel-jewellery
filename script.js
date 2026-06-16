@@ -1,7 +1,7 @@
 /* =========================================================================
    ANGEL JEWELLERY — COMPLETE MASTER RUNTIME ENGINE APPLICATIVE LOGIC
    ========================================================================= */
-
+let productDatabase = [];
 let shoppingCart = [];       
 let wishlistMemory = [];     
 let adminOrdersCache = [];       
@@ -9,6 +9,7 @@ let currentAdminActiveTab = "pending";
 let activeDiscount = { code: "", type: "", value: 0 };
 let adminConsoleSearchQueryString = "";
 let currentSelectedFilterCategoryKey = "all"; 
+let MASTER_LIVE_INVENTORY_CACHE = {};
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
 
@@ -39,6 +40,9 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryBut
     document.head.appendChild(styleSheetNode);
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — HEADLESS COMMERCE AUTOMATED DATA DATA STREAM MATRIX
+// =========================================================================
 async function loadProductDatabaseEngine() {
     try {
         console.log("Synchronizing live data matrix cleanly via single-source SheetDB repository...");
@@ -51,12 +55,14 @@ async function loadProductDatabaseEngine() {
 
         const databasePayload = await databaseResponse.json();
 
+        // Remap raw spreadsheet row fields into strict clean execution numbers and variables
         productDatabase = databasePayload.map(item => {
             const parsedUniqueId = parseInt(item.id);
             const verifiedPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
             const liveStockLevel = parseInt(item.stock) ?? 0;
             const updatedStatus = liveStockLevel <= 0 ? "sold" : String(item.status || 'available').trim().toLowerCase();
 
+            // Cache stock limits inside memory lookups simultaneously
             MASTER_LIVE_INVENTORY_CACHE[parsedUniqueId] = {
                 stock: liveStockLevel,
                 status: updatedStatus
@@ -75,14 +81,15 @@ async function loadProductDatabaseEngine() {
 
         console.log(`Synchronization successful. Compiled ${productDatabase.length} masterpieces dynamically.`);
 
-        if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
-        filterCatalog();
+        // ➔ THE CRITICAL SEQUENCING REPAIR: Build the visual collection folder panels FIRST!
+        if (typeof generateDynamicCatalogFilters === 'function') {
+            generateDynamicCatalogFilters();
+        }
 
     } catch (error) {
         console.error('Critical spreadsheet extraction breakdown caught:', error);
     }
 }
-
 // =========================================================================
 // ANGEL JEWELLERY — FORTIFIED ADMINISTRATIVE CONTROL ACTIVATOR
 // =========================================================================
@@ -109,20 +116,16 @@ function challengeAdminIdentityGateway() {
             #adminLauncherFloatingUtilityNode { background: #ff1493 !important; color: #ffffff !important; width: 44px !important; height: 44px !important; font-size: 1.1rem !important; box-shadow: 0 4px 15px rgba(255,20,147,0.4); }
         `;
         
-        alert("✨ Authenticated Successfully! Administrative curation tools unlocked.");
+        const topAddBtn = document.getElementById("topMenuBarAdminCreateBtn");
+        if (topAddBtn) {
+            topAddBtn.style.setProperty("display", "inline-flex", "important");
+        }
         
         // ➔ THE REBUILD RUN: Instantly kick start a complete rendering loop sync 
         // so that edit buttons render live on your screen right away!
         if (typeof filterCatalog === "function") {
             filterCatalog(); 
         }
-        
-        // Also force display on your category toolbar header buttons if present
-        const topAddBtn = document.querySelector("#dynamicCatalogFiltersDock .admin-action-inline-trigger");
-        if (topAddBtn) {
-            topAddBtn.style.setProperty("display", "inline-flex", "important");
-        }
-        
     } else {
         alert("❌ Identity Handshake Blocked: Invalid Passcode.");
     }
@@ -159,8 +162,8 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('formProductImage').value = product.image;
     document.getElementById('formProductDesc').value = product.description;
 
-    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Adjust Masterpiece #${product.id}`;
-    document.getElementById('formSubmitActionBtn').innerText = "Update Vault Parameters";
+    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
+    document.getElementById('formSubmitActionBtn').innerText = "Update";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
 }
 
@@ -226,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const response = await fetch(requestUrl, fetchOptions);
                 if (!response.ok) throw new Error("Cloud stream communication rejected parameters.");
                 
-                alert(`Transaction Complete: Catalog parameters successfully synchronized!`);
+                alert(`Update Success!`);
                 closeAdminFormVaultModal();
                 
                 // Force hot-reloading data matrix streams instantly without crashing tabs
@@ -255,6 +258,11 @@ function formatCurrency(amount) {
 // =========================================================================
 function filterCatalog(passedSearchQuery) {
     const productGrid = document.getElementById('productGrid');
+
+    if (!productDatabase || productDatabase.length === 0) {
+        console.log("⏳ Catalog canvas waiting for single-source product stream synchronization...");
+        return;
+    }
     
     // A. READ SEARCH INPUT CONTENT Safely across inputs and passed arguments
     let searchStringQuery = "";
@@ -330,7 +338,7 @@ function filterCatalog(passedSearchQuery) {
                 const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
                     <button type="button" class="admin-action-inline-trigger" 
                             onclick="openAdminFormModalForEditing(event, ${product.id})" 
-                            style="position: absolute; top: -10px; left: -10px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 50px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                            style="position: absolute; top: 0px; left: 0px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 50px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
                         <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> Edit #${product.id}
                     </button>
                 ` : '';
@@ -1055,9 +1063,11 @@ function toggleWishlistDrawer() {
     }
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — SANITIZED NATURAL SCROLL CONTROLLER
+// =========================================================================
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
-    const catalogControls = document.querySelector('.catalog-controls');
     const backToTopBtn = document.getElementById('backToTopBtn');
     
     // Smoothly apply shadow branding context as the page rolls past threshold
@@ -1065,18 +1075,6 @@ window.addEventListener('scroll', () => {
         if (header) header.classList.add('scrolled');
     } else {
         if (header) header.classList.remove('scrolled');
-    }
-    
-    // FORCE STICKY BACKUP: Calculate runtime trigger gaps for older mobile browser support
-    if (catalogControls) {
-        // Gap threshold logic based on mobile/desktop header state variations
-        const activeHeaderGap = header && header.classList.contains('scrolled') ? 60 : 70;
-        
-        if (window.scrollY > activeHeaderGap) {
-            catalogControls.classList.add('sticky-fixed-active');
-        } else {
-            catalogControls.classList.remove('sticky-fixed-active');
-        }
     }
     
     // Back to top floating utility button toggle
@@ -1090,12 +1088,15 @@ window.addEventListener('scroll', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+    // ➔ THE CRITICAL FIX: Trigger product sheet load engine immediately on app startup!
     loadProductDatabaseEngine();
+    
+    initializeLuxuryBannerCarousel();
     mountCouponHelperBadges();
     applyStrictIndianPhoneValidationRules('invClientPhone');
     applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
-    // ➔ INTEGRATED: Search parameter routing alignment
+    // Search parameter routing alignment
     let searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
@@ -1154,9 +1155,9 @@ window.addEventListener('DOMContentLoaded', () => {
     catalogJumpLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const targetSection = document.getElementById('productGrid');
+            const targetSection = document.getElementById('catalog');
             if (targetSection) {
-                const offsetPosition = targetSection.getBoundingClientRect().top + window.scrollY - 220;
+                const offsetPosition = targetSection.getBoundingClientRect().top + window.scrollY - 90;
                 window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         });
@@ -1210,40 +1211,14 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const filterControlsBox = document.querySelector(".catalog-controls");
-    const masterProductGridCanvas = document.getElementById("productGrid"); 
-
-    if (filterControlsBox && masterProductGridCanvas) {
-        
-        const observerOptions = {
-            root: null,      
-            rootMargin: "0px 0px -10% 0px", 
-            threshold: 0     
-        };
-
-        const catalogScrollObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Main item list is actively visible on viewport screen -> Show Controls
-                    filterControlsBox.classList.remove("hide-controls");
-                } else {
-                    // User has scrolled completely beyond the item grid -> Hide Controls
-                    filterControlsBox.classList.add("hide-controls");
-                }
-            });
-        }, observerOptions);
-
-        catalogScrollObserver.observe(masterProductGridCanvas);
-    }
-
-    // 1. Locate your floating contact element node
+    // Floating WhatsApp configuration setup
     const whatsappBubble = document.getElementById("whatsappFloatingBubble");
     if (whatsappBubble) {
         const defaultText = "Hello Angel Jewellery!";
         whatsappBubble.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(defaultText)}`;
     }
 
-    // Hydrate the brand-new structural footer contact links automatically
+    // Hydrate footer context contact anchors automatically
     const footerPhoneAnchor = document.getElementById("footerPhoneLink");
     const footerWhatsappSocialAnchor = document.getElementById("footerWhatsappSocial");
 
@@ -1257,53 +1232,18 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const interactivePhoneBubble = document.getElementById("phoneFloatingBubble");
-
     if (interactivePhoneBubble) {
         interactivePhoneBubble.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
     }
 
-     searchInput = document.getElementById("searchInput");
-    let clearButton = document.getElementById("clearSearchActionBtn");
-
-    if (searchInput && clearButton) {
-        
-        // 1. Evaluate input lengths on input text entry sequences
-        searchInput.addEventListener("input", () => {
-            if (searchInput.value.trim().length > 0) {
-                clearButton.style.display = "flex"; // Fade-in button presence
-            } else {
-                clearButton.style.display = "none";  // Hide away safely if text row gets cleared manually
-            }
-        });
-
-        // 2. Bind clearing handler algorithms to execution clicks
-        clearButton.addEventListener("click", () => {
-            searchInput.value = "";              // Wipe input payload clear
-            clearButton.style.display = "none";  // Instantly drop visibility state flags
-            searchInput.focus();                 // Pop cursor text insertion frame focus back to customer entry
-            
-            // ➔ CRITICAL LOGIC: Trigger your existing filtering code loop
-            // to instantly restore all items to the product grid layout container.
-            if (typeof filterProducts === "function") {
-                filterProducts(""); 
-            } else {
-                // If your system relies on launching direct fake custom input triggers instead:
-                searchInput.dispatchEvent(new Event("input"));
-            }
-        });
-    }
-
     const gridContainer = document.getElementById("trendingShowroomGridCanvas");
-    
     if (!gridContainer || !ANGEL_STORE_CONFIG.TRENDING_COLLECTION) return;
 
     const curationItems = ANGEL_STORE_CONFIG.TRENDING_COLLECTION;
 
-    // 1. Build and compile item cards inside the grid layout frame dynamically
+    // Compile trending gemstone showcase cards cleanly
     gridContainer.innerHTML = curationItems.map((item, itemIdx) => {
-        const defaultVariant = item.variants[0]; // First element defaults to current view
-        
-        // Map individual gemstone swatches inline directly inside the current string scope
+        const defaultVariant = item.variants[0];
         const swatchesHtml = item.variants.map((variant, varIdx) => `
             <button type="button" class="showroom-swatch-dot" 
                 data-item-idx="${itemIdx}" 
@@ -1314,43 +1254,34 @@ window.addEventListener('DOMContentLoaded', () => {
 
         return `
             <div class="trending-showcase-card" id="trendingCard_${itemIdx}" data-selected-var-idx="0" style="background: #ffffff; border: 1px solid var(--pink-accent); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(32,44,85,0.01); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-sizing: border-box; text-align: center;">
-                
                 <div style="width: 100%; background: #ffffff; padding: 10px; box-sizing: border-box; position: relative; overflow: hidden; margin-bottom: 20px;">
                     <img id="trendingVisual_${itemIdx}" src="${defaultVariant.imageFile}" alt="${item.title}" style="width: 100%; height: auto; max-height: 280px; object-fit: contain; display: block; margin: 0 auto; transition: opacity 0.25s ease;">
                 </div>
-
                 <div style="margin-bottom: 18px;">
                     <p style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #77778b; margin: 0 0 10px 0;">
                         Gemstone: <span id="trendingGemstoneLabel_${itemIdx}" style="color: #ff1493; font-weight: 800;">${defaultVariant.colorName}</span>
                     </p>
-                    <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-                        ${swatchesHtml}
-                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">${swatchesHtml}</div>
                 </div>
-
                 <div style="margin-bottom: 22px;">
                     <h3 style="color: #202c55; font-size: 1.15rem; font-weight: 600; margin: 0 0 6px 0; letter-spacing: 0.5px;">${item.title}</h3>
                     <p style="color: #6c757d; font-size: 0.8rem; line-height: 1.5; margin: 0 0 12px 0; padding: 0 5px;">${item.description}</p>
                     <p style="color: #202c55; font-size: 1.1rem; font-weight: 700; margin: 0;">${item.basePrice}</p>
                 </div>
-
                 <button type="button" class="trending-acquire-action-btn" data-item-idx="${itemIdx}" style="background: #202c55; color: #ffffff; width: 100%; height: 44px; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; outline: none;">
                     ADD TO CART
                 </button>
-            </div>
-        `;
+            </div>`;
     }).join('');
 
-    // 2. Event Routing: Intercept color swatch selection sequences inside card panels
+
     gridContainer.addEventListener("click", (event) => {
         const swatch = event.target.closest(".showroom-swatch-dot");
         if (!swatch) return;
 
         const itemIdx = parseInt(swatch.getAttribute("data-item-idx"));
         const varIdx = parseInt(swatch.getAttribute("data-var-idx"));
-        
-        const targetItem = curationItems[itemIdx];
-        const selectedVariant = targetItem.variants[varIdx];
+        const selectedVariant = curationItems[itemIdx].variants[varIdx];
 
         const cardElement = document.getElementById(`trendingCard_${itemIdx}`);
         const imageElement = document.getElementById(`trendingVisual_${itemIdx}`);
@@ -1358,10 +1289,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         if (!cardElement || !imageElement || !labelElement) return;
 
-        // Save selected color index onto parent layout element data attributes state flags
         cardElement.setAttribute("data-selected-var-idx", varIdx);
-
-        // Soft visual swap fade transition execution
         imageElement.style.opacity = "0.2";
         setTimeout(() => {
             imageElement.src = selectedVariant.imageFile;
@@ -1369,25 +1297,13 @@ window.addEventListener('DOMContentLoaded', () => {
             imageElement.style.opacity = "1";
         }, 150);
 
-        // Synchronize local border highlights across dots inside this specific array card box node only
-        const siblingSwatches = cardElement.querySelectorAll(".showroom-swatch-dot");
-        siblingSwatches.forEach((btn, idx) => {
-            if (idx === varIdx) {
-                btn.style.borderColor = "#ffffff";
-                btn.style.boxShadow = "0 0 0 1.5px #202c55";
-                btn.style.transform = "scale(1.1)";
-            } else {
-                btn.style.borderColor = "#ffffff";
-                btn.style.boxShadow = "0 0 0 1.5px rgba(32,44,85,0.15)";
-                btn.style.transform = "scale(1)";
-            }
+        cardElement.querySelectorAll(".showroom-swatch-dot").forEach((btn, idx) => {
+            btn.style.boxShadow = idx === varIdx ? "0 0 0 1.5px #202c55" : "0 0 0 1.5px rgba(32,44,85,0.15)";
+            btn.style.transform = idx === varIdx ? "scale(1.1)" : "scale(1)";
         });
     });
 
-    
-  // =========================================================================
-    // 3. Checkout Additions Handler Routing Loop (FIXED ID AND QUANTITY CONTROLS)
-    // =========================================================================
+    // Handle checkout clicks from trending banner rows
     gridContainer.addEventListener("click", (event) => {
         const actionBtn = event.target.closest(".trending-acquire-action-btn");
         if (!actionBtn) return;
@@ -1399,16 +1315,10 @@ window.addEventListener('DOMContentLoaded', () => {
         const baseItem = curationItems[itemIdx];
         const currentVariant = baseItem.variants[currentVarIdx];
 
-        // Compile clean item descriptors for shopping bags and logs
         const compiledBespokeTitlePayload = `${baseItem.title} (${currentVariant.colorName})`;
-        
-        // Strip out text artifacts to derive clean numbers for pricing calculations
         const numericCleanPriceValue = parseFloat(baseItem.basePrice.replace(/[^0-9.]/g, '')) || 0;
-
-        // ➔ THE FIX: Generated a stable numeric hash ID sequence so onClick parameters evaluate cleanly
         const safeNumericVariantId = 202600 + (itemIdx * 10) + currentVarIdx;
 
-        // Construct matching structured mock object parameters
         const structuredMockProductItem = {
             id: safeNumericVariantId, 
             title: compiledBespokeTitlePayload,
@@ -1417,41 +1327,28 @@ window.addEventListener('DOMContentLoaded', () => {
             image: currentVariant.imageFile
         };
 
-        // Connect directly into your master shopping cart array core memory pipelines
-        if (typeof addToCartEngine === "function" || typeof shoppingCart !== "undefined") {
-            
-            // Query current selection state bounds against the active matrix array
-            const existingSelection = shoppingCart.find(item => item.id === safeNumericVariantId);
-            
-            if (existingSelection) {
-                existingSelection.quantity += 1;
-            } else {
-                shoppingCart.push({ ...structuredMockProductItem, quantity: 1 });
-            }
-            
-            // Re-render side drawer tracking components instantly
-            updateCartUI();
-
-            // Fire tactile micro-feedback button flash animations
-            actionBtn.textContent = "Secured In Bag";
-            actionBtn.style.background = "#ff1493";
-            actionBtn.style.borderColor = "#ff1493";
-            
-            if (typeof triggerCartNotification === "function") {
-                triggerCartNotification(compiledBespokeTitlePayload);
-            }
-            
-            setTimeout(() => {
-                actionBtn.textContent = "ADD TO CART";
-                actionBtn.style.background = "#202c55";
-                actionBtn.style.borderColor = "#202c55";
-            }, 1500);
-            
+        const existingSelection = shoppingCart.find(item => item.id === safeNumericVariantId);
+        if (existingSelection) {
+            existingSelection.quantity += 1;
         } else {
-            alert(`Added to Bag: ${compiledBespokeTitlePayload} - ${baseItem.basePrice}`);
+            shoppingCart.push({ ...structuredMockProductItem, quantity: 1 });
         }
+        
+        updateCartUI();
+        actionBtn.textContent = "Secured In Bag";
+        actionBtn.style.background = "#ff1493";
+        actionBtn.style.borderColor = "#ff1493";
+        
+        triggerCartNotification(compiledBespokeTitlePayload);
+        
+        setTimeout(() => {
+            actionBtn.textContent = "ADD TO CART";
+            actionBtn.style.background = "#202c55";
+            actionBtn.style.borderColor = "#202c55";
+        }, 1500);
     });
 });
+
 
 let globalPayableAmountInPaise = 0; 
 
@@ -2097,6 +1994,7 @@ function updateCarouselRenderPosition() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    loadProductDatabaseEngine();
     initializeLuxuryBannerCarousel();
 });
 
@@ -2434,147 +2332,183 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
 }
 
 // =========================================================================
-// ANGEL JEWELLERY — DYNAMIC FILTER ENGINE ASSEMBLER (ZERO STATIC CONFIGS)
+// ANGEL JEWELLERY — DYNAMIC COMPACT SHOWROOM ROUNDED CIRCLE ACCENTS
 // =========================================================================
 function generateDynamicCatalogFilters() {
-    const filtersDock = document.getElementById('dynamicCatalogFiltersDock');
-    if (!filtersDock || !productDatabase || productDatabase.length === 0) return;
+    let foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
+    const mainSectionTitle = document.getElementById('collection-main-title');
+    const productGridCanvas = document.getElementById('productGrid');
+    const navHeader = document.getElementById('showroomNavigationHeader');
+    const navTitle = document.getElementById('activeShowroomCategoryTitle');
 
-    const uniqueCategoriesList = new Set();
+    if (!foldersGrid) foldersGrid = productGridCanvas;
+    if (!foldersGrid || !productDatabase || productDatabase.length === 0) return;
+
+    // Enforce folder gallery structural display setups
+    if (currentSelectedFilterCategoryKey === "all") {
+        if (productGridCanvas) productGridCanvas.style.setProperty("display", "none", "important");
+        if (mainSectionTitle) mainSectionTitle.style.setProperty("display", "block", "important");
+        if (navTitle) navTitle.style.setProperty("display", "none", "important");
+        if (navHeader) navHeader.style.setProperty("display", "none", "important");
+        
+        // Use flex layout here so miniature elements sit beautifully side-by-side
+        foldersGrid.style.setProperty("display", "flex", "important");
+        foldersGrid.style.setProperty("flex-wrap", "wrap", "important");
+        foldersGrid.style.setProperty("justify-content", "center", "important");
+        foldersGrid.style.setProperty("gap", "25px", "important");
+    }
+
+    const categoryMap = {};
     productDatabase.forEach(product => {
         if (product.category) {
-            uniqueCategoriesList.add(product.category.trim().toLowerCase());
+            const cleanKey = product.category.trim();
+            if (!categoryMap[cleanKey]) {
+                categoryMap[cleanKey] = {
+                    name: cleanKey,
+                    itemCount: 0,
+                    thumbnail: product.image || 'assets/placeholder.png'
+                };
+            }
+            categoryMap[cleanKey].itemCount += 1;
         }
     });
 
-    const compiledCategoriesArray = Array.from(uniqueCategoriesList);
-    filtersDock.innerHTML = ""; 
+    // ➔ THE 100PX RESHAPE: Re-maps categories into ultra-premium minimalist circle nodes
+    foldersGrid.innerHTML = Object.values(categoryMap).map(folder => {
+        return `
+            <div class="category-compact-node-card" 
+                 onclick="selectShowroomCategoryFolder('${folder.name}')"
+                 style="display: flex; flex-direction: column; align-items: center; width: 110px; cursor: pointer; transition: transform 0.25s ease; box-sizing: border-box;"
+                 onmouseover="this.style.transform='translateY(-3px)'"
+                 onmouseout="this.style.transform='translateY(0)'">
+                
+                <!-- 100px by 100px Premium Circular Frame Asset Overlay -->
+                <div style="width: 100px; height: 100px; min-width: 100px; min-height: 100px; border-radius: 50%; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
+                    <img src="${folder.thumbnail}" alt="${folder.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                    
+                    <!-- Subtle Floating Numeric Count Notification Accent -->
+                    <div style="position: absolute; bottom: 4px; right: 4px; background: #202c55; color: #ffffff; font-size: 0.58rem; padding: 2px 6px; font-weight: 700; border-radius: 10px; font-family: 'Montserrat';">
+                        ${folder.itemCount}
+                    </div>
+                </div>
 
-    const universalAllButton = document.createElement('button');
-    universalAllButton.className = "filter-category-tab-btn";
-    universalAllButton.innerText = "All";
-    
-    applyCustomFilterTabButtonStyles(universalAllButton, currentSelectedFilterCategoryKey === 'all');
-    
-    universalAllButton.onclick = () => {
-        currentSelectedFilterCategoryKey = "all";
-        refreshFilterTabStylesAndTriggerRender();
-    };
-    filtersDock.appendChild(universalAllButton);
+                <!-- Text Identifier Node Block -->
+                <div style="margin-top: 10px; text-align: center; width: 100%;">
+                    <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; color: #202c55; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${folder.name}
+                    </h3>
+                </div>
 
-    compiledCategoriesArray.forEach(categoryKey => {
-        const structuralCategoryTabButton = document.createElement('button');
-        structuralCategoryTabButton.className = "filter-category-tab-btn";
-        
-        const capitalizedButtonLabel = categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
-        structuralCategoryTabButton.innerText = capitalizedButtonLabel;
-        
-        structuralCategoryTabButton.setAttribute('data-category-target', categoryKey);
-        applyCustomFilterTabButtonStyles(structuralCategoryTabButton, currentSelectedFilterCategoryKey === categoryKey);
-        
-        structuralCategoryTabButton.onclick = () => {
-            currentSelectedFilterCategoryKey = categoryKey;
-            refreshFilterTabStylesAndTriggerRender();
-        };
-        
-        filtersDock.appendChild(structuralCategoryTabButton);
-    });
+            </div>
+        `;
+    }).join('');
+}
+
+function selectShowroomCategoryFolder(targetCategoryName) {
+    currentSelectedFilterCategoryKey = targetCategoryName;
+
+    const foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
+    const productGridCanvas = document.getElementById('productGrid');
+    const navHeader = document.getElementById('showroomNavigationHeader');
+    const navTitle = document.getElementById('activeShowroomCategoryTitle');
+    const mainSectionTitle = document.getElementById('collection-main-title');
+
+    if (foldersGrid) foldersGrid.style.display = "none";
+    if (mainSectionTitle) mainSectionTitle.style.display = "none";
+    
+    if (productGridCanvas) productGridCanvas.style.setProperty("display", "grid", "important");
+    if (navHeader) navHeader.style.setProperty("display", "flex", "important");
+    
+    // ➔ THE FIX: Find the empty parent section block wrapper and force it to display elegantly
+    const parentSectionWrapper = productGridCanvas.closest('.products-section');
+    if (parentSectionWrapper) parentSectionWrapper.style.setProperty("display", "block", "important");
+    
+    if (navTitle) {
+        navTitle.innerText = `${targetCategoryName} Collection`;
+        navTitle.style.setProperty("display", "block", "important");
+        navTitle.style.setProperty("text-align", "center", "important");
+    }
+
+    if (typeof filterCatalog === "function") {
+        filterCatalog();
+    }
+
+    const scrollAnchor = document.getElementById('catalog') || productGridCanvas;
+    if (scrollAnchor) {
+        window.scrollTo({ top: scrollAnchor.offsetTop - 20, behavior: 'smooth' });
+    }
+}
+
+function returnToMainShowroomFolders() {
+    currentSelectedFilterCategoryKey = "all";
+
+    const foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
+    const productGridCanvas = document.getElementById('productGrid');
+    const navHeader = document.getElementById('showroomNavigationHeader');
+    const navTitle = document.getElementById('activeShowroomCategoryTitle');
+    const mainSectionTitle = document.getElementById('collection-main-title');
+
+    if (productGridCanvas) productGridCanvas.style.display = "none";
+    if (navHeader) navHeader.style.display = "none";
+    if (navTitle) navTitle.style.display = "none";
+    
+    // ➔ THE FIX: Hide the empty parent section block completely when returning to folder view
+    const parentSectionWrapper = productGridCanvas?.closest('.products-section');
+    if (parentSectionWrapper) parentSectionWrapper.style.setProperty("display", "none", "important");
+    
+    if (foldersGrid) foldersGrid.style.setProperty("display", "grid", "important");
+    if (mainSectionTitle) mainSectionTitle.style.setProperty("display", "block", "important");
+
+    if (typeof generateDynamicCatalogFilters === "function") {
+        generateDynamicCatalogFilters();
+    }
+
+    const scrollAnchor = document.getElementById('catalog');
+    if (scrollAnchor) {
+        window.scrollTo({ top: scrollAnchor.offsetTop - 20, behavior: 'smooth' });
+    }
 }
 
 function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
-    const baseStyles = `
-        padding: 10px 18px;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap; /* Stops titles from breaking into multiple lines */
-        display: inline-block;
-    `;
-
+    const baseStyles = `padding: 10px 18px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: inline-block;`;
     if (isCurrentlySelected) {
-        buttonNode.style.cssText = baseStyles + `
-            background: var(--purple-primary, #202c55);
-            color: #ffffff;
-            border: 1px solid var(--purple-primary, #202c55);
-            box-shadow: 0 2px 6px rgba(32, 44, 85, 0.12);
-            font-weight: 700;
-        `;
+        buttonNode.style.cssText = baseStyles + `background: var(--purple-primary, #202c55); color: #ffffff; border: 1px solid var(--purple-primary, #202c55); box-shadow: 0 2px 6px rgba(32, 44, 85, 0.12); font-weight: 700;`;
     } else {
-        buttonNode.style.cssText = baseStyles + `
-            background: #fff;
-            color: var(--text-dark-primary, #111116);
-            border: 1px solid #111116;
-            font-weight: 600;
-        `;
+        buttonNode.style.cssText = baseStyles + `background: #fff; color: var(--text-dark-primary, #111116); border: 1px solid #111116; font-weight: 600;`;
     }
 }
 
 function refreshFilterTabStylesAndTriggerRender() {
     const allTabButtons = document.querySelectorAll('.filter-category-tab-btn');
-    
     allTabButtons.forEach(btn => {
         const buttonTargetKey = btn.getAttribute('data-category-target') || 'all';
         applyCustomFilterTabButtonStyles(btn, currentSelectedFilterCategoryKey === buttonTargetKey);
     });
-
-    // Automatically sync keyword lookup fields upon category changes
     const liveInputEl = document.getElementById('searchInput');
     const currentSearchText = liveInputEl ? liveInputEl.value : "";
-    
-    if (typeof filterCatalog === 'function') {
-        filterCatalog(currentSearchText);
-    }
+    filterCatalog(currentSearchText);
 }
-
-// =========================================================================
-// ANGEL JEWELLERY — PREMIUM DYNAMIC BADGE COLOR DICTIONARY
-// =========================================================================
 function getBadgeCustomStyles(badgeText) {
     const text = String(badgeText || '').trim().toLowerCase();
-    
     let bgColor = 'var(--purple-primary, #202c55)';
     let textColor = '#ffffff';
-
-    if (text === 'sale' || text.includes('off') || text.includes('discount')) {
-        bgColor = '#d9383a'; 
-    } 
-    else if (text === 'trending' || text === 'hot' || text === 'popular') {
-        bgColor = '#04693a'; // Champange Gold for premium trending feel
-    } 
-    else if (text === 'new' || text === 'arrival') {
-        bgColor = '#2a7b6a'; 
-    } 
-    else if (text === 'limited' || text.includes('exclusive')) {
-        bgColor = 'var(--pink-accent, #ff1493)'; 
-    } 
-    else if (text === 'sold out' || text.includes('restock')) {
-        bgColor = '#6c757d'; 
-    }
-
+    if (text === 'sale' || text.includes('off') || text.includes('discount')) bgColor = '#d9383a'; 
+    else if (text === 'trending' || text === 'hot' || text === 'popular') bgColor = '#04693a'; 
+    else if (text === 'new' || text === 'arrival') bgColor = '#2a7b6a'; 
+    else if (text === 'limited' || text.includes('exclusive')) bgColor = 'var(--pink-accent, #ff1493)'; 
+    else if (text === 'sold out' || text.includes('restock')) bgColor = '#6c757d'; 
     return `background: ${bgColor} !important; color: ${textColor} !important;`;
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — LIVE SHETDB REAL-TIME INVENTORY MANAGEMENT ENGINE
-// =========================================================================
-let MASTER_LIVE_INVENTORY_CACHE = {};
-
-// 1. Core Loader: Pulls real-time stock counts from SheetDB Inventory sheet
 async function synchronizeLiveStorefrontInventory() {
-    // Look up your central API URL structure from your existing sheet configurations
-    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
     
     try {
-        // Fetch explicitly targeting the "Inventory" tab worksheet component
-        const response = await fetch(`${baseSheetDbEndpoint}?sheet=Products`);
+        const response = await fetch(`${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Products`);
         if (!response.ok) throw new Error("Inventory endpoint unreachable");
         
         const inventoryRows = await response.json();
         
-        // Map individual rows onto a fast runtime dictionary cache lookups
         inventoryRows.forEach(row => {
             const cleanId = parseInt(row.id);
             if (!isNaN(cleanId)) {
@@ -2586,24 +2520,25 @@ async function synchronizeLiveStorefrontInventory() {
         });
         
         console.log("💎 Live Inventory Vault Synchronized successfully:", MASTER_LIVE_INVENTORY_CACHE);
-        if (typeof filterCatalog === "function") filterCatalog();
         
-        // ➔ Force update UI views so active items check their stock status instantly on startup
-        if (typeof renderProducts === "function") renderProducts(); 
-        if (typeof renderCatalog === "function") renderCatalog();
+        if (!productDatabase || productDatabase.length === 0) {
+            await loadProductDatabaseEngine();
+        } else {
+            generateDynamicCatalogFilters();
+            filterCatalog();
+        }
+        
+        renderTrendingSection();
+        renderVaultSaleSection();
         
     } catch (error) {
         console.error("❌ Inventory download sync failed. Store falling back to default availability states:", error);
     }
 }
 
-// 2. Automated Deductor: Subtracts items from Google Sheets upon final order placement
 async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
-    // ➔ CHNAGED TO LET: Safely allows slash replacing operations without reassign syntax errors
-    let baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-
+    let baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
     baseSheetDbEndpoint = baseSheetDbEndpoint.replace(/\/$/, "");
-    
     if (!completedOrderItemsArray || !completedOrderItemsArray.length) return;
     
     console.log("⚡ Starting background stock deduction sequence for order items...");
@@ -2612,13 +2547,11 @@ async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
         const itemTargetId = parseInt(item.id);
         if (isNaN(itemTargetId)) continue;
         
-        // Retrieve current baseline levels from local cache, defaulting to 5 safety buffer
         const currentCachedStock = MASTER_LIVE_INVENTORY_CACHE[itemTargetId]?.stock ?? 5;
         const freshCalculatedStockValue = Math.max(0, currentCachedStock - (item.quantity || 1));
         const updatedStatusFlag = freshCalculatedStockValue <= 0 ? "sold" : "available";
         
         try {
-            // Target the specific product row on SheetDB
             const targetUrl = `${baseSheetDbEndpoint}/id/${itemTargetId}?sheet=Products`;
             await fetch(targetUrl, {
                 method: 'PATCH',
@@ -2627,14 +2560,10 @@ async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    data: {
-                        stock: freshCalculatedStockValue,
-                        status: updatedStatusFlag
-                    }
+                    data: { stock: freshCalculatedStockValue, status: updatedStatusFlag }
                 })
             });
             
-            // Sync local cache value instantly to prevent multi-click exploits
             if (MASTER_LIVE_INVENTORY_CACHE[itemTargetId]) {
                 MASTER_LIVE_INVENTORY_CACHE[itemTargetId].stock = freshCalculatedStockValue;
                 MASTER_LIVE_INVENTORY_CACHE[itemTargetId].status = updatedStatusFlag;
@@ -2645,12 +2574,9 @@ async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
         }
     }
 
-    // Refresh display grids automatically to show updated stock values immediately
-    if (typeof renderProducts === "function") renderProducts();
-    if (typeof filterCatalog === "function") filterCatalog();
+    generateDynamicCatalogFilters();
+    filterCatalog();
 }
-
-// Initialize the live connection right away when the page scripts boot up
 document.addEventListener("DOMContentLoaded", () => {
     synchronizeLiveStorefrontInventory();
 });
