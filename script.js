@@ -90,10 +90,16 @@ async function loadProductDatabaseEngine() {
         console.error('Critical spreadsheet extraction breakdown caught:', error);
     }
 }
+
 // =========================================================================
-// ANGEL JEWELLERY — FORTIFIED ADMINISTRATIVE CONTROL ACTIVATOR
+// ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (ONE PASSWORD)
 // =========================================================================
-function challengeAdminIdentityGateway() {
+// =========================================================================
+// ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (LOCK AUTO-HIDE)
+// =========================================================================
+function challengeAdminIdentityGateway(event) {
+    if (event) event.preventDefault();
+    
     const masterAdminPasskey = "ANGEL2026";
     const accessAttempt = prompt("🔒 Administrative Clearance Verification Required.\nPlease enter your Master Access Key:");
     
@@ -102,27 +108,28 @@ function challengeAdminIdentityGateway() {
     if (accessAttempt.trim() === masterAdminPasskey) {
         INTEGRATED_ADMIN_AUTH_STATE = true;
         
-        // ➔ THE OVERRIDE FIX: Inject explicit layout variables directly to force visibilities
+        // Inject inline styles to reveal the hidden inline card edit badges
         let styleNode = document.getElementById('angelJewelryAdminUIControlsStyleTag');
         if (!styleNode) {
             styleNode = document.createElement("style");
             styleNode.id = 'angelJewelryAdminUIControlsStyleTag';
             document.head.appendChild(styleNode);
         }
-        
-        // Hardcodes absolute visibility rules so no other theme class can hide them
         styleNode.innerHTML = `
             .admin-action-inline-trigger { display: inline-flex !important; }
-            #adminLauncherFloatingUtilityNode { background: #ff1493 !important; color: #ffffff !important; width: 44px !important; height: 44px !important; font-size: 1.1rem !important; box-shadow: 0 4px 15px rgba(255,20,147,0.4); }
         `;
         
-        const topAddBtn = document.getElementById("topMenuBarAdminCreateBtn");
-        if (topAddBtn) {
-            topAddBtn.style.setProperty("display", "inline-flex", "important");
-        }
+        // Grab the elements from your footer cluster group
+        const lockBtnAnchor = event.currentTarget || document.querySelector('[aria-label="Authenticate Master Identity Link"]');
+        const wrenchBtn = document.getElementById("footerAdminWrenchDeskBtn");
+        const addNewBtn = document.getElementById("footerAdminAddNewPieceFormBtn");
         
-        // ➔ THE REBUILD RUN: Instantly kick start a complete rendering loop sync 
-        // so that edit buttons render live on your screen right away!
+        // ➔ THE TRANSITION FIX: Hide the lock icon entirely and fade the master tools into view!
+        if (lockBtnAnchor) lockBtnAnchor.style.setProperty("display", "none", "important");
+        if (wrenchBtn) wrenchBtn.style.setProperty("display", "flex", "important");
+        if (addNewBtn) addNewBtn.style.setProperty("display", "flex", "important");
+        
+        // Refresh catalog view grids to render "Edit" inline buttons on product cards
         if (typeof filterCatalog === "function") {
             filterCatalog(); 
         }
@@ -134,7 +141,8 @@ function challengeAdminIdentityGateway() {
 // =========================================================================
 // ANGEL JEWELLERY — DYNAMIC INLINE CRUD WRITE OPERATIONS METHODS
 // =========================================================================
-function openAdminFormModalForCreation() {
+function openAdminFormModalForCreation(event) {
+    if (event) event.preventDefault(); // Blocks link hashes from jumping page levels
     document.getElementById('masterJewelryAdminForm').reset();
     document.getElementById('formActionProductId').value = "";
     document.getElementById('formProductId').disabled = false;
@@ -339,8 +347,15 @@ function filterCatalog(passedSearchQuery) {
                     <button type="button" class="admin-action-inline-trigger" 
                             onclick="openAdminFormModalForEditing(event, ${product.id})" 
                             style="position: absolute; top: 0px; left: 0px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 50px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                        <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> Edit #${product.id}
+                        <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
                     </button>
+                    <button type="button" class="admin-action-inline-trigger" 
+                        onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${safeTitleString}')" 
+                        style="position: absolute; top: 0px; right: 0px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 50%; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
+                        onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
+                        onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
                 ` : '';
 
                 return `
@@ -1810,16 +1825,16 @@ function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — MASTER ORDER LEDGER DESK TERMINAL (PASSWORD PROMPT REMOVED)
+// =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
-    const MASTER_ADMIN_SECRET_KEY = "1234"; 
 
-    const inputtedPasskeyAttempt = prompt("🔒 Access Restricted: Enter Administrative Passcode:");
-    if (inputtedPasskeyAttempt === null) return;
-
-    if (inputtedPasskeyAttempt.trim() !== MASTER_ADMIN_SECRET_KEY) {
-        alert("❌ Security Alert: Invalid administrative credentials provided.");
-        return; 
+    // ➔ SECURITY COMPATIBILITY CHECK: Ensure the master passcode has been completed first
+    if (!INTEGRATED_ADMIN_AUTH_STATE) {
+        alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
+        return;
     }
 
     const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
@@ -2580,3 +2595,54 @@ async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
 document.addEventListener("DOMContentLoaded", () => {
     synchronizeLiveStorefrontInventory();
 });
+
+// =========================================================================
+// ANGEL JEWELLERY — SECURE ADMINISTRATIVE CRUD ROW DELETION ENGINE
+// =========================================================================
+async function executeAdminItemDeletionPipeline(event, productId, productTitle) {
+    if (event) event.stopPropagation(); // Stop the card's QuickView detail modal from springing open
+    
+    // 1. Dual Safety Handshake Challenge
+    const userFinalConfirmation = confirm(`⚠️ DANGER ZONE: Are you entirely sure you want to permanently delete "${productTitle}" (ID: #${productId})?\n\nThis action completely wipes the record row out of your live Google Sheet and cannot be undone.`);
+    if (!userFinalConfirmation) return;
+
+    console.log(`Starting dynamic row purge sequence for Item Identity Matrix ID: ${productId}`);
+    
+    // 2. Resolve Config Target API Paths
+    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    const cleanPurgeTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}/id/${productId}?sheet=Products`;
+
+    try {
+        // Fire native REST API DELETE request straight to the active row matching columns
+        const networkResponse = await fetch(cleanPurgeTargetUrl, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!networkResponse.ok) throw new Error(`Cloud interface returned status code: ${networkResponse.status}`);
+        
+        const feedbackPayload = await networkResponse.json();
+        
+        if (feedbackPayload && feedbackPayload.deleted >= 1) {
+            alert(`✨ Successfully Deleted.`);
+            
+            // Clean local inventory lookup memory maps instantly
+            if (MASTER_LIVE_INVENTORY_CACHE[productId]) {
+                delete MASTER_LIVE_INVENTORY_CACHE[productId];
+            }
+
+            // Reload the live spreadsheet engine to update the folders and items list smoothly
+            await loadProductDatabaseEngine();
+            if (typeof filterCatalog === "function") filterCatalog();
+        } else {
+            throw new Error("API handled parameters successfully but row mapping reported zero alterations.");
+        }
+
+    } catch (error) {
+        console.error("Critical administrative row write/purge communication error caught:", error);
+        alert("Pipeline Synchronization Interrupted: Could not wipe item from Google Sheet. Verify API rate limits or network link uptime.");
+    }
+}
