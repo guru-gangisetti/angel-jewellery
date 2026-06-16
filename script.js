@@ -2376,7 +2376,7 @@ function generateDynamicCatalogFilters() {
         foldersGrid.style.setProperty("display", "flex", "important");
         foldersGrid.style.setProperty("flex-wrap", "wrap", "important");
         foldersGrid.style.setProperty("justify-content", "center", "important");
-        foldersGrid.style.setProperty("gap", "25px", "important");
+        foldersGrid.style.setProperty("gap", "50px", "important");
     }
 
     const categoryMap = {};
@@ -2404,7 +2404,7 @@ function generateDynamicCatalogFilters() {
                  onmouseout="this.style.transform='translateY(0)'">
                 
                 <!-- 100px by 100px Premium Circular Frame Asset Overlay -->
-                <div style="width: 100px; height: 100px; min-width: 100px; min-height: 100px; border-radius: 50%; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
+                <div style="width: 150px; height: 150px; min-width: 100px; min-height: 100px; border-radius: 50%; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
                     <img src="${folder.thumbnail}" alt="${folder.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                     
                     <!-- Subtle Floating Numeric Count Notification Accent -->
