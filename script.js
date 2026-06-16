@@ -2652,3 +2652,151 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
         alert("Pipeline Synchronization Interrupted: Could not wipe item from Google Sheet. Verify API rate limits or network link uptime.");
     }
 }
+
+// =========================================================================
+// ANGEL JEWELLERY — AUTOMATED CUSTOMER FEEDBACK & REVIEWS LOGIC
+// =========================================================================
+let currentSelectedFeedbackFormRatingValue = 5;
+
+// A. READ PIPELINE: Fetch reviews dynamically from the 'Feedback' Sheet
+async function loadLiveCustomerFeedbackShowroom() {
+    const feedbackCanvas = document.getElementById('liveClientFeedbackGridCanvas');
+    if (!feedbackCanvas) return;
+
+    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    const cleanFetchTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Feedback`;
+
+    try {
+        const response = await fetch(cleanFetchTargetUrl);
+        if (!response.ok) throw new Error("Could not download user feedback matrices.");
+
+        const dynamicReviewsArray = await response.json();
+
+        if (!dynamicReviewsArray || dynamicReviewsArray.length === 0) {
+            feedbackCanvas.innerHTML = `
+                <div style="grid-column: 1 / -1; color: var(--text-muted, #777); font-size: 0.88rem; padding: 20px 0; font-weight: 500;">
+                    No verified reviews posted yet. Be the first to share your aura!
+                </div>`;
+            return;
+        }
+
+        // Display the 4 most recent reviews first
+        const reverseChronologicalReviews = [...dynamicReviewsArray].reverse().slice(0, 4);
+
+        feedbackCanvas.innerHTML = reverseChronologicalReviews.map(review => {
+            const numericRating = parseInt(review.Rating) || 5;
+            const compiledStarIconsHtml = '★'.repeat(numericRating).padEnd(5, '☆');
+            const clientNameValue = review.Name || 'Anonymous Collector';
+            const cleanDateText = review.Date ? review.Date.split(',')[0] : '';
+
+            return `
+                <div class="feedback-display-card" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 25px; box-sizing: border-box; text-align: left; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.01); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div>
+                        <div style="color: #cca43b; font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 1px;">${compiledStarIconsHtml}</div>
+                        <p style="color: #4a4a5a; font-size: 0.85rem; line-height: 1.6; font-style: italic; margin: 0 0 15px 0;">"${review.Review}"</p>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted #e8e8ef; padding-top: 12px;">
+                        <h4 style="color: #202c55; margin: 0; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${clientNameValue}</h4>
+                        <small style="color: #aaa; font-size: 0.72rem;">${cleanDateText}</small>
+                    </div>
+                </div>`;
+        }).join('');
+
+    } catch (err) {
+        console.error("Feedback visual showroom boot breakdown:", err);
+        feedbackCanvas.innerHTML = `<div style="grid-column: 1 / -1; color: #ff1493; font-size: 0.82rem;">Feedback track failed to synchronize.</div>`;
+    }
+}
+
+// B. MODAL VISIBILITY TRIGGERS
+function openCustomerFeedbackModal(event) {
+    if (event) event.preventDefault();
+    document.getElementById('angelStoreCustomerFeedbackForm').reset();
+    setInteractiveFeedbackFormRating(5);
+    document.getElementById('customerFeedbackSubmissionModal').style.display = 'flex';
+}
+
+function closeCustomerFeedbackModal() {
+    document.getElementById('customerFeedbackSubmissionModal').style.display = 'none';
+}
+
+// C. STAR SELECTION ENGINE MATHS
+function setInteractiveFeedbackFormRating(ratingValue) {
+    currentSelectedFeedbackFormRatingValue = ratingValue;
+    document.getElementById('feedbackFormRatingValue').value = ratingValue;
+    
+    const stars = document.querySelectorAll('.feedback-star-node');
+    stars.forEach((star, idx) => {
+        if (idx < ratingValue) {
+            star.style.color = '#cca43b'; // Unlocked Gold Accent
+        } else {
+            star.style.color = '#e8e8ef'; // Muted Baseline Grey
+        }
+    });
+}
+
+function highlightFeedbackFormStarsPreview(previewValue) {
+    const stars = document.querySelectorAll('.feedback-star-node');
+    stars.forEach((star, idx) => {
+        star.style.color = (idx < previewValue) ? '#ffd700' : '#e8e8ef';
+    });
+}
+
+function resetFeedbackFormStarsHighlight() {
+    setInteractiveFeedbackFormRating(currentSelectedFeedbackFormRatingValue);
+}
+
+// D. WRITE PIPELINE: POST feedback payload back to SheetDB row matrix
+async function submitCustomerFeedbackPipeline(event) {
+    event.preventDefault();
+
+    const submitBtn = document.getElementById('feedbackFormSubmitActionBtn');
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Entry Sync...`;
+
+    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    const cleanTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Feedback`;
+
+    const feedbackPayloadObject = {
+        data: [
+            {
+                "Name": document.getElementById('feedbackFormClientName').value.trim(),
+                "Rating": document.getElementById('feedbackFormRatingValue').value,
+                "Review": document.getElementById('feedbackFormReviewText').value.trim(),
+                "Date": new Date().toLocaleString('en-IN')
+            }
+        ]
+    };
+
+    try {
+        const response = await fetch(cleanTargetUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(feedbackPayloadObject)
+        });
+
+        if (!response.ok) throw new Error("Cloud stream rejected review entry properties.");
+
+        alert("✨ Review Published! Thank you for sharing your experience with Angel Jewellery.");
+        closeCustomerFeedbackModal();
+        
+        // Hot-reload the testimonials section right on the spot without page crash resets
+        await loadLiveCustomerFeedbackShowroom();
+
+    } catch (error) {
+        console.error("Feedback database post crash caught:", error);
+        alert("Pipeline Sync Interrupted: Verify your network and try again.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+    }
+}
+
+// E. LINK INTO DOM CONTENT BOOT STRAPS FOR REAL-TIME LOAD INITIALIZATION
+document.addEventListener("DOMContentLoaded", () => {
+    loadLiveCustomerFeedbackShowroom();
+});
