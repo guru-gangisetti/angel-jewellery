@@ -1139,9 +1139,15 @@ window.addEventListener('DOMContentLoaded', () => {
     if (wishlistBtn) wishlistBtn.addEventListener('click', toggleWishlistDrawer);
     if (closeWishlistBtn) closeWishlistBtn.addEventListener('click', toggleWishlistDrawer);
     
-    if (menuToggle && navMenu) {
-        menuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+    });
+        const mobileNavigationLinks = navMenu.querySelectorAll('a');
+        mobileNavigationLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
         });
     }
 
