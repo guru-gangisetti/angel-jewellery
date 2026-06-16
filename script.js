@@ -2,7 +2,6 @@
    ANGEL JEWELLERY — COMPLETE MASTER RUNTIME ENGINE APPLICATIVE LOGIC
    ========================================================================= */
 
-let productDatabase = [];    
 let shoppingCart = [];       
 let wishlistMemory = [];     
 let adminOrdersCache = [];       
@@ -21,11 +20,6 @@ const couponRegistry = {
     "FESTIVE2000": { type: "flat", value: 2000 },
     "LAUNCH2026": { type: "percentage", value: 15 }
 };
-
-// Ensure the core database array exists globally
-if (typeof productDatabase === 'undefined') {
-     productDatabase = []; 
-}
 
 // Inject standard button transition/hover utility rules cleanly into the runtime context
 if (typeof document !== 'undefined' && !document.getElementById('angelJewelryButtonHoverStyleTag')) {
