@@ -9,10 +9,11 @@ let adminOrdersCache = [];
 let currentAdminActiveTab = "pending";
 let activeDiscount = { code: "", type: "", value: 0 };
 let adminConsoleSearchQueryString = "";
-// ➔ THE CRITICAL FIX: Aligned from "All Collection" to "all" to match your tab builder and prevent initial view drops
 let currentSelectedFilterCategoryKey = "all"; 
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
+
+let INTEGRATED_ADMIN_AUTH_STATE = false;
 
 const couponRegistry = {
     "ANGEL10": { type: "percentage", value: 10 },
@@ -46,42 +47,210 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryBut
 
 async function loadProductDatabaseEngine() {
     try {
-        console.log("Synchronizing data matrix cleanly via master repository stream...");
-
-        // 1. Fetch straight from your verified 24-item master data file
-        const databaseResponse = await fetch('data/products.json');
+        console.log("Synchronizing live data matrix cleanly via single-source SheetDB repository...");
         
-        if (!databaseResponse.ok) {
-            throw new Error(`Master database file returned status code: ${databaseResponse.status}`);
-        }
+        const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+        const cleanFetchTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Products`;
+
+        const databaseResponse = await fetch(cleanFetchTargetUrl);
+        if (!databaseResponse.ok) throw new Error(`Spreadsheet connection dropped: ${databaseResponse.status}`);
 
         const databasePayload = await databaseResponse.json();
 
-        // 2. Safely unpack items whether they are in an array property wrapper or raw list
-        productDatabase = databasePayload.products || databasePayload.items || (Array.isArray(databasePayload) ? databasePayload : []);
+        productDatabase = databasePayload.map(item => {
+            const parsedUniqueId = parseInt(item.id);
+            const verifiedPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+            const liveStockLevel = parseInt(item.stock) ?? 0;
+            const updatedStatus = liveStockLevel <= 0 ? "sold" : String(item.status || 'available').trim().toLowerCase();
 
-        console.log(`Synchronization successful. Main database pool compiled: ${productDatabase.length} items.`);
+            MASTER_LIVE_INVENTORY_CACHE[parsedUniqueId] = {
+                stock: liveStockLevel,
+                status: updatedStatus
+            };
 
-        // 3. Generate your category filter controls dynamically right from the master dataset
-        if (typeof generateDynamicCatalogFilters === 'function') {
-            generateDynamicCatalogFilters();
-        }
+            return {
+                id: parsedUniqueId,
+                title: item.title,
+                price: verifiedPrice,
+                category: item.category || 'Luxury Collection',
+                image: item.image || 'assets/placeholder.png',
+                badge: updatedStatus === "sold" ? "Sold Out" : (item.badge || ''),
+                description: item.description || ''
+            };
+        });
 
-        // 4. Render your beautiful jewelry products catalog layout grid
+        console.log(`Synchronization successful. Compiled ${productDatabase.length} masterpieces dynamically.`);
+
+        if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
         filterCatalog();
 
     } catch (error) {
-        console.error('Critical database loading interruption caught:', error);
-        const productGrid = document.getElementById('productGrid');
-        if (productGrid) {
-            productGrid.innerHTML = `
-                <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-muted);">
-                    <i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:10px; color:var(--pink-accent);"></i>
-                    <p>Unable to load the catalog display grid right now. Please refresh the page.</p>
-                </div>`;
-        }
+        console.error('Critical spreadsheet extraction breakdown caught:', error);
     }
 }
+
+// =========================================================================
+// ANGEL JEWELLERY — FORTIFIED ADMINISTRATIVE CONTROL ACTIVATOR
+// =========================================================================
+function challengeAdminIdentityGateway() {
+    const masterAdminPasskey = "ANGEL2026";
+    const accessAttempt = prompt("🔒 Administrative Clearance Verification Required.\nPlease enter your Master Access Key:");
+    
+    if (accessAttempt === null) return;
+    
+    if (accessAttempt.trim() === masterAdminPasskey) {
+        INTEGRATED_ADMIN_AUTH_STATE = true;
+        
+        // ➔ THE OVERRIDE FIX: Inject explicit layout variables directly to force visibilities
+        let styleNode = document.getElementById('angelJewelryAdminUIControlsStyleTag');
+        if (!styleNode) {
+            styleNode = document.createElement("style");
+            styleNode.id = 'angelJewelryAdminUIControlsStyleTag';
+            document.head.appendChild(styleNode);
+        }
+        
+        // Hardcodes absolute visibility rules so no other theme class can hide them
+        styleNode.innerHTML = `
+            .admin-action-inline-trigger { display: inline-flex !important; }
+            #adminLauncherFloatingUtilityNode { background: #ff1493 !important; color: #ffffff !important; width: 44px !important; height: 44px !important; font-size: 1.1rem !important; box-shadow: 0 4px 15px rgba(255,20,147,0.4); }
+        `;
+        
+        alert("✨ Authenticated Successfully! Administrative curation tools unlocked.");
+        
+        // ➔ THE REBUILD RUN: Instantly kick start a complete rendering loop sync 
+        // so that edit buttons render live on your screen right away!
+        if (typeof filterCatalog === "function") {
+            filterCatalog(); 
+        }
+        
+        // Also force display on your category toolbar header buttons if present
+        const topAddBtn = document.querySelector("#dynamicCatalogFiltersDock .admin-action-inline-trigger");
+        if (topAddBtn) {
+            topAddBtn.style.setProperty("display", "inline-flex", "important");
+        }
+        
+    } else {
+        alert("❌ Identity Handshake Blocked: Invalid Passcode.");
+    }
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — DYNAMIC INLINE CRUD WRITE OPERATIONS METHODS
+// =========================================================================
+function openAdminFormModalForCreation() {
+    document.getElementById('masterJewelryAdminForm').reset();
+    document.getElementById('formActionProductId').value = "";
+    document.getElementById('formProductId').disabled = false;
+    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Curate New Masterpiece`;
+    document.getElementById('formSubmitActionBtn').innerText = "Commit Matrix to Live Vault";
+    document.getElementById('adminPieceVaultModal').style.display = 'flex';
+}
+
+function openAdminFormModalForEditing(event, id) {
+    if (event) event.stopPropagation(); // Block card QuickView trigger clicks from bubbling
+    
+    const product = productDatabase.find(p => p.id === id);
+    if (!product) return;
+
+    const stockInfo = MASTER_LIVE_INVENTORY_CACHE[id] || { stock: 5, status: 'available' };
+
+    document.getElementById('formActionProductId').value = product.id;
+    document.getElementById('formProductId').value = product.id;
+    document.getElementById('formProductId').disabled = true; // Lock identity column fields
+    document.getElementById('formProductTitle').value = product.title;
+    document.getElementById('formProductCategory').value = product.category;
+    document.getElementById('formProductPrice').value = product.price;
+    document.getElementById('formProductStock').value = stockInfo.stock;
+    document.getElementById('formProductBadge').value = product.badge === "Sold Out" ? "" : product.badge;
+    document.getElementById('formProductImage').value = product.image;
+    document.getElementById('formProductDesc').value = product.description;
+
+    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Adjust Masterpiece #${product.id}`;
+    document.getElementById('formSubmitActionBtn').innerText = "Update Vault Parameters";
+    document.getElementById('adminPieceVaultModal').style.display = 'flex';
+}
+
+function closeAdminFormVaultModal() {
+    document.getElementById('adminPieceVaultModal').style.display = 'none';
+}
+
+// Bind intercept routing configurations straight inside form submission sequences
+document.addEventListener("DOMContentLoaded", () => {
+    const adminFormNode = document.getElementById('masterJewelryAdminForm');
+    if (adminFormNode) {
+        adminFormNode.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('formSubmitActionBtn');
+            const originalButtonText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Stream Sync...`;
+
+            const editingTargetRowId = document.getElementById('formActionProductId').value;
+            const isEditOperationMode = editingTargetRowId !== "";
+
+            const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+            const cleanBaseUrl = baseSheetDbEndpoint.replace(/\/$/, "");
+
+            const formStockVal = parseInt(document.getElementById('formProductStock').value) || 0;
+            const computedStatusFlag = formStockVal <= 0 ? "sold" : "available";
+
+            const itemFormDataObject = {
+                id: document.getElementById('formProductId').value,
+                title: document.getElementById('formProductTitle').value.trim(),
+                category: document.getElementById('formProductCategory').value,
+                price: document.getElementById('formProductPrice').value,
+                stock: formStockVal,
+                badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
+                status: computedStatusFlag,
+                image: document.getElementById('formProductImage').value.trim(),
+                description: document.getElementById('formProductDesc').value.trim()
+            };
+
+            try {
+                let requestUrl = "";
+                let fetchOptions = {};
+
+                if (isEditOperationMode) {
+                    // Mode A: Perform an edit operational PATCH request
+                    requestUrl = `${cleanBaseUrl}/id/${editingTargetRowId}?sheet=Products`;
+                    fetchOptions = {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: itemFormDataObject })
+                    };
+                } else {
+                    // Mode B: Perform a creation POST row insertion request
+                    requestUrl = `${cleanBaseUrl}?sheet=Products`;
+                    fetchOptions = {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [itemFormDataObject] })
+                    };
+                }
+
+                const response = await fetch(requestUrl, fetchOptions);
+                if (!response.ok) throw new Error("Cloud stream communication rejected parameters.");
+                
+                alert(`Transaction Complete: Catalog parameters successfully synchronized!`);
+                closeAdminFormVaultModal();
+                
+                // Force hot-reloading data matrix streams instantly without crashing tabs
+                await loadProductDatabaseEngine();
+
+            } catch (error) {
+                console.error("Administrative execution pipeline crash:", error);
+                alert("Pipeline Sync Interrupted: Verify data formatting thresholds and API quotas.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalButtonText;
+            }
+        });
+    }
+});
+
+
+
 
 function formatCurrency(amount) {
     return '₹' + amount.toLocaleString('en-IN');
@@ -161,16 +330,25 @@ function filterCatalog(passedSearchQuery) {
                 const rawPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
                 const displayPrice = rawPriceValue > 0 ? `₹${rawPriceValue.toLocaleString('en-IN')}` : 'Price on Request';
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
-                
-                // Fallback validation for category string data attributes
                 const displayCategory = product.category || product.type || 'Luxury Collection';
+
+                // ➔ HARDENED EMBEDDED ENGINE CONTROL LINK MARKUP (FORCED HIGHER Z-INDEX LAYER)
+                const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
+                    <button type="button" class="admin-action-inline-trigger" 
+                            onclick="openAdminFormModalForEditing(event, ${product.id})" 
+                            style="position: absolute; top: -10px; left: -10px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 50px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                        <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> Edit #${product.id}
+                    </button>
+                ` : '';
 
                 return `
                     <div class="product-card" 
                          onclick="openQuickViewShield(${product.id})" 
                          style="background: #ffffff; border: 1px solid var(--purple-primary, #e8e8ef); border-radius: 8px; padding: 16px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
                         
-                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 2px; margin-bottom: 14px;">
+                        ${adminEditInlineControlMarkup}
+
+                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 2px; margin-bottom: 14px; z-index:1;">
                             ${badgeHTML}
                             
                             <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
@@ -185,7 +363,6 @@ function filterCatalog(passedSearchQuery) {
                         
                         <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
-                                <!-- INJECTED CATEGORY BADGE TAG DESIGN TO MATCH THE SALE/TRENDING GRIDS -->
                                 <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 600; margin: 0 0 4px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat', sans-serif; text-align: center;">
                                     ${displayCategory}
                                 </p>
@@ -193,7 +370,7 @@ function filterCatalog(passedSearchQuery) {
                                 <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
                             </div>
                             
-                           <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
+                            <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
                                     onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
                                     ${isSoldOut ? 'disabled' : ''} 
                                     style="width: 100%; 
@@ -215,10 +392,8 @@ function filterCatalog(passedSearchQuery) {
                                             color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; 
                                             border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};
                                             box-shadow: ${isSoldOut ? 'none !important' : ''};">
-                                
-                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem; ${isSoldOut ? 'opacity: 0.8;' : ''}"></i> 
+                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
                                 ${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}
-
                             </button>
                         </div>
                     </div>
@@ -575,16 +750,22 @@ function updateWishlistUI() {
         const isSoldOut = item.badge && item.badge.toLowerCase() === 'sold out';
 
         let actionButtonHTML = "";
-        if (isSoldOut) {
-            actionButtonHTML = `
-                <button class="btn-luxury" disabled style="padding:6px 12px; font-size:0.65rem; letter-spacing:1px; color:var(--text-muted); background:#f1f0f5; border:none; cursor:not-allowed;">
-                    Restocking Soon
+        const currentItemIdKey = parseInt(product.id);
+        const cachedStockInfo = MASTER_LIVE_INVENTORY_CACHE[currentItemIdKey] || { stock: 5, status: 'available' };
+        let checkoutButtonMarkup = "";
+        
+       // Check if the item is entirely sold out
+        if (cachedStockInfo.stock <= 0 || cachedStockInfo.status === "sold") {
+            checkoutButtonMarkup = `
+                <button type="button" disabled class="btn btn-sold-out" style="background: #e1e1e6 !important; color: #8e8e9f !important; border: 1px solid #dcdce0 !important; cursor: not-allowed; width: 100%; height: 44px; font-weight: 600; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">
+                    <i class="fas fa-lock" style="font-size:0.75rem; margin-right:6px;"></i> Recrafting in Vault
                 </button>
             `;
         } else {
-            actionButtonHTML = `
-                <button onclick="addToCartEngine(${item.id}); toggleWishlistDrawer(); triggerCartNotification('${item.title}');" class="btn-luxury" style="padding:6px 12px; font-size:0.65rem; letter-spacing:1px;">
-                    Move To Cart
+            // Your existing functional buy button markup:
+            checkoutButtonMarkup = `
+                <button type="button" class="btn btn-primary" onclick="addToCartEngine(${product.id})" style="background: #202c55; color: #ffffff; width: 100%; height: 44px; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; cursor: pointer;">
+                    ADD TO CART
                 </button>
             `;
         }
@@ -1481,41 +1662,60 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
 
     const orderImageUrlsString = shoppingCart.map(item => item.image || '').filter(url => url !== '').join(', ');
     
+    const dbPayload = {
+        data: [
+            {
+                "Payment ID": paymentId,
+                "Date": new Date().toLocaleString('en-IN'),
+                "Client Name": name,
+                "Phone": phone,
+                "Address": address,
+                "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
+                "Order Images": orderImageUrlsString,
+                "Total Paid": formatCurrency(finalTotalCost),
+                "Status": "Paid"
+            }
+        ]
+    };
+
+    // Post data to master SheetDB database
     fetch(ANGEL_STORE_CONFIG.DATABASE.SHEETDB_API_URL, {
         method: "POST",
         headers: {
             'Accept': 'application/json',
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            data: [
-                {
-                    "Payment ID": paymentId,
-                    "Date": new Date().toLocaleString('en-IN'),
-                    "Client Name": name,
-                    "Phone": phone,
-                    "Address": address,
-                    "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
-                    "Order Images": orderImageUrlsString,
-                    "Total Paid": formatCurrency(finalTotalCost),
-                    "Status": "Paid"
-                }
-            ]
-        })
+        body: JSON.stringify(dbPayload)
     })
     .then(response => response.json())
-    .catch(err => console.error("SheetDB network stream drop:", err));
-    
-    shoppingCart = [];
-    activeDiscount = { code: "", type: "", value: 0 };
-    if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
-    
-    if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
-    if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
-    
-    updateCartUI();
-    closeInvoiceScreen(); 
-    confirmationScreen.style.display = 'flex';
+    .then(data => {
+        console.log("SheetDB logging successful:", data);
+        
+        // Trigger background inventory deduction safely before resetting cart memory
+        if (typeof executeSheetDbInventoryDeduction === "function") {
+            executeSheetDbInventoryDeduction(shoppingCart);
+        }
+        
+        // Wipe local runtime cart states and update checkout interface view frameworks
+        shoppingCart = [];
+        activeDiscount = { code: "", type: "", value: 0 };
+        if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
+        
+        if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
+        if (document.getElementById('customerAddress')) document.getElementById('customerAddress').value = "";
+        
+        updateCartUI();
+        closeInvoiceScreen(); 
+        confirmationScreen.style.display = 'flex';
+    })
+    .catch(err => {
+        console.error("SheetDB network stream drop:", err);
+        // Fallback execution so the app doesn't freeze for the client if database fails
+        shoppingCart = [];
+        updateCartUI();
+        closeInvoiceScreen(); 
+        confirmationScreen.style.display = 'flex';
+    });
 }
 
 function exitConfirmationAndReset() {
@@ -2362,3 +2562,101 @@ function getBadgeCustomStyles(badgeText) {
 
     return `background: ${bgColor} !important; color: ${textColor} !important;`;
 }
+
+// =========================================================================
+// ANGEL JEWELLERY — LIVE SHETDB REAL-TIME INVENTORY MANAGEMENT ENGINE
+// =========================================================================
+let MASTER_LIVE_INVENTORY_CACHE = {};
+
+// 1. Core Loader: Pulls real-time stock counts from SheetDB Inventory sheet
+async function synchronizeLiveStorefrontInventory() {
+    // Look up your central API URL structure from your existing sheet configurations
+    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    
+    try {
+        // Fetch explicitly targeting the "Inventory" tab worksheet component
+        const response = await fetch(`${baseSheetDbEndpoint}?sheet=Products`);
+        if (!response.ok) throw new Error("Inventory endpoint unreachable");
+        
+        const inventoryRows = await response.json();
+        
+        // Map individual rows onto a fast runtime dictionary cache lookups
+        inventoryRows.forEach(row => {
+            const cleanId = parseInt(row.id);
+            if (!isNaN(cleanId)) {
+                MASTER_LIVE_INVENTORY_CACHE[cleanId] = {
+                    stock: parseInt(row.stock) || 0,
+                    status: String(row.status || '').trim().toLowerCase()
+                };
+            }
+        });
+        
+        console.log("💎 Live Inventory Vault Synchronized successfully:", MASTER_LIVE_INVENTORY_CACHE);
+        if (typeof filterCatalog === "function") filterCatalog();
+        
+        // ➔ Force update UI views so active items check their stock status instantly on startup
+        if (typeof renderProducts === "function") renderProducts(); 
+        if (typeof renderCatalog === "function") renderCatalog();
+        
+    } catch (error) {
+        console.error("❌ Inventory download sync failed. Store falling back to default availability states:", error);
+    }
+}
+
+// 2. Automated Deductor: Subtracts items from Google Sheets upon final order placement
+async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
+    // ➔ CHNAGED TO LET: Safely allows slash replacing operations without reassign syntax errors
+    let baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+
+    baseSheetDbEndpoint = baseSheetDbEndpoint.replace(/\/$/, "");
+    
+    if (!completedOrderItemsArray || !completedOrderItemsArray.length) return;
+    
+    console.log("⚡ Starting background stock deduction sequence for order items...");
+
+    for (const item of completedOrderItemsArray) {
+        const itemTargetId = parseInt(item.id);
+        if (isNaN(itemTargetId)) continue;
+        
+        // Retrieve current baseline levels from local cache, defaulting to 5 safety buffer
+        const currentCachedStock = MASTER_LIVE_INVENTORY_CACHE[itemTargetId]?.stock ?? 5;
+        const freshCalculatedStockValue = Math.max(0, currentCachedStock - (item.quantity || 1));
+        const updatedStatusFlag = freshCalculatedStockValue <= 0 ? "sold" : "available";
+        
+        try {
+            // Target the specific product row on SheetDB
+            const targetUrl = `${baseSheetDbEndpoint}/id/${itemTargetId}?sheet=Products`;
+            await fetch(targetUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: {
+                        stock: freshCalculatedStockValue,
+                        status: updatedStatusFlag
+                    }
+                })
+            });
+            
+            // Sync local cache value instantly to prevent multi-click exploits
+            if (MASTER_LIVE_INVENTORY_CACHE[itemTargetId]) {
+                MASTER_LIVE_INVENTORY_CACHE[itemTargetId].stock = freshCalculatedStockValue;
+                MASTER_LIVE_INVENTORY_CACHE[itemTargetId].status = updatedStatusFlag;
+            }
+            
+        } catch (err) {
+            console.error(`⚠️ Could not process automated inventory reduction for Item ID: ${itemTargetId}`, err);
+        }
+    }
+
+    // Refresh display grids automatically to show updated stock values immediately
+    if (typeof renderProducts === "function") renderProducts();
+    if (typeof filterCatalog === "function") filterCatalog();
+}
+
+// Initialize the live connection right away when the page scripts boot up
+document.addEventListener("DOMContentLoaded", () => {
+    synchronizeLiveStorefrontInventory();
+});

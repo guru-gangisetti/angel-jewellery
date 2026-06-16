@@ -747,6 +747,15 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         transform: rotate(15deg) scale(1.1);
     }
 }
+.product-card-sold-out-overlay {
+    opacity: 0.65; /* Elegant matte fade for unavailable pieces */
+    position: relative;
+    pointer-events: none; /* Block accidental quick-view clicks */
+}
+
+.product-card-sold-out-overlay img {
+    filter: grayscale(30%) contrast(90%); /* Soft luxury archival tint */
+}
 
 /* =========================================================================
    MEDIA QUERIES — MOBILE DISPLAY PHONES COMPRESSION OVERRIDES (< 768px)

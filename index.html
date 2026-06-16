@@ -159,18 +159,21 @@
                 </button>
             </div>
             <div class="filter-wrapper" id="filterContainer">
-                <div class="catalog-filter-container" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding: 20px 0;">
-                    <div id="dynamicCatalogFiltersDock" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;"></div>
-                </div>
-                <div class="inventory-toggle-wrapper">
-                    <label class="switch-container">
-                        <input type="checkbox" id="hideSoldOutCheckbox">
-                        <span class="switch-slider"></span>
-                    </label>
-                    <span class="toggle-label">Hide Sold Out</span>
-                </div>
+        <div class="catalog-filter-container" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding: 20px 0; align-items: center;">
+            <div id="dynamicCatalogFiltersDock" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;"></div>
+            <button type="button" id="topMenuBarAdminCreateBtn" class="admin-action-inline-trigger" onclick="openAdminFormModalForCreation()" style="display: none; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; font-size: 0.8rem; font-weight: 700; font-family: 'Montserrat', sans-serif; text-transform: uppercase; background: transparent; color: #ff1493; border: 2px dashed #ff1493; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-sizing: border-box; outline: none; height: 38px;">
+                <i class="fas fa-plus-circle"></i> Add New Item
+            </button>
+        </div>
+        <div class="inventory-toggle-wrapper">
+            <label class="switch-container">
+                <input type="checkbox" id="hideSoldOutCheckbox">
+                <span class="switch-slider"></span>
+            </label>
+            <span class="toggle-label">Hide Sold Out</span>
             </div>
         </div>
+    </div>
     </section>
 
     <div class="main-collection-header-vault" style="text-align: center; padding: 10px; max-width: 1200px; margin: 0 auto; box-sizing: border-box;">
@@ -529,5 +532,76 @@
     <script src="script.js"></script>
     <script src="config.js"></script>
     <button id="backToTopBtn" aria-label="Scroll to top"><i class="fas fa-chevron-up"></i></button>
+
+    <div id="adminPieceVaultModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 26, 54, 0.6); backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif;">
+    <div style="background: #ffffff; width: 100%; max-width: 550px; border-radius: 8px; border: 1px solid #202c55; box-shadow: 0 20px 50px rgba(32,44,85,0.3); overflow: hidden; display: flex; flex-direction: column; animation: scaleInFade 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
+        
+        <div style="background: #202c55; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="adminFormModalTitle" style="color: #ffffff; margin: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-gem" style="color: #ff1493;"></i> Curate New Masterpiece
+            </h3>
+            <i class="fas fa-times" onclick="closeAdminFormVaultModal()" style="color: #ffffff; cursor: pointer; font-size: 1.2rem; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8"></i>
+        </div>
+
+        <form id="masterJewelryAdminForm" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: calc(100vh - 120px); box-sizing: border-box; text-align: left;">
+            <input type="hidden" id="formActionProductId" value="">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Masterpiece ID</label>
+                    <input type="number" id="formProductId" placeholder="e.g. 25" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif;">
+                </div>
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Collection Category</label>
+                    <select id="formProductCategory" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; background: #ffffff;">
+                        <option value="Necklaces">Necklaces</option>
+                        <option value="Chokers">Chokers</option>
+                        <option value="Earrings">Earrings</option>
+                        <option value="Bangles">Bangles</option>
+                        <option value="Rings">Rings</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Masterpiece Title Name</label>
+                <input type="text" id="formProductTitle" placeholder="e.g. The Royal Kundan Haar" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Price (INR raw number)</label>
+                    <input type="number" id="formProductPrice" placeholder="18500" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Stock Count Limit</label>
+                    <input type="number" id="formProductStock" placeholder="5" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Visual Display Badge</label>
+                    <input type="text" id="formProductBadge" placeholder="e.g. New, Sale, Trending, or blank" style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Image Asset Path File URL</label>
+                    <input type="text" id="formProductImage" placeholder="assets/p1.jpg" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Editorial Description Content</label>
+                <textarea id="formProductDesc" rows="3" placeholder="Describe the gold weights, gemstones, or heritage patterns..." style="width: 100%; padding: 10px 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <button type="submit" id="formSubmitActionBtn" style="background: #202c55; color: #ffffff; width: 100%; height: 46px; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: background 0.2s; margin-top: 5px; outline: none;">
+                Commit Matrix to Live Vault
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="adminLauncherFloatingUtilityNode" onclick="challengeAdminIdentityGateway()" style="position: fixed; bottom: 15px; left: 15px; width: 24px; height: 24px; background: rgba(32,44,85,0.03); border-radius: 50%; z-index: 99999; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: transparent; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,20,147,0.1)'; this.style.color='#ff1493'">🔑</div>
 </body>
 </html>
