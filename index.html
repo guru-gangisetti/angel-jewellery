@@ -370,7 +370,7 @@
                 </div>
             </div>
 
-            <div id="adminAnalyticsStrip" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; text-align: left;">
+            <div id="adminAnalyticsStrip" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; text-align: left;">
                 <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--purple-primary);">
                     <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Pending Fulfillment Value</span>
                     <h3 id="analyticsPendingValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: var(--purple-primary); font-weight: 700;">₹0</h3>
@@ -378,6 +378,10 @@
                 <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--pink-accent);">
                     <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Total Shipped Value</span>
                     <h3 id="analyticsShippedValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: var(--pink-accent); font-weight: 700;">₹0</h3>
+                </div>
+                <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid #cca43b;">
+                    <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Total Combined Value</span>
+                    <h3 id="analyticsCombinedValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: #cca43b; font-weight: 700;">₹0</h3>
                 </div>
             </div>
 
@@ -580,6 +584,8 @@
             <a href="#" onclick="openAngelStorePolicyModal(event, 'refund')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Refund & Exchange</a>
             <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
             <a href="#" onclick="openAngelStorePolicyModal(event, 'terms')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Terms of Service</a>
+            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
+            <a href="#" onclick="openFaqSystemModalOverlay(event, 'terms')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">FAQs & Support</a>
         </div>
 
         <div style="margin-top: 15px; opacity: 0.5;">
@@ -619,6 +625,7 @@
                         <option value="Earrings">Earrings</option>
                         <option value="Bangles">Bangles</option>
                         <option value="Rings">Rings</option>
+                        <option value="MiniHaram">MiniHaram</option>
                     </select>
                 </div>
             </div>
@@ -656,7 +663,7 @@
             </div>
 
             <button type="submit" id="formSubmitActionBtn" style="background: #202c55; color: #ffffff; width: 25%; padding:8px; margin: 4px; height: 46px; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: background 0.2s; margin-top: 5px; outline: none;">
-                Commit Matrix to Live Vault
+                Add New Item
             </button>
         </form>
     </div>
@@ -732,6 +739,63 @@
             </div>
         </div>
     </div>
+    <div id="faqSystemModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 27, 37, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+    <div style="background: #ffffff; width: 100%; max-width: 650px; border-radius: 8px; border: 1px solid var(--purple-primary); box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 85vh; animation: faqModalSlideUp 0.3s ease;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5;">
+            <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); letter-spacing: 0.5px; text-transform: uppercase;">
+                <i class="far fa-question-circle" style="color: var(--pink-accent); margin-right: 6px;"></i> FAQs & Support
+            </h3>
+            <button onclick="closeFaqSystemModalOverlay()" style="background: transparent; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; outline: none;" onmouseover="this.style.color='var(--pink-accent)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+        </div>
 
+        <div style="overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; font-family: 'Montserrat', sans-serif;">
+            
+            <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                    <span>✨ How do I customize or order bespoke sizes?</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                </div>
+                <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                    <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                        You can specify your exact sizing details directly during the checkout process, or initiate a luxury consultation instantly by tapping our automated WhatsApp portal at the base of your catalog cards.
+                    </p>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                    <span>🚚 What are your shipping windows across India?</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                </div>
+                <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                    <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                        All orders are processed securely and dispatched through premium networks including DTDC, Delhivery, or Blue Dart. Delivery typically fulfills within 3 to 5 business days, and real-time step tracking can be checked directly via our live tracker using your phone number.
+                    </p>
+                </div>
+            </div>
+
+            <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                    <span>🛡️ Is my payment transaction completely secure?</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                </div>
+                <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                    <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                        Absolutely. All payments execute over bank-grade transaction gateways. Upon a validated ledger match, your order profile maps natively to our backend inventory tracking nodes.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes faqModalSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 </body>
 </html>

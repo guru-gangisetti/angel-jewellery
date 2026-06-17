@@ -41,28 +41,37 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryBut
 }
 
 // =========================================================================
-// ANGEL JEWELLERY — HEADLESS COMMERCE AUTOMATED DATA DATA STREAM MATRIX
+// ANGEL JEWELLERY — HIGH-PERFORMANCE SUPABASE RELATIONAL DATABASE CHANNELS
 // =========================================================================
 async function loadProductDatabaseEngine() {
     try {
-        console.log("Synchronizing live data matrix cleanly via single-source SheetDB repository...");
+        console.log("Synchronizing live data matrix cleanly via direct Supabase API connection...");
         
-        const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-        const cleanFetchTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Products`;
+        const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+        
+        // Query ordered by ID so your collection stays neatly sequenced
+        const cleanFetchTargetUrl = `${sbUrl}/rest/v1/Products?select=*&order=id.asc`;
 
-        const databaseResponse = await fetch(cleanFetchTargetUrl);
-        if (!databaseResponse.ok) throw new Error(`Spreadsheet connection dropped: ${databaseResponse.status}`);
+        const databaseResponse = await fetch(cleanFetchTargetUrl, {
+            method: 'GET',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
+        if (!databaseResponse.ok) throw new Error(`Supabase returned status code: ${databaseResponse.status}`);
         const databasePayload = await databaseResponse.json();
 
-        // Remap raw spreadsheet row fields into strict clean execution numbers and variables
+        // Map fields explicitly from your database columns
         productDatabase = databasePayload.map(item => {
             const parsedUniqueId = parseInt(item.id);
-            const verifiedPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+            const verifiedPrice = parseFloat(item.price) || 0;
             const liveStockLevel = parseInt(item.stock) ?? 0;
             const updatedStatus = liveStockLevel <= 0 ? "sold" : String(item.status || 'available').trim().toLowerCase();
 
-            // Cache stock limits inside memory lookups simultaneously
             MASTER_LIVE_INVENTORY_CACHE[parsedUniqueId] = {
                 stock: liveStockLevel,
                 status: updatedStatus
@@ -79,21 +88,17 @@ async function loadProductDatabaseEngine() {
             };
         });
 
-        console.log(`Synchronization successful. Compiled ${productDatabase.length} masterpieces dynamically.`);
+        console.log(`✨ Success! Loaded ${productDatabase.length} items from Supabase.`);
 
-        // ➔ THE CRITICAL SEQUENCING REPAIR: Build the visual collection folder panels FIRST!
         if (typeof generateDynamicCatalogFilters === 'function') {
             generateDynamicCatalogFilters();
         }
 
     } catch (error) {
-        console.error('Critical spreadsheet extraction breakdown caught:', error);
+        console.error('Critical Supabase catalog extraction breakdown caught:', error);
     }
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (ONE PASSWORD)
-// =========================================================================
 // =========================================================================
 // ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (LOCK AUTO-HIDE)
 // =========================================================================
@@ -147,14 +152,14 @@ function openAdminFormModalForCreation(event) {
     document.getElementById('formActionProductId').value = "";
     document.getElementById('formProductId').disabled = false;
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Curate New Masterpiece`;
-    document.getElementById('formSubmitActionBtn').innerText = "Commit Matrix to Live Vault";
+    document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
 }
 
 function openAdminFormModalForEditing(event, id) {
     if (event) event.stopPropagation(); // Block card QuickView trigger clicks from bubbling
     
-    const product = productDatabase.find(p => p.id === id);
+    const product = productDatabase.find(p => p.id === parseInt(id));
     if (!product) return;
 
     const stockInfo = MASTER_LIVE_INVENTORY_CACHE[id] || { stock: 5, status: 'available' };
@@ -165,7 +170,9 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('formProductTitle').value = product.title;
     document.getElementById('formProductCategory').value = product.category;
     document.getElementById('formProductPrice').value = product.price;
-    document.getElementById('formProductStock').value = stockInfo.stock;
+    const liveCacheData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+    const trueCurrentStock = liveCacheData ? liveCacheData.stock : product.stock;
+    document.getElementById('formProductStock').value = trueCurrentStock;
     document.getElementById('formProductBadge').value = product.badge === "Sold Out" ? "" : product.badge;
     document.getElementById('formProductImage').value = product.image;
     document.getElementById('formProductDesc').value = product.description;
@@ -179,7 +186,7 @@ function closeAdminFormVaultModal() {
     document.getElementById('adminPieceVaultModal').style.display = 'none';
 }
 
-// Bind intercept routing configurations straight inside form submission sequences
+// 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
 document.addEventListener("DOMContentLoaded", () => {
     const adminFormNode = document.getElementById('masterJewelryAdminForm');
     if (adminFormNode) {
@@ -189,22 +196,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const submitBtn = document.getElementById('formSubmitActionBtn');
             const originalButtonText = submitBtn.innerText;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Stream Sync...`;
+            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Upserting Database Parameters...`;
 
             const editingTargetRowId = document.getElementById('formActionProductId').value;
             const isEditOperationMode = editingTargetRowId !== "";
-
-            const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-            const cleanBaseUrl = baseSheetDbEndpoint.replace(/\/$/, "");
+            
+            const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+            const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
 
             const formStockVal = parseInt(document.getElementById('formProductStock').value) || 0;
             const computedStatusFlag = formStockVal <= 0 ? "sold" : "available";
 
-            const itemFormDataObject = {
-                id: document.getElementById('formProductId').value,
+            // Structured object mapping to match your Supabase columns exactly
+            const itemPayloadObject = {
+                id: parseInt(document.getElementById('formProductId').value),
                 title: document.getElementById('formProductTitle').value.trim(),
                 category: document.getElementById('formProductCategory').value,
-                price: document.getElementById('formProductPrice').value,
+                price: parseFloat(document.getElementById('formProductPrice').value) || 0,
                 stock: formStockVal,
                 badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
                 status: computedStatusFlag,
@@ -213,39 +221,42 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             try {
-                let requestUrl = "";
+                let requestUrl = `${sbUrl}/rest/v1/Products`;
+                let customHeaders = {
+                    'apikey': sbKey,
+                    'Authorization': `Bearer ${sbKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                };
+
                 let fetchOptions = {};
 
                 if (isEditOperationMode) {
-                    // Mode A: Perform an edit operational PATCH request
-                    requestUrl = `${cleanBaseUrl}/id/${editingTargetRowId}?sheet=Products`;
+                    // Update exact record by filtering for the row ID
+                    requestUrl += `?id=eq.${editingTargetRowId}`;
                     fetchOptions = {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: itemFormDataObject })
+                        headers: customHeaders,
+                        body: JSON.stringify(itemPayloadObject)
                     };
                 } else {
-                    // Mode B: Perform a creation POST row insertion request
-                    requestUrl = `${cleanBaseUrl}?sheet=Products`;
+                    // Insert brand new product row
                     fetchOptions = {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [itemFormDataObject] })
+                        headers: customHeaders,
+                        body: JSON.stringify(itemPayloadObject)
                     };
                 }
 
                 const response = await fetch(requestUrl, fetchOptions);
-                if (!response.ok) throw new Error("Cloud stream communication rejected parameters.");
-                
-                alert(`Update Success!`);
+                if (!response.ok) throw new Error("Supabase cloud workspace rejected writing parameters.");
                 closeAdminFormVaultModal();
-                
-                // Force hot-reloading data matrix streams instantly without crashing tabs
                 await loadProductDatabaseEngine();
+                if (typeof filterCatalog === "function") filterCatalog();
 
             } catch (error) {
-                console.error("Administrative execution pipeline crash:", error);
-                alert("Pipeline Sync Interrupted: Verify data formatting thresholds and API quotas.");
+                console.error("Supabase write pipeline execution breakdown caught:", error);
+                alert("Database Update Interrupted: Double-check your column naming configurations or column data types.");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalButtonText;
@@ -253,8 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
-
 
 
 function formatCurrency(amount) {
@@ -1574,39 +1583,44 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
 
     const orderImageUrlsString = shoppingCart.map(item => item.image || '').filter(url => url !== '').join(', ');
     
-    const dbPayload = {
-        data: [
-            {
-                "Payment ID": paymentId,
-                "Date": new Date().toLocaleString('en-IN'),
-                "Client Name": name,
-                "Phone": phone,
-                "Address": address,
-                "Order Items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
-                "Order Images": orderImageUrlsString,
-                "Total Paid": formatCurrency(finalTotalCost),
-                "Status": "Paid"
-            }
-        ]
+    // =========================================================================
+    // SUPABASE PRODUCTION CHANNEL — SECURE ZERO-LIMIT ORDER SUBMISSION
+    // =========================================================================
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    // Flattening the payload and matching standard relational column keys
+    const supabaseOrderPayload = {
+        "payment_id": paymentId,
+        "customer_name": name,
+        "phone": phone,
+        "address": address,
+        "order_items": shoppingCart.map(i => `${i.title} (x${i.quantity})`).join(", "),
+        "order_images": orderImageUrlsString,
+        "total_amount": finalTotalCost, 
+        "status": "Paid"
     };
 
-    // Post data to master SheetDB database
-    fetch(ANGEL_STORE_CONFIG.DATABASE.SHEETDB_API_URL, {
+    // Post data straight to your master Supabase Orders table index
+   fetch(`${sbUrl}/rest/v1/Orders`, {
         method: "POST",
         headers: {
-            'Accept': 'application/json',
-            "Content-Type": "application/json"
+            "apikey": sbKey,
+            "Authorization": `Bearer ${sbKey}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
         },
-        body: JSON.stringify(dbPayload)
+        body: JSON.stringify(supabaseOrderPayload)
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log("SheetDB logging successful:", data);
+    .then(async response => { // ➔ Notice the 'async' added here so we can await the deduction loop
+        if (!response.ok) throw new Error(`Supabase interface returned code: ${response.status}`);
+        console.log("Supabase transaction logged successfully.");
         
-        // Trigger background inventory deduction safely before resetting cart memory
-        if (typeof executeSheetDbInventoryDeduction === "function") {
-            executeSheetDbInventoryDeduction(shoppingCart);
-        }
+        // ➔ THE CRITICAL INTEGRATION: Deduct stock values in Supabase before clearing the cart memory
+        await executeSupabaseInventoryDeduction(shoppingCart);
+        if (typeof loadProductDatabaseEngine === "function") {
+             await loadProductDatabaseEngine(); 
+         }
         
         // Wipe local runtime cart states and update checkout interface view frameworks
         shoppingCart = [];
@@ -1621,7 +1635,8 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         confirmationScreen.style.display = 'flex';
     })
     .catch(err => {
-        console.error("SheetDB network stream drop:", err);
+        console.error("Supabase network order submission stream drop:", err);
+        
         // Fallback execution so the app doesn't freeze for the client if database fails
         shoppingCart = [];
         updateCartUI();
@@ -1635,168 +1650,165 @@ function exitConfirmationAndReset() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function executeLiveOrderTrackingSearch() {
-    const inputField = document.getElementById('trackingPhoneInput');
+// =========================================================================
+// SUPABASE PUBLIC CHANNEL — HIGH-FIDELITY LIVE CLIENT ORDER VISUAL TRACKER
+// =========================================================================
+async function executeLiveOrderTrackingSearch() {
+    const inputPhone = document.getElementById('trackingPhoneInput').value.trim();
     const statusMsg = document.getElementById('trackingStatusMessage');
-    const resultsContainer = document.getElementById('trackingResultsContainer');
+    const container = document.getElementById('trackingResultsContainer');
     
-    if (!inputField || !statusMsg || !resultsContainer) return;
-    
-    const plainPhoneNumberInput = inputField.value.trim();
-    resultsContainer.innerHTML = ""; 
-    
-    if (!plainPhoneNumberInput) {
-        statusMsg.style.display = "block";
-        statusMsg.style.color = "var(--pink-accent)";
-        statusMsg.innerText = "Please provide a valid contact number.";
+    if (!inputPhone) {
+        alert("Please enter a valid phone number.");
         return;
     }
-    
+
     statusMsg.style.display = "block";
-    statusMsg.style.color = "var(--purple-primary)";
     statusMsg.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; gap: 12px;">
-            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--purple-primary);"></i>
-            <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; color: var(--text-muted, #777); text-transform: uppercase;">
-                Loading...
+        <div style="display: flex; align-items: center; justify-content: center; padding: 15px 0; gap: 10px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--pink-accent);"></i>
+            <span style="font-size: 0.88rem; font-weight: 600; color: var(--purple-primary);">
+                Retrieving your order portfolio from secure nodes...
             </span>
         </div>
     `;
+    container.innerHTML = "";
 
-    const searchApiEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/search?Phone=${encodeURIComponent(plainPhoneNumberInput)}`;
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const trackingUrl = `${sbUrl}/rest/v1/Orders?phone=eq.${inputPhone}&order=created_at.desc`;
 
-    fetch(searchApiEndpoint)
-        .then(response => {
-            if (!response.ok) throw new Error("Database interface link dropped.");
-            return response.json();
-        })
-        .then(matchingOrdersArray => {
-            if (!matchingOrdersArray || matchingOrdersArray.length === 0) {
-                statusMsg.style.color = "var(--pink-accent)";
-                statusMsg.innerText = "No verified luxury transaction records discovered matching this number.";
-                return;
+    try {
+        const response = await fetch(trackingUrl, {
+            method: 'GET',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error("Failed to scan orders database index.");
+        const customerOrders = await response.json();
+
+        if (customerOrders.length === 0) {
+            statusMsg.innerHTML = `
+                <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.9rem;">
+                    ⚠️ No verified records discovered matching that phone number index.
+                </div>`;
+            return;
+        }
+
+        statusMsg.innerHTML = `Discovered <strong>${customerOrders.length}</strong> authenticated order masterpiece files matching your profile:`;
+        
+        container.innerHTML = customerOrders.map(order => {
+            const ordStatus = String(order.status || 'Paid').trim();
+            const isShipped = ordStatus.toLowerCase() === 'shipped';
+            const displayStatus = isShipped ? "Shipped" : "Order Placed";
+            
+            const badgeStyle = isShipped 
+                ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
+                : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+
+            const ordDate = order.created_at ? new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'short' }) : 'N/A';
+            const ordTotalAmount = order.total_amount ? (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) : '₹0';
+
+            // Logistics tracking metadata block
+            let logisticsMetadataHTML = ""; 
+            if (isShipped) {
+                const partner = order.courier || 'Standard Logistics';
+                const trackingNum = order.tracking_number || 'N/A';
+                logisticsMetadataHTML = `
+                    <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-truck"></i> <span>Waybill (${partner}): <strong>${trackingNum}</strong></span>
+                    </div>
+                `;
             }
 
-            statusMsg.style.color = "#25d366";
-            statusMsg.innerText = `Discovered ${matchingOrdersArray.length} authenticated reservation order file(s):`;
+            // Parse cart items and imagery arrays
+            const itemNamesArray = (order.order_items || '').split(',').map(str => str.trim());
+            const itemImagesArray = (order.order_images || '').split(',').map(str => str.trim());
 
-            resultsContainer.innerHTML = matchingOrdersArray.map(order => {
-                const rawSheetStatus = (order['Status'] || '').trim().toLowerCase();
-                
-                let displayStatusText = "Order Placed";
-                let badgeBgColor = "rgba(32, 44, 85, 0.08)"; 
-                let badgeTextColor = "var(--purple-primary)";
-                let trackingBlockHTML = ""; // Empty string container wrapper if pending placement
-
-                if (rawSheetStatus === 'shipped') {
-                    displayStatusText = "Shipped";
-                    badgeBgColor = "rgba(255, 20, 147, 0.1)"; 
-                    badgeTextColor = "var(--pink-accent)";
-                    
-                    const courierPartner = order['Courier'] || 'Logistics Fleet';
-                    const waybillReference = order['Tracking Number'] || 'Awaiting Allocation';
-                    
-                    trackingBlockHTML = `
-                        <div style="background: #fff0f6; border: 1px solid #ffa3d1; border-radius: 4px; padding: 12px 16px; margin-bottom: 5px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
-                            <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--pink-accent); font-weight: 700; letter-spacing: 0.5px;">
-                                <i class="fas fa-truck-moving" style="margin-right: 4px;"></i> Live Consignment Logistics Waybill
-                            </span>
-                            <p style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116;">
-                                Carrier Agent: <strong style="color: var(--purple-primary); font-weight: 700;">${courierPartner}</strong>
-                            </p>
-                            <p style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116;">
-                                Tracking ID: <strong style="font-family: monospace; color: var(--purple-primary); letter-spacing: 0.5px;">${waybillReference}</strong>
-                            </p>
-                        </div>
-                    `;
+            const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
+                if (!itemString) return '';
+                let parsedTitle = itemString;
+                let parsedQuantity = "1";
+                const qtyMatch = itemString.match(/\(x(\d+)\)/);
+                if (qtyMatch) {
+                    parsedTitle = itemString.replace(qtyMatch[0], '').trim();
+                    parsedQuantity = qtyMatch[1];
                 }
-
-                const itemNamesArray = (order['Order Items'] || '').split(',').map(str => str.trim());
-                const itemImagesArray = (order['Order Images'] || '').split(',').map(str => str.trim());
-
-                const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
-                    if (!itemString) return '';
-                    
-                    let parsedTitle = itemString;
-                    let parsedQuantity = "1";
-                    const qtyMatch = itemString.match(/\(x(\d+)\)/);
-                    if (qtyMatch) {
-                        parsedTitle = itemString.replace(qtyMatch[0], '').trim();
-                        parsedQuantity = qtyMatch[1];
-                    }
-
-                    const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
-
-                    return `
-                        <tr style="border-bottom: 1px solid #f1f1f5;">
-                            <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                                <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
-                                    <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
-                                </div>
-                            </td>
-                            <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
-                                ${parsedTitle}
-                            </td>
-                            <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
-                                ${parsedQuantity}
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
 
                 return `
-                <div style="background: var(--bg-surface); border: 1px solid var(--purple-primary); border-radius: 6px; padding: 25px; box-sizing: border-box; width: 100%; position: relative; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; font-size: 0.8rem; color: var(--text-muted); font-weight:600; gap: 10px; flex-wrap: wrap;">
-                        <span>Ref ID: <strong style="color: var(--purple-primary); font-family: monospace;">${order['Payment ID']}</strong></span>
-                        <span>${order['Date']}</span>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 16px; border: 1px solid var(--border-subtle); border-radius: 4px;">
-                        <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">
-                            <i class="fas fa-box-open" style="margin-right: 6px; color: var(--purple-primary);"></i> Order Status
-                        </span>
-                        <span style="background: ${badgeBgColor}; color: ${badgeTextColor}; font-size: 0.7rem; padding: 6px 14px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s ease;">
-                            ${displayStatusText}
-                        </span>
-                    </div>
-
-                    <!-- LOGISTICS PARTNER INJECTION IN THE TRACKING PORTAL CONTAINER -->
-                    ${trackingBlockHTML}
-
-                    <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
-                        <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
-                            <thead>
-                                <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
-                                    <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
-                                    <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece Title</th>
-                                    <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Quantity</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${inventoryRowsHTML}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; font-size: 0.85rem; color: var(--text-dark-primary); font-weight:500; display: flex; flex-direction: column; gap: 4px;">
-                        <p style="margin: 0;"><span style="color: var(--text-muted); font-weight:600;">Consignee:</span> ${order['Client Name']}</p>
-                        <p style="margin: 0;"><span style="color: var(--text-muted); font-weight:600;">Destination:</span> ${order['Address']}</p>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 12px; font-size: 1.1rem; font-weight: 700; color: var(--purple-primary);">
-                        <span>Settled Balance:</span>
-                        <span>${order['Total Paid']}</span>
-                    </div>
-                </div>
+                    <tr style="border-bottom: 1px solid #f1f1f5;">
+                        <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
+                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                                <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                            </div>
+                        </td>
+                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
+                            ${parsedTitle}
+                        </td>
+                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
+                            ${parsedQuantity}
+                        </td>
+                    </tr>
                 `;
             }).join('');
-        })
-        .catch(err => {
-            console.error("Live ledger sync execution drop:", err);
-            statusMsg.style.color = "var(--pink-accent)";
-            statusMsg.innerText = "Fulfillment system extraction dropped. Please verify network links.";
-        });
+
+            return `
+            <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left; margin-bottom: 15px;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
+                    <div style="text-align: left; flex: 1;">
+                        <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
+                            Reference ID: <strong style="color: var(--purple-primary);">#${order.id}</strong>
+                        </span>
+                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
+                            ${order.customer_name}
+                        </h4>
+                    </div>
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div style="line-height: 1.3; margin-bottom: 2px;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600; text-align: right;">Ordered: ${ordDate}</span>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block; text-align: right;">${ordTotalAmount}</span>
+                        </div>
+                        <span style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
+                            ${displayStatus}
+                        </span>
+                        ${logisticsMetadataHTML}
+                    </div>
+                </div>
+
+                <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
+                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                        <thead>
+                            <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
+                                <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
+                                <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece</th>
+                                <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inventoryRowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="background: #fafafa; padding: 12px 16px; border-radius: 6px; border: 1px solid #e8e8ef; font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
+                    <span style="color: var(--text-muted); font-weight: 600;">Shipping Destination:</span> ${order.address}
+                </div>
+
+            </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error("Tracking rendering breakdown caught:", error);
+        statusMsg.innerHTML = `<span style="color:red; font-size:0.85rem;">Tracking server cluster timed out. Please try again shortly.</span>`;
+    }
 }
 
 function openTrackingScreenOverlay(event) {
@@ -1832,12 +1844,14 @@ function closeTrackingScreenOverlay() {
 }
 
 // =========================================================================
-// ANGEL JEWELLERY — MASTER ORDER LEDGER DESK TERMINAL (PASSWORD PROMPT REMOVED)
+// SUPABASE PRODUCTION CHANNEL — ADMINISTRATIVE MASTER ORDERS PANEL
+// =========================================================================
+// =========================================================================
+// SUPABASE SECURE PANEL — SYNCING REAL DATA MATRIX FOR ANALYTICS
 // =========================================================================
 function openAdminMasterConsole(event) {
     if (event) event.preventDefault();
 
-    // ➔ SECURITY COMPATIBILITY CHECK: Ensure the master passcode has been completed first
     if (!INTEGRATED_ADMIN_AUTH_STATE) {
         alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
         return;
@@ -1855,24 +1869,61 @@ function openAdminMasterConsole(event) {
         <div style="display: flex; align-items: center; justify-content: left; padding: 10px 0; gap: 10px;">
             <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--pink-accent);"></i>
             <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; color: var(--purple-primary);">
-                Loading...
+                Synchronizing Live Supabase Order Matrix...
             </span>
         </div>
     `;
 
-    fetch("https://sheetdb.io/api/v1/0lvmtng1nhhhi")
-        .then(response => {
-            if (!response.ok) throw new Error("Administrative link connection dropout.");
-            return response.json();
-        })
-        .then(allOrdersArray => {
-            adminOrdersCache = allOrdersArray || [];
-            renderSegregatedAdminOrders();
-        })
-        .catch(err => {
-            console.error("Admin dashboard runtime drop:", err);
-            statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate spreadsheet rows.";
-        });
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    
+    const targetFetchUrl = `${sbUrl}/rest/v1/Orders?select=*&order=created_at.desc`;
+
+    fetch(targetFetchUrl, {
+        method: "GET",
+        headers: {
+            "apikey": sbKey,
+            "Authorization": `Bearer ${sbKey}`,
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`Supabase returned connection status code: ${response.status}`);
+        return response.json();
+    })
+    .then(supabaseOrdersArray => {
+        // ➔ THE CRITICAL ALIGNMENT: Map the true 'total_amount' column safely into your cache variables
+        adminOrdersCache = (supabaseOrdersArray || []).map(order => ({
+            "id": order.id,
+            "payment_id": order.payment_id,
+            "Payment ID": order.payment_id,
+            "Date": order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A',
+            "customer_name": order.customer_name,
+            "Client Name": order.customer_name,
+            "phone": order.phone,
+            "Phone": order.phone,
+            "address": order.address,
+            "Address": order.address,
+            "order_items": order.order_items,
+            "Order Items": order.order_items,
+            "order_images": order.order_images,
+            "Order Images": order.order_images,
+            "status": order.status || 'Paid',
+            "Status": order.status || 'Paid',
+            // Fixes your calculation errors completely right here:
+            "total_amount": order.total_amount,
+            "Total Amount": order.total_amount,
+            "Total Paid": order.total_amount 
+        }));
+        
+        statusMsg.innerHTML = "";
+        // Fire your calculation and card layout loops
+        renderSegregatedAdminOrders();
+    })
+    .catch(err => {
+        console.error("Admin dashboard runtime drop:", err);
+        statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate Supabase tables.";
+    });
 }
 
 function switchAdminConsoleTab(targetTabKey) {
@@ -2030,6 +2081,8 @@ function renderSegregatedAdminOrders() {
     
     const pendingValueHeading = document.getElementById('analyticsPendingValue');
     const shippedValueHeading = document.getElementById('analyticsShippedValue');
+    // ➔ Target your new combined UI selector node
+    const combinedValueHeading = document.getElementById('analyticsCombinedValue');
 
     if (!ordersContainer || !adminOrdersCache) return;
 
@@ -2039,8 +2092,9 @@ function renderSegregatedAdminOrders() {
     let accumulatedShippedSum = 0;
 
     adminOrdersCache.forEach(order => {
-        const numericValue = parseFloat((order['Total Paid'] || '').replace(/[^0-9.]/g, '')) || 0;
-        const statusStr = (order['Status'] || '').trim().toLowerCase();
+        const rawTotalPaidString = String(order.total_amount || order['Total Amount'] || '0');
+        const numericValue = parseFloat(rawTotalPaidString.replace(/[^0-9.]/g, '')) || 0;
+        const statusStr = String(order.status || order['Status'] || '').trim().toLowerCase();
         
         if (statusStr === 'shipped') {
             accumulatedShippedSum += numericValue;
@@ -2049,11 +2103,16 @@ function renderSegregatedAdminOrders() {
         }
     });
 
+    // Calculate total transactional volume velocity across both states
+    const combinedTotalSum = accumulatedPendingSum + accumulatedShippedSum;
+
     if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
     if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
+    // ➔ Render the combined luxury portfolio scale value text
+    if (combinedValueHeading) combinedValueHeading.innerText = formatCurrency(combinedTotalSum);
 
-    const pendingOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() !== 'shipped');
-    const shippedOrdersList = adminOrdersCache.filter(order => (order['Status'] || '').trim().toLowerCase() === 'shipped');
+    const pendingOrdersList = adminOrdersCache.filter(order => String(order.status || order['Status'] || '').trim().toLowerCase() !== 'shipped');
+    const shippedOrdersList = adminOrdersCache.filter(order => String(order.status || order['Status'] || '').trim().toLowerCase() === 'shipped');
 
     if (pendingCountSpan) pendingCountSpan.innerText = pendingOrdersList.length;
     if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
@@ -2062,10 +2121,10 @@ function renderSegregatedAdminOrders() {
 
     if (adminConsoleSearchQueryString) {
         targetDisplayDataset = targetDisplayDataset.filter(order => {
-            const clientName = (order['Client Name'] || '').toLowerCase();
-            const phoneNum = (order['Phone'] || '').toLowerCase();
-            const paymentId = (order['Payment ID'] || '').toLowerCase();
-            const destination = (order['Address'] || '').toLowerCase();
+            const clientName = String(order['Client Name'] || order.customer_name || '').toLowerCase();
+            const phoneNum = String(order['Phone'] || order.phone || '').toLowerCase();
+            const paymentId = String(order['Payment ID'] || order.payment_id || '').toLowerCase();
+            const destination = String(order['Address'] || order.address || '').toLowerCase();
             
             return clientName.includes(adminConsoleSearchQueryString) || 
                    phoneNum.includes(adminConsoleSearchQueryString) || 
@@ -2102,6 +2161,7 @@ function renderSegregatedAdminOrders() {
             @keyframes fadeInForm { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
             
             @media (max-width: 768px) {
+                #adminAnalyticsStrip { grid-template-columns: 1fr !important; gap: 10px; }
                 .admin-card-header { flex-direction: column; gap: 12px; align-items: stretch; }
                 .admin-header-right { text-align: left; justify-content: space-between; border-top: 1px solid #f1f1f5; padding-top: 10px; width: 100%; }
                 .admin-shipping-info-row { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -2115,39 +2175,45 @@ function renderSegregatedAdminOrders() {
     const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
 
     ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
-        const rawStatus = (order['Status'] || '').trim();
-        const isShipped = rawStatus.toLowerCase() === 'shipped';
-        
+        const ordStatus = String(order.status || order['Status'] || '').trim();
+        const ordPaymentId = order['Payment ID'] || order.payment_id || 'N/A';
+        const ordClientName = order['Client Name'] || order.customer_name || 'Anonymous';
+        const ordPhone = String(order['Phone'] || order.phone || '');
+        const ordAddress = order['Address'] || order.address || '';
+        const ordDate = order['Date'] || (order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A');
+        const ordTotalAmount = order['Total Paid'] || (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) || '₹0';
+
+        const isShipped = ordStatus.toLowerCase() === 'shipped';
         const displayStatus = isShipped ? "Shipped" : "Order Placed";
         const badgeStyle = isShipped 
             ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
             : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
 
-        const cleanPhone = order['Phone'].replace(/[^0-9]/g, '');
-        const clientMessage = `Hello ${order['Client Name']},\n\nYour Angel Jewellery order (Ref: ${order['Payment ID']}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
+        const cleanPhone = ordPhone.replace(/[^0-9]/g, '');
+        const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
         const whatsappUpdateLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(clientMessage)}`;
 
         let shippedActionButtonHTML = "";
-        let logisticsMetadataHTML = ""; // To store tracking tags for shipped items
+        let logisticsMetadataHTML = ""; 
         
         if (!isShipped) {
             shippedActionButtonHTML = `
-                <button class="btn-admin-action-unit" onclick="revealCourierAllocationPanel('${order['Payment ID']}')" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary);">
+                <button class="btn-admin-action-unit" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary);">
                     <i class="fas fa-shipping-fast"></i> Ship
                 </button>
             `;
         } else {
-            // Render explicit shipping metrics if the item is already archived as Shipped
-            const partner = order['Courier'] || 'Standard Logistics';
-            const trackingNum = order['Tracking Number'] || 'N/A';
+            const partner = order['Courier'] || order.courier || 'Standard Logistics';
+            const trackingNum = order['Tracking Number'] || order.tracking_number || 'N/A';
             logisticsMetadataHTML = `
                 <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; text-align: center">
                     <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
                 </div>
             `;
         }
-        const itemNamesArray = (order['Order Items'] || '').split(',').map(str => str.trim());
-        const itemImagesArray = (order['Order Images'] || '').split(',').map(str => str.trim());
+        
+        const itemNamesArray = (order['Order Items'] || order.order_items || '').split(',').map(str => str.trim());
+        const itemImagesArray = (order['Order Images'] || order.order_images || '').split(',').map(str => str.trim());
 
         const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
             if (!itemString) return '';
@@ -2177,9 +2243,9 @@ function renderSegregatedAdminOrders() {
             `;
         }).join('');
 
-        const safeName = (order['Client Name'] || '').replace(/'/g, "\\'");
-        const safePhone = (order['Phone'] || '').replace(/'/g, "\\'");
-        const safeAddress = (order['Address'] || '').replace(/'/g, "\\'").replace(/\n/g, " ");
+        const safeName = ordClientName.replace(/'/g, "\\'");
+        const safePhone = ordPhone.replace(/'/g, "\\'");
+        const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
 
         return `
         <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
@@ -2187,19 +2253,19 @@ function renderSegregatedAdminOrders() {
             <div class="admin-card-header">
                 <div class="admin-header-left">
                     <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                        Transaction ID: <strong style="color: var(--purple-primary);">${order['Payment ID']}</strong>
+                        Transaction ID: <strong style="color: var(--purple-primary);">${ordPaymentId}</strong>
                     </span>
                     <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
-                        ${order['Client Name']}
+                        ${ordClientName}
                     </h4>
                 </div>
                 <div class="admin-header-right">
                     <div style="line-height: 1.3;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">${order['Date']}</span>
-                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${order['Total Paid']}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">${ordDate}</span>
+                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${ordTotalAmount}</span>
                     </div>
                     <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                        <span id="badge-status-${order['Payment ID']}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
+                        <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
                             ${displayStatus}
                         </span>
                         ${logisticsMetadataHTML}
@@ -2226,40 +2292,40 @@ function renderSegregatedAdminOrders() {
                 <div class="admin-shipping-info-row">
                     <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
                         <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
-                        <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${order['Address']}
+                        <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${ordAddress}
                     </div>
                     
                     <div class="admin-actions-flex-wrapper">
                         <button class="btn-admin-action-unit" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle, #e8e8ef);" title="Copy Address Tag">
                             <i class="far fa-copy"></i> Label
-                    </button>
+                        </button>
                         <a href="tel:${cleanPhone}" class="btn-admin-action-unit" style="background: #ffffff; color: var(--purple-primary); border: 1px solid var(--purple-primary);" title="Call Client">
                             <i class="fas fa-phone-alt"></i> ${cleanPhone}
                         </a>
-                        <div id="shipped-action-slot-${order['Payment ID']}" style="display: contents;">${shippedActionButtonHTML}</div>
+                        <div id="shipped-action-slot-${ordPaymentId}" style="display: contents;">${shippedActionButtonHTML}</div>
                         <a href="${whatsappUpdateLink}" target="_blank" class="btn-admin-action-unit" style="background: #ffffff; color: #25d366; border: 1px solid #25d366;" title="WhatsApp Alert">
                             <i class="fab fa-whatsapp"></i> Chat
                         </a>
                     </div>
                 </div>
 
-                <div id="courier-panel-${order['Payment ID']}" class="courier-allocation-panel">
+                <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel">
                     <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
                     <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
                         <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${order['Payment ID']}" value="DTDC" checked style="accent-color: var(--purple-primary);"> DTDC
+                            <input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary);"> DTDC
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${order['Payment ID']}" value="Delhivery" style="accent-color: var(--purple-primary);"> Delhivery
+                            <input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary);"> Delhivery
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${order['Payment ID']}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
+                            <input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
                         </label>
                     </div>
                     <div class="tracking-form" style="display: flex; gap: 8px;">
-                        <input type="text" id="tracking-input-${order['Payment ID']}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
-                        <button onclick="updateGoogleSheetRowStatus('${order['Payment ID']}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
-                        <button onclick="hideCourierAllocationPanel('${order['Payment ID']}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
+                        <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
+                        <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
+                        <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
                     </div>
                 </div>
 
@@ -2280,7 +2346,10 @@ function hideCourierAllocationPanel(paymentId) {
     if (panel) panel.style.display = 'none';
 }
 
-function updateGoogleSheetRowStatus(paymentId, buttonElement) {
+// =========================================================================
+// SUPABASE UPDATE CHANNEL — SYNCHRONIZE DISPATCH LOGS & COURIER TRACKING
+// =========================================================================
+function updateShippingStatus(paymentId, buttonElement) {
     if (!paymentId || !buttonElement) return;
 
     const trackingInput = document.getElementById(`tracking-input-${paymentId}`);
@@ -2305,26 +2374,39 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
     const originalButtonText = buttonElement.innerText;
     buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Syncing...`;
 
-    const sheetDbUpdateEndpoint = `https://sheetdb.io/api/v1/0lvmtng1nhhhi/Payment%20ID/${encodeURIComponent(paymentId)}`;
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    
+    // Target exact order record matching your filtered payment identifier 
+    const supabaseUpdateEndpoint = `${sbUrl}/rest/v1/Orders?payment_id=eq.${encodeURIComponent(paymentId)}`;
 
-    fetch(sheetDbUpdateEndpoint, {
+    // Prepare clean database-mapped payload structure
+    const updatePayload = {
+        "status": "Shipped",
+        "courier": selectedCourierValue,
+        "tracking_number": trackingNumber
+    };
+
+    fetch(supabaseUpdateEndpoint, {
         method: 'PATCH', 
         headers: {
-            'Content-Type': 'application/json'
+            "apikey": sbKey,
+            "Authorization": `Bearer ${sbKey}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation" // Tells Supabase to return the modified row array data
         },
-        body: JSON.stringify({
-            data: {
-                "Status": "Shipped",
-                "Courier": selectedCourierValue,
-                "Tracking Number": trackingNumber
-            }
-        })
+        body: JSON.stringify(updatePayload)
     })
-    .then(response => response.json())
-    .then(payloadResult => {
-        if (payloadResult && payloadResult.updated >= 1) {
-            console.log(`Sheet ledger successfully synchronized for ID: ${paymentId}`);
+    .then(response => {
+        if (!response.ok) throw new Error(`Supabase patch connection failed with status: ${response.status}`);
+        return response.json();
+    })
+    .then(updatedRowsArray => {
+        // Supabase returns an array of modified rows upon a successful representation patch query
+        if (updatedRowsArray && updatedRowsArray.length > 0) {
+            console.log(`Supabase database row successfully synchronized for payment ID: ${paymentId}`);
 
+            // Keep the admin UI matching your database parameters seamlessly
             const cachedOrderObjectIndex = adminOrdersCache.findIndex(o => o['Payment ID'] === paymentId);
             if (cachedOrderObjectIndex > -1) {
                 adminOrdersCache[cachedOrderObjectIndex]['Status'] = 'Shipped';
@@ -2334,6 +2416,7 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
             
             setTimeout(renderSegregatedAdminOrders, 400);
 
+            // Pop up the system success confirmation toast notification
             const dynamicToast = document.createElement('div');
             dynamicToast.className = "copied-toast";
             dynamicToast.innerHTML = `<i class="fas fa-check-circle"></i> Ledger & Waybill Synced!`;
@@ -2341,14 +2424,14 @@ function updateGoogleSheetRowStatus(paymentId, buttonElement) {
             setTimeout(() => { dynamicToast.remove(); }, 2400);
 
         } else {
-            throw new Error("Spreadsheet validation key row mapping verification reject error.");
+            throw new Error("No record matching that payment target filter was updated on the server.");
         }
     })
     .catch(err => {
-        console.error("Critical spreadsheet record edit synchronization error dropped:", err);
+        console.error("Critical Supabase dispatch update exception caught:", err);
         buttonElement.disabled = false;
         buttonElement.innerText = originalButtonText;
-        alert("Failed to update status on server cloud. Verify network and try again.");
+        alert("Failed to update tracking metrics on the server cluster. Please check your configurations and try again.");
     });
 }
 
@@ -2521,12 +2604,30 @@ function getBadgeCustomStyles(badgeText) {
     return `background: ${bgColor} !important; color: ${textColor} !important;`;
 }
 
+// =========================================================================
+// SUPABASE PRODUCTION CHANNEL — LIVE STOCK BACKGROUND SYNCHRONIZATION
+// =========================================================================
 async function synchronizeLiveStorefrontInventory() {
-    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
     
+    if (!sbUrl || !sbKey) {
+        console.error("❌ Inventory sync aborted: Supabase credentials missing inside config layers.");
+        return;
+    }
+
     try {
-        const response = await fetch(`${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Products`);
-        if (!response.ok) throw new Error("Inventory endpoint unreachable");
+        // Query the Products table explicitly using your authorized project headers
+        const response = await fetch(`${sbUrl}/rest/v1/Products?select=id,stock,status`, {
+            method: 'GET',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error(`Supabase returned status code: ${response.status}`);
         
         const inventoryRows = await response.json();
         
@@ -2540,7 +2641,7 @@ async function synchronizeLiveStorefrontInventory() {
             }
         });
         
-        console.log("💎 Live Inventory Vault Synchronized successfully:", MASTER_LIVE_INVENTORY_CACHE);
+        console.log("💎 Live Inventory Vault Synchronized successfully from Supabase:", MASTER_LIVE_INVENTORY_CACHE);
         
         if (!productDatabase || productDatabase.length === 0) {
             await loadProductDatabaseEngine();
@@ -2557,99 +2658,94 @@ async function synchronizeLiveStorefrontInventory() {
     }
 }
 
-async function executeSheetDbInventoryDeduction(completedOrderItemsArray) {
-    let baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-    baseSheetDbEndpoint = baseSheetDbEndpoint.replace(/\/$/, "");
-    if (!completedOrderItemsArray || !completedOrderItemsArray.length) return;
-    
-    console.log("⚡ Starting background stock deduction sequence for order items...");
+// =========================================================================
+// SUPABASE LIVE DEDUCTION CHANNELS — UPDATE PRODUCTS STOCK LEVELS
+// =========================================================================
+async function executeSupabaseInventoryDeduction(cartItemsArray) {
+    if (!cartItemsArray || cartItemsArray.length === 0) return;
 
-    for (const item of completedOrderItemsArray) {
-        const itemTargetId = parseInt(item.id);
-        if (isNaN(itemTargetId)) continue;
-        
-        const currentCachedStock = MASTER_LIVE_INVENTORY_CACHE[itemTargetId]?.stock ?? 5;
-        const freshCalculatedStockValue = Math.max(0, currentCachedStock - (item.quantity || 1));
-        const updatedStatusFlag = freshCalculatedStockValue <= 0 ? "sold" : "available";
-        
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    console.log("Processing inventory levels synchronization down to Supabase nodes...");
+
+    // Loop through every item purchased in the checkout batch array
+    for (const item of cartItemsArray) {
         try {
-            const targetUrl = `${baseSheetDbEndpoint}/id/${itemTargetId}?sheet=Products`;
-            await fetch(targetUrl, {
+            const currentProductId = parseInt(item.id);
+            const purchasedQuantity = parseInt(item.quantity) || 1;
+
+            // Look up what we currently have cached locally for this specific key
+            const currentCachedData = MASTER_LIVE_INVENTORY_CACHE[currentProductId];
+            if (!currentCachedData) continue;
+
+            // Math deduction step
+            const currentStockLevel = parseInt(currentCachedData.stock) || 0;
+            const absoluteNewStockLevel = Math.max(0, currentStockLevel - purchasedQuantity);
+            const computedStatusFlag = absoluteNewStockLevel <= 0 ? "sold" : "available";
+
+            const itemPatchUrl = `${sbUrl}/rest/v1/Products?id=eq.${currentProductId}`;
+            
+            const stockPayload = {
+                "stock": absoluteNewStockLevel,
+                "status": computedStatusFlag,
+                "badge": absoluteNewStockLevel <= 0 ? "Sold Out" : ""
+            };
+
+            // Fire the network sync write call to your database index row
+            await fetch(itemPatchUrl, {
                 method: 'PATCH',
                 headers: {
-                    'Accept': 'application/json',
+                    'apikey': sbKey,
+                    'Authorization': `Bearer ${sbKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    data: { stock: freshCalculatedStockValue, status: updatedStatusFlag }
-                })
+                body: JSON.stringify(stockPayload)
             });
-            
-            if (MASTER_LIVE_INVENTORY_CACHE[itemTargetId]) {
-                MASTER_LIVE_INVENTORY_CACHE[itemTargetId].stock = freshCalculatedStockValue;
-                MASTER_LIVE_INVENTORY_CACHE[itemTargetId].status = updatedStatusFlag;
-            }
-            
+
+            console.log(`✨ Product ID #${currentProductId} stock deducted down to: ${absoluteNewStockLevel}`);
+
         } catch (err) {
-            console.error(`⚠️ Could not process automated inventory reduction for Item ID: ${itemTargetId}`, err);
+            console.error(`Inventory modification trace failed for item identification index:`, err);
         }
     }
-
-    generateDynamicCatalogFilters();
-    filterCatalog();
 }
+
 document.addEventListener("DOMContentLoaded", () => {
     synchronizeLiveStorefrontInventory();
 });
 
-// =========================================================================
-// ANGEL JEWELLERY — SECURE ADMINISTRATIVE CRUD ROW DELETION ENGINE
-// =========================================================================
+// 3. DELETE CHANNEL: Instant Row Purging via the Trash can icon
 async function executeAdminItemDeletionPipeline(event, productId, productTitle) {
-    if (event) event.stopPropagation(); // Stop the card's QuickView detail modal from springing open
+    if (event) event.stopPropagation();
     
-    // 1. Dual Safety Handshake Challenge
-    const userFinalConfirmation = confirm(`⚠️ DANGER ZONE: Are you entirely sure you want to permanently delete "${productTitle}" (ID: #${productId})?\n\nThis action completely wipes the record row out of your live Google Sheet and cannot be undone.`);
+    const userFinalConfirmation = confirm(`⚠️ DANGER ZONE: Are you entirely sure you want to permanently delete "${productTitle}" (ID: #${productId}) from Supabase?\n\nThis action cannot be undone.`);
     if (!userFinalConfirmation) return;
 
-    console.log(`Starting dynamic row purge sequence for Item Identity Matrix ID: ${productId}`);
-    
-    // 2. Resolve Config Target API Paths
-    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-    const cleanPurgeTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}/id/${productId}?sheet=Products`;
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const cleanPurgeTargetUrl = `${sbUrl}/rest/v1/Products?id=eq.${productId}`;
 
     try {
-        // Fire native REST API DELETE request straight to the active row matching columns
         const networkResponse = await fetch(cleanPurgeTargetUrl, {
             method: 'DELETE',
             headers: {
-                'Accept': 'application/json',
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
                 'Content-Type': 'application/json'
             }
         });
 
-        if (!networkResponse.ok) throw new Error(`Cloud interface returned status code: ${networkResponse.status}`);
+        if (!networkResponse.ok) throw new Error(`Supabase returned status code: ${networkResponse.status}`);
         
-        const feedbackPayload = await networkResponse.json();
-        
-        if (feedbackPayload && feedbackPayload.deleted >= 1) {
-            alert(`✨ Successfully Deleted.`);
-            
-            // Clean local inventory lookup memory maps instantly
-            if (MASTER_LIVE_INVENTORY_CACHE[productId]) {
-                delete MASTER_LIVE_INVENTORY_CACHE[productId];
-            }
-
-            // Reload the live spreadsheet engine to update the folders and items list smoothly
-            await loadProductDatabaseEngine();
-            if (typeof filterCatalog === "function") filterCatalog();
-        } else {
-            throw new Error("API handled parameters successfully but row mapping reported zero alterations.");
-        }
+        alert(`✨ Successfully Deleted! "${productTitle}" has been cleanly scrubbed from your database rows.`);
+        if (MASTER_LIVE_INVENTORY_CACHE[productId]) delete MASTER_LIVE_INVENTORY_CACHE[productId];
+        await loadProductDatabaseEngine();
+        if (typeof filterCatalog === "function") filterCatalog();
 
     } catch (error) {
-        console.error("Critical administrative row write/purge communication error caught:", error);
-        alert("Pipeline Synchronization Interrupted: Could not wipe item from Google Sheet. Verify API rate limits or network link uptime.");
+        console.error("Critical Supabase row write/purge communication error caught:", error);
+        alert("Pipeline Synchronization Interrupted: Could not wipe item from Supabase database layout.");
     }
 }
 
@@ -2658,53 +2754,86 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
 // =========================================================================
 let currentSelectedFeedbackFormRatingValue = 5;
 
-// A. READ PIPELINE: Fetch reviews dynamically from the 'Feedback' Sheet
+// =========================================================================
+// SUPABASE COMBINED CHANNELS — REVIEWS & TESTIMONIALS DISPATCH (READ/WRITE)
+// =========================================================================
 async function loadLiveCustomerFeedbackShowroom() {
     const feedbackCanvas = document.getElementById('liveClientFeedbackGridCanvas');
     if (!feedbackCanvas) return;
 
-    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-    const cleanFetchTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Feedback`;
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=3`;
 
     try {
-        const response = await fetch(cleanFetchTargetUrl);
-        if (!response.ok) throw new Error("Could not download user feedback matrices.");
-
+        const response = await fetch(feedbackUrl, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
         const dynamicReviewsArray = await response.json();
 
-        if (!dynamicReviewsArray || dynamicReviewsArray.length === 0) {
-            feedbackCanvas.innerHTML = `
-                <div style="grid-column: 1 / -1; color: var(--text-muted, #777); font-size: 0.88rem; padding: 20px 0; font-weight: 500;">
-                    No verified reviews posted yet. Be the first to share your aura!
-                </div>`;
+        if (dynamicReviewsArray.length === 0) {
+            feedbackCanvas.innerHTML = `<div style="grid-column:1/-1; color:#777; font-size:0.88rem; padding:20px 0; text-align:center;">No reviews posted yet. Be the first to share your aura!</div>`;
             return;
         }
 
-        // Display the 4 most recent reviews first
-        const reverseChronologicalReviews = [...dynamicReviewsArray].reverse().slice(0, 4);
-
-        feedbackCanvas.innerHTML = reverseChronologicalReviews.map(review => {
-            const numericRating = parseInt(review.Rating) || 5;
-            const compiledStarIconsHtml = '★'.repeat(numericRating).padEnd(5, '☆');
-            const clientNameValue = review.Name || 'Anonymous Collector';
-            const cleanDateText = review.Date ? review.Date.split(',')[0] : '';
-
+        feedbackCanvas.innerHTML = dynamicReviewsArray.map(review => {
+            const numericRating = parseInt(review.rating) || 5;
             return `
-                <div class="feedback-display-card" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 25px; box-sizing: border-box; text-align: left; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.01); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="feedback-display-card" style="background:#ffffff; border:1px solid #e8e8ef; border-radius:8px; padding:25px; box-sizing:border-box; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
                     <div>
-                        <div style="color: #cca43b; font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 1px;">${compiledStarIconsHtml}</div>
-                        <p style="color: #4a4a5a; font-size: 0.85rem; line-height: 1.6; font-style: italic; margin: 0 0 15px 0;">"${review.Review}"</p>
+                        <div style="color:#cca43b; font-size:1.1rem; margin-bottom:10px;">${'★'.repeat(numericRating).padEnd(5, '☆')}</div>
+                        <p style="color:#4a4a5a; font-size:0.85rem; line-height:1.6; font-style:italic; margin:0 0 15px 0;">"${review.review}"</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted #e8e8ef; padding-top: 12px;">
-                        <h4 style="color: #202c55; margin: 0; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${clientNameValue}</h4>
-                        <small style="color: #aaa; font-size: 0.72rem;">${cleanDateText}</small>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dotted #e8e8ef; padding-top:12px;">
+                        <h4 style="color:#202c55; margin:0; font-size:0.82rem; font-weight:700; text-transform:uppercase;">${review.name || 'Anonymous Collector'}</h4>
+                        <small style="color:#aaa; font-size:0.72rem;">${new Date(review.created_at).toLocaleDateString('en-IN')}</small>
                     </div>
                 </div>`;
         }).join('');
-
     } catch (err) {
-        console.error("Feedback visual showroom boot breakdown:", err);
-        feedbackCanvas.innerHTML = `<div style="grid-column: 1 / -1; color: #ff1493; font-size: 0.82rem;">Feedback track failed to synchronize.</div>`;
+        feedbackCanvas.innerHTML = `<div style="grid-column:1/-1; color:#ff1493; font-size:0.82rem; text-align:center;">Feedback showroom failed to connect.</div>`;
+    }
+}
+
+async function submitCustomerFeedbackPipeline(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('feedbackFormSubmitActionBtn');
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Submitting Review...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    const feedbackPayloadObject = {
+        name: document.getElementById('feedbackFormClientName').value.trim(),
+        rating: parseInt(document.getElementById('feedbackFormRatingValue').value) || 5,
+        review: document.getElementById('feedbackFormReviewText').value.trim()
+    };
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Feedback`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(feedbackPayloadObject)
+        });
+
+        if (!response.ok) throw new Error("Feedback submission rejected.");
+
+        alert("✨ Review Published! Thank you for sharing your experience with Angel Jewellery.");
+        closeCustomerFeedbackModal();
+        await loadLiveCustomerFeedbackShowroom();
+
+    } catch (error) {
+        alert("Pipeline Sync Interrupted. Please check your connection.");
+    } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
     }
 }
 
@@ -2744,56 +2873,6 @@ function highlightFeedbackFormStarsPreview(previewValue) {
 
 function resetFeedbackFormStarsHighlight() {
     setInteractiveFeedbackFormRating(currentSelectedFeedbackFormRatingValue);
-}
-
-// D. WRITE PIPELINE: POST feedback payload back to SheetDB row matrix
-async function submitCustomerFeedbackPipeline(event) {
-    event.preventDefault();
-
-    const submitBtn = document.getElementById('feedbackFormSubmitActionBtn');
-    const originalText = submitBtn.innerText;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Entry Sync...`;
-
-    const baseSheetDbEndpoint = ANGEL_STORE_CONFIG?.DATABASE?.SHEETDB_API_URL || "https://sheetdb.io/api/v1/0lvmtng1nhhhi";
-    const cleanTargetUrl = `${baseSheetDbEndpoint.replace(/\/$/, "")}?sheet=Feedback`;
-
-    const feedbackPayloadObject = {
-        data: [
-            {
-                "Name": document.getElementById('feedbackFormClientName').value.trim(),
-                "Rating": document.getElementById('feedbackFormRatingValue').value,
-                "Review": document.getElementById('feedbackFormReviewText').value.trim(),
-                "Date": new Date().toLocaleString('en-IN')
-            }
-        ]
-    };
-
-    try {
-        const response = await fetch(cleanTargetUrl, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(feedbackPayloadObject)
-        });
-
-        if (!response.ok) throw new Error("Cloud stream rejected review entry properties.");
-
-        alert("✨ Review Published! Thank you for sharing your experience with Angel Jewellery.");
-        closeCustomerFeedbackModal();
-        
-        // Hot-reload the testimonials section right on the spot without page crash resets
-        await loadLiveCustomerFeedbackShowroom();
-
-    } catch (error) {
-        console.error("Feedback database post crash caught:", error);
-        alert("Pipeline Sync Interrupted: Verify your network and try again.");
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = originalText;
-    }
 }
 
 // E. LINK INTO DOM CONTENT BOOT STRAPS FOR REAL-TIME LOAD INITIALIZATION
@@ -2876,3 +2955,52 @@ function closeAngelStorePolicyModal() {
     const modalView = document.getElementById('angelStorePolicyModalViewer');
     if (modalView) modalView.style.display = 'none';
 }
+// =========================================================================
+// INTERACTIVE FAQ OVERLAY MODAL & ACCORDION SYSTEM UTILITIES
+// =========================================================================
+function openFaqSystemModalOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('faqSystemModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Lock background scrolling
+    }
+}
+
+function closeFaqSystemModalOverlay() {
+    const overlay = document.getElementById('faqSystemModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = ''; // Unlock background scrolling
+    }
+}
+
+function toggleFaqAccordionUnit(headerElement) {
+    const contentPane = headerElement.nextElementSibling;
+    const chevronIcon = headerElement.querySelector('.fa-chevron-down');
+    
+    // Check if item is already active
+    if (contentPane.style.maxHeight && contentPane.style.maxHeight !== '0px') {
+        contentPane.style.maxHeight = '0px';
+        if (chevronIcon) chevronIcon.style.transform = 'rotate(0deg)';
+    } else {
+        // Collapse all other panels inside the overlay first for a clean view loop
+        document.querySelectorAll('.faq-content-pane').forEach(pane => pane.style.maxHeight = '0px');
+        document.querySelectorAll('.faq-content-pane').forEach(pane => {
+            const icon = pane.previousElementSibling.querySelector('.fa-chevron-down');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        });
+
+        // Expand clicked item seamlessly matching its scroll height metrics
+        contentPane.style.maxHeight = contentPane.scrollHeight + "px";
+        if (chevronIcon) chevronIcon.style.transform = 'rotate(180deg)';
+    }
+}
+
+// Close modal instantly if the user taps outside the main modal boundaries
+window.addEventListener('click', (e) => {
+    const overlay = document.getElementById('faqSystemModalOverlay');
+    if (e.target === overlay) {
+        closeFaqSystemModalOverlay();
+    }
+});

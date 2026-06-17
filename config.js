@@ -4,8 +4,8 @@
 const ANGEL_STORE_CONFIG = {
     // 1. Database Operations Pipelines (Google Sheets Integrations)
     DATABASE: {
-        SHEETDB_API_URL: "https://sheetdb.io/api/v1/0lvmtng1nhhhi",
-        ORDERS_LOG_SHEET_NAME: "Angel-records"
+        SUPABASE_URL: "https://ixktbnnkjmeyqflxjgeb.supabase.co", 
+        SUPABASE_ANON_KEY: "sb_publishable_7ZS8IYQ2gbijrvt8KYPhxQ_iI1OfLVi"
     },
 
     // 2. Secured Transaction Merchant Gateways
