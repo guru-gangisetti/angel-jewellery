@@ -2763,7 +2763,7 @@ async function loadLiveCustomerFeedbackShowroom() {
 
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=3`;
+    const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=4`;
 
     try {
         const response = await fetch(feedbackUrl, {
