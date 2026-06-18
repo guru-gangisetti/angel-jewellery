@@ -703,17 +703,21 @@ function updateCartUI() {
         cartCountBadge.style.opacity = "1";
     }
     
+    // ➔ EXTRACT PARAMETERS DYNAMICALLY FROM GLOBAL CONFIG MASTER OBJECT
+    const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
+    const FLAT_SHIPPING_CHARGE_RATE = ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
+
     const progressBarFill = document.getElementById('shippingBarFill');
     const progressText = document.getElementById('shippingProgressText');
     
     if (progressBarFill && progressText) {
-        const structuralPercentage = Math.min((grandSubtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+        const structuralPercentage = Math.min((grandSubtotal / SHIPPING_THRESHOLD_LIMIT) * 100, 100);
         progressBarFill.style.width = `${structuralPercentage}%`;
         
-        if (grandSubtotal >= FREE_SHIPPING_THRESHOLD) {
+        if (grandSubtotal >= SHIPPING_THRESHOLD_LIMIT) {
             progressText.innerHTML = `✨ <span style="color:#25d366; font-weight:600;">Free Shipping Unlocked!</span>`;
         } else {
-            const gapAmount = FREE_SHIPPING_THRESHOLD - grandSubtotal;
+            const gapAmount = SHIPPING_THRESHOLD_LIMIT - grandSubtotal;
             progressText.innerHTML = `Add <span style="color:var(--pink-accent); font-weight:600;">${formatCurrency(gapAmount)}</span> more for Free Delivery`;
         }
     }
@@ -724,15 +728,35 @@ function updateCartUI() {
         else if (activeDiscount.type === "flat") discountAmount = activeDiscount.value;
         if (discountAmount > grandSubtotal) discountAmount = grandSubtotal;
     }
-    let finalPayableTotal = grandSubtotal - discountAmount;
+    let netTotalBeforeShipping = grandSubtotal - discountAmount;
+
+    // ➔ COMPUTE INLINE FREIGHT LOGISTICS ASSIGNMENTS FROM ACCESSED VARIABLE VALUES
+    let shippingChargeAmount = 0;
+    if (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) {
+        shippingChargeAmount = FLAT_SHIPPING_CHARGE_RATE; 
+    } else {
+        shippingChargeAmount = 0;  
+    }
+
+    let finalPayableTotal = netTotalBeforeShipping + shippingChargeAmount;
 
     let summaryHTML = `<div class="totals-row"><span>Items Subtotal:</span><span>${formatCurrency(grandSubtotal)}</span></div>`;
     if (discountAmount > 0) {
         summaryHTML += `<div class="totals-row discount-applied"><span>Discount (${activeDiscount.code}):</span><span>-${formatCurrency(discountAmount)}</span></div>`;
     }
+    
+    if (shippingChargeAmount === 0 && netTotalBeforeShipping >= SHIPPING_THRESHOLD_LIMIT) {
+        summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span style="color:#25d366; font-weight:700; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.5px;">🎉 Free</span></div>`;
+    } else {
+        summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span>${formatCurrency(shippingChargeAmount)}</span></div>`;
+    }
+
     summaryHTML += `<div class="totals-row grand-payable"><span>Final Payable:</span><span>${formatCurrency(finalPayableTotal)}</span></div>`;
     
     if (cartTotalQty) cartTotalQty.innerHTML = summaryHTML;
+    
+    finalTotalCost = finalPayableTotal; 
+
     const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
     if (primaryCheckoutButtonElement) {
         primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;

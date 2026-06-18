@@ -21,6 +21,10 @@ const ANGEL_STORE_CONFIG = {
         WHATSAPP_PHONE_RAW: "919160133199",
         WHATSAPP_LINK_URI: "https://wa.me/919160133199"
     },
+    LOGISTICS: {
+        FREE_SHIPPING_THRESHOLD: 1000, // Free shipping eligibility limit milestone
+        FLAT_SHIPPING_FEE: 50          // Flat rate delivery fee below threshold
+    },
     // 5. Angel's Picks — Dynamic Trending Showcase Curation
     TRENDING_COLLECTION: [
         {

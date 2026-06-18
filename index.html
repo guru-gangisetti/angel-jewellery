@@ -235,41 +235,50 @@
         </div>
     </section>
 
-    <div id="cartDrawer">
-        <div class="cart-header">
-            <h3>Your Selection</h3>
-            <i class="fas fa-times" id="closeCartBtn"></i>
+  <div id="cartDrawer">
+    <div class="cart-header">
+        <h3>Your Selection</h3>
+        <i class="fas fa-times" id="closeCartBtn"></i>
+    </div>
+    
+    <div id="cartItemsContainer">
+        <div id="cartItemsList"></div>
+    </div> 
+
+    <div class="cart-footer-embedded" id="cartFooterSection">
+        <!-- UPGRADED LUXURY PROGRESS STRIP FOR FREE FREIGHT BALANCES -->
+        <div id="shippingProgressBox" class="shipping-progress-wrapper" style="margin-bottom: 20px; text-align: left; font-family: 'Montserrat', sans-serif;">
+            <p id="shippingProgressText" style="margin: 0 0 8px 0; font-size: 0.8rem; font-weight: 600; color: var(--purple-primary, #202c55); display: flex; align-items: center; gap: 6px;">
+                <!-- Managed dynamically by updateCartUI calculation logs -->
+            </p>
+            <div class="shipping-bar-track" style="width: 100%; height: 6px; background: #e8e8ef; border-radius: 20px; overflow: hidden; position: relative;">
+                <div id="shippingBarFill" class="shipping-bar-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #cca43b, var(--pink-accent, #ff1493)); border-radius: 20px; transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);"></div>
+            </div>
+        </div>
+
+        <!-- LIVE DATABASE COUPON REDUCTION CONTROLLER PANEL -->
+        <div class="cart-form-group luxury-coupon-container" style="margin-top: 20px; font-family: 'Montserrat', sans-serif; text-align: left;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--purple-primary, #202c55); margin-bottom: 12px;">
+                <i class="fas fa-ticket-alt" style="color: #cca43b; font-size: 0.9rem;"></i> Offers & Coupons
+            </label>
+            <div class="coupon-input-wrapper" style="display: flex; background: #ffffff; border: 1px solid var(--border-subtle, #e8e8ef); border-radius: 6px; padding: 4px; transition: all 0.2s ease; box-sizing: border-box; width: 100%;" onfocusin="this.style.borderColor='var(--purple-primary, #202c55)'; this.style.boxShadow='0 4px 12px rgba(32,44,85,0.04)';" onfocusout="this.style.borderColor='#e8e8ef'; this.style.boxShadow='none';">
+                <input type="text" id="couponInput" placeholder="Enter coupon code..." style="flex: 1; border: none; padding: 10px 14px; font-size: 0.85rem; font-weight: 600; font-family: monospace; letter-spacing: 1px; text-transform: uppercase; outline: none; color: #111116; background: transparent;">
+                <button id="applyCouponBtn" onclick="applyCouponEngineAction()" style="background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 0 20px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--pink-accent, #ff1493)';" onmouseout="this.style.background='var(--purple-primary, #202c55)';">Apply</button>
+            </div>
+            <p id="couponStatusMessage" style="display: none; margin: 10px 0 0 0; font-size: 0.78rem; font-weight: 600; line-height: 1.4; padding-left: 4px; animation: couponMessageSlide 0.2s ease;"></p>
+            <div class="coupon-helper-tags" id="couponHelpersGroup" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; width: 100%;"></div>
+        </div>
+
+        <!-- BREAKDOWN CALCULATIONS CONTAINER ROW GRID -->
+        <div id="cartTotalQty" class="cart-totals-box" style="margin-top: 25px; border-top: 1px solid #e8e8ef; padding-top: 15px;">
+            <!-- JavaScript dynamically prints Item Subtotal, Discounts, Shipping Fees, and Final Totals -->
         </div>
         
-        <div id="cartItemsContainer">
-            <div id="cartItemsList"></div>
-        </div> 
-
-        <div class="cart-footer-embedded" id="cartFooterSection">
-            <div id="shippingProgressBox" class="shipping-progress-wrapper">
-                <p id="shippingProgressText"></p>
-                <div class="shipping-bar-track">
-                    <div id="shippingBarFill" class="shipping-bar-fill"></div>
-                </div>
-            </div>
-
-            <div class="cart-form-group">
-                <label><i class="fas fa-ticket-alt"></i> Offers & Coupons</label>
-                <div class="coupon-input-wrapper">
-                    <input type="text" id="couponInput" placeholder="Enter coupon code...">
-                    <button id="applyCouponBtn">Apply</button>
-                </div>
-                <p id="couponStatusMessage"></p>
-                <div class="coupon-helper-tags" id="couponHelpersGroup"></div>
-            </div>
-
-            <div id="cartTotalQty" class="cart-totals-box"></div>
-            
-            <button id="checkoutBtn" class="btn-luxury checkout-action-btn" onclick="openInvoiceScreen()">
-                <i class="fas fa-lock"></i> Secure Checkout Panel
-            </button>
-        </div> 
+        <button id="checkoutBtn" class="btn-luxury checkout-action-btn" onclick="openInvoiceScreen()" style="margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; cursor: pointer; transition: all 0.2s ease-in-out;">
+            <i class="fas fa-lock"></i> Secure Checkout Panel
+        </button>
     </div> 
+</div>
     
     <div id="cartOverlay"></div>
 

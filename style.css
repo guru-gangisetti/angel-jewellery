@@ -213,6 +213,28 @@ header.scrolled .logo img { height: 45px; }
     background: #ff1493 !important; /* Glows brand accent pink on desktop cursor hover states */
     box-shadow: 0 6px 15px rgba(255, 20, 147, 0.2);
 }
+
+.cart-totals-box .totals-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        color: #4a4a5a;
+        font-weight: 500;
+    }
+    .cart-totals-box .totals-row.discount-applied {
+        color: #25d366;
+        font-weight: 600;
+    }
+    .cart-totals-box .totals-row.grand-payable {
+        border-top: 1px dotted #e8e8ef;
+        padding-top: 12px;
+        margin-top: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--purple-primary, #202c55);
+    }
 @media (max-width: 768px) {
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
