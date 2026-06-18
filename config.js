@@ -25,6 +25,9 @@ const ANGEL_STORE_CONFIG = {
         FREE_SHIPPING_THRESHOLD: 1000, // Free shipping eligibility limit milestone
         FLAT_SHIPPING_FEE: 50          // Flat rate delivery fee below threshold
     },
+    SECURITY: {
+        MASTER_ADMIN_PASSKEY: "a" // Replace with your actual password string
+    },
     // 5. Angel's Picks — Dynamic Trending Showcase Curation
     TRENDING_COLLECTION: [
         {

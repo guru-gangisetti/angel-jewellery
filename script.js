@@ -98,7 +98,7 @@ async function loadProductDatabaseEngine() {
 function challengeAdminIdentityGateway(event) {
     if (event) event.preventDefault();
     
-    const masterAdminPasskey = "ANGEL2026";
+    const masterAdminPasskey = ANGEL_STORE_CONFIG.SECURITY.MASTER_ADMIN_PASSKEY;
     const accessAttempt = prompt("🔒 Administrative Clearance Verification Required.\nPlease enter your Master Access Key:");
     
     if (accessAttempt === null) return;
