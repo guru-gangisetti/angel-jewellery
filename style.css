@@ -236,7 +236,7 @@ header.scrolled .logo img { height: 45px; }
         color: var(--purple-primary, #202c55);
     }
 
-     .value-prop-card:hover {
+    .value-prop-card:hover {
         background: #ffffff !important;
         border-color: var(--pink-accent, #ff1493) !important;
         transform: translateY(-4px);
@@ -253,6 +253,32 @@ header.scrolled .logo img { height: 45px; }
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
     }
+    .luxury-value-proposition-section {
+            padding: 40px 0 40px 20px !important; /* Extra breathing room on left, clips right */
+        }
+        .luxury-value-proposition-section > div:last-child {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            gap: 16px !important;
+            padding-right: 20px !important;
+            
+            /* Smooth momentum swiping on iOS & Android */
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+        }
+        
+        /* Hide ugly native mobile scrollbars to keep a clean, luxury interface */
+        .luxury-value-proposition-section > div:last-child::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .value-prop-card {
+            flex: 0 0 75% !important; /* Comfortably shows 1 card + sneaks a preview of the next one */
+            scroll-snap-align: start;
+            padding: 20px 16px !important;
+        }
 }
 
 /* --- SEAMLESS HYBRID STICKY CATALOG CONTROLS STRIP --- */
