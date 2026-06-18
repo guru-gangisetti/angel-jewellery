@@ -357,12 +357,12 @@ function filterCatalog(passedSearchQuery) {
                 const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
                     <button type="button" class="admin-action-inline-trigger" 
                             onclick="openAdminFormModalForEditing(event, ${product.id})" 
-                            style="position: absolute; top: 0px; left: 0px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 50px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                            style="position: absolute; top: 0px; left: 0px; z-index: 10; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
                         <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
                     </button>
                     <button type="button" class="admin-action-inline-trigger" 
                         onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${safeTitleString}')" 
-                        style="position: absolute; top: 0px; right: 0px; z-index: 9999; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 50%; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
+                        style="position: absolute; top: 0px; right: 0px; z-index: 10; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px;  padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
                         onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
                         onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
                     <i class="fas fa-trash-alt"></i>
