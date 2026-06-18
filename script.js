@@ -1732,6 +1732,20 @@ function initiateRazorpayPaymentProcess(event) {
         "description": "Angel Jewellery Checkout Window",
         "image": "angel-logo.png", 
         "handler": function (transactionResponse) {
+            // ➔ THE CRITICAL FLASH FIX: Immediately mask the screen
+            const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
+            if (invoiceOverlay) {
+                invoiceOverlay.style.setProperty('display', 'none', 'important'); // Hide invoice instantly
+            }
+            
+            const luxuryLoader = document.getElementById('luxuryPaymentLoaderOverlay');
+            if (luxuryLoader) {
+                luxuryLoader.style.setProperty('display', 'flex', 'important'); // Force loading mask on home page
+            }
+            
+            console.log("💳 Payment successful! Transaction ID:", transactionResponse.razorpay_payment_id);
+
+            // Continue with the execution loop to process data
             executePostPaidWhatsAppDispatch(transactionResponse.razorpay_payment_id, name, phone, address);
         },
         "prefill": {
@@ -1816,7 +1830,7 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         "status": "Paid"
     };
 
-    // Post data straight to your master Supabase Orders table index
+   // Post data straight to your master Supabase Orders table index
    fetch(`${sbUrl}/rest/v1/Orders`, {
         method: "POST",
         headers: {
@@ -1827,17 +1841,16 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         },
         body: JSON.stringify(supabaseOrderPayload)
     })
-    .then(async response => { // ➔ Notice the 'async' added here so we can await the deduction loop
+    .then(async response => {
         if (!response.ok) throw new Error(`Supabase interface returned code: ${response.status}`);
         console.log("Supabase transaction logged successfully.");
         
-        // ➔ THE CRITICAL INTEGRATION: Deduct stock values in Supabase before clearing the cart memory
         await executeSupabaseInventoryDeduction(shoppingCart);
         if (typeof loadProductDatabaseEngine === "function") {
              await loadProductDatabaseEngine(); 
-         }
+        }
         
-        // Wipe local runtime cart states and update checkout interface view frameworks
+        // Wipe local runtime cart states
         shoppingCart = [];
         activeDiscount = { code: "", type: "", value: 0 };
         if (localStorage.getItem('shoppingCart')) localStorage.removeItem('shoppingCart');
@@ -1847,7 +1860,15 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
         
         updateCartUI();
         closeInvoiceScreen(); 
-        confirmationScreen.style.display = 'flex';
+
+        // Clear the transition loading mask
+        const luxuryLoader = document.getElementById('luxuryPaymentLoaderOverlay');
+        if (luxuryLoader) luxuryLoader.style.display = 'none';
+
+        // ➔ TARGET RESOLUTION: Ensure this points to the exact screen container you use (e.g., confirmationScreen)
+        if (confirmationScreen) {
+            confirmationScreen.style.setProperty('display', 'flex', 'important');
+        }
     })
     .catch(err => {
         console.error("Supabase network order submission stream drop:", err);

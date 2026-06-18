@@ -182,6 +182,22 @@ header.scrolled .logo img { height: 45px; }
     animation-play-state: paused;
 }
 
+/* 1. Force the admin editing buttons on product cards down to the lowest priority layer */
+.product-card .admin-action-inline-trigger {
+    z-index: 1 !important; /* Overrides the inline z-index: 10 from the mapping code */
+}
+
+/* 2. Elevate all system overlay screens so they completely mask background elements */
+#invoiceOverlayScreen,
+#luxuryPaymentLoaderOverlay,
+#adminMasterConsoleOverlay,
+#adminPromoConsoleOverlay,
+#trackingScreenOverlay,
+#cartDrawer {
+    z-index: 999999 !important; /* Force all overlays over everything else */
+    position: fixed !important;
+}
+
 /* Linear infinite layout math shift matrix */
 @keyframes luxuryRibbonRollLoop {
     0% {
