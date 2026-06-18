@@ -756,6 +756,24 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .product-card-sold-out-overlay img {
     filter: grayscale(30%) contrast(90%); /* Soft luxury archival tint */
 }
+/* Circular Button Alignment Adjustments & Luxury Hover Animations */
+.admin-footer-circular-btn:hover {
+    border-color: var(--pink-accent, #ff1493) !important;
+    background-color: rgba(255, 20, 147, 0.05) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(255, 20, 147, 0.15);
+}
+
+.admin-footer-circular-btn:hover .fa-ticket-alt {
+    color: var(--pink-accent, #ff1493) !important;
+}
+
+/* Ensure the parent action container strips use flexbox to align them symmetrically */
+.admin-footer-actions-container-or-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
 /* =========================================================================
    MEDIA QUERIES — MOBILE DISPLAY PHONES COMPRESSION OVERRIDES (< 768px)

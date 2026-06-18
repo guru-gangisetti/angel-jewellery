@@ -15,13 +15,6 @@ const FREE_SHIPPING_THRESHOLD = 1000;
 
 let INTEGRATED_ADMIN_AUTH_STATE = false;
 
-const couponRegistry = {
-    "ANGEL10": { type: "percentage", value: 10 },
-    "WELCOME5": { type: "percentage", value: 5 },
-    "FESTIVE2000": { type: "flat", value: 2000 },
-    "LAUNCH2026": { type: "percentage", value: 15 }
-};
-
 // Inject standard button transition/hover utility rules cleanly into the runtime context
 if (typeof document !== 'undefined' && !document.getElementById('angelJewelryButtonHoverStyleTag')) {
     const styleSheetNode = document.createElement("style");
@@ -133,6 +126,15 @@ function challengeAdminIdentityGateway(event) {
         if (lockBtnAnchor) lockBtnAnchor.style.setProperty("display", "none", "important");
         if (wrenchBtn) wrenchBtn.style.setProperty("display", "flex", "important");
         if (addNewBtn) addNewBtn.style.setProperty("display", "flex", "important");
+
+        // Inside your master passcode validation function, right where authentication succeeds:
+        INTEGRATED_ADMIN_AUTH_STATE = true;
+
+        // ➔ THE LOCK SYSTEM REVEAL SECURITY TRIGGER:
+        const promoLinkNode = document.getElementById('adminPromoMasterFooterLink');
+        if (promoLinkNode) {
+            promoLinkNode.style.display = 'flex'; // Reveals link perfectly next to your unlock buttons
+        }
         
         // Refresh catalog view grids to render "Edit" inline buttons on product cards
         if (typeof filterCatalog === "function") {
@@ -811,19 +813,46 @@ function updateWishlistUI() {
     });
 }
 
+// =========================================================================
+// SUPABASE PRODUCTION CHANNEL — PROMO CODES & DISCOUNT LOGIC (CRUD & LIVE VALIDATION)
+// =========================================================================
+
+let couponRegistryCache = []; // Dynamic local memory layer replacing hardcoded dictionary
+
+// 1. READ CHANNEL: Fetch active promos from database & render consumer helper tag badges
+async function loadLiveCouponDatabaseEngine() {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const targetUrl = `${sbUrl}/rest/v1/Coupons?select=*&order=code.asc`;
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
+        
+        couponRegistryCache = await response.json();
+        mountCouponHelperBadges(); // Automatically re-draw badges on client storefront
+        
+    } catch (err) {
+        console.error("❌ Failed to synchronize active coupon registry layers:", err);
+    }
+}
+
 function mountCouponHelperBadges() {
     const helpersGroup = document.getElementById('couponHelpersGroup');
     if (!helpersGroup) return;
     
     helpersGroup.innerHTML = "";
-    Object.keys(couponRegistry).forEach(code => {
+    couponRegistryCache.forEach(promo => {
         const badge = document.createElement('span');
         badge.className = "coupon-tag-badge";
-        badge.innerHTML = `<i class="fas fa-tag"></i> ${code}`;
+        badge.innerHTML = `<i class="fas fa-tag"></i> ${promo.code}`;
         badge.addEventListener('click', () => {
             const inputField = document.getElementById('couponInput');
             if (inputField) {
-                inputField.value = code;
+                inputField.value = promo.code;
                 applyCouponEngineAction();
             }
         });
@@ -831,6 +860,7 @@ function mountCouponHelperBadges() {
     });
 }
 
+// 2. STOREFRONT CHECKOUT ENGINE: Validates client inputs against database cache
 function applyCouponEngineAction() {
     const inputField = document.getElementById('couponInput');
     const statusMsg = document.getElementById('couponStatusMessage');
@@ -838,21 +868,157 @@ function applyCouponEngineAction() {
 
     const inputtedCode = inputField.value.toUpperCase().trim();
     
-    if (couponRegistry[inputtedCode]) {
+    // Find matching coupon record inside our dynamic cached runtime array
+    const matchedPromo = couponRegistryCache.find(c => c.code.toUpperCase() === inputtedCode);
+    
+    if (matchedPromo) {
         activeDiscount = {
-            code: inputtedCode,
-            type: couponRegistry[inputtedCode].type,
-            value: couponRegistry[inputtedCode].value
+            code: matchedPromo.code,
+            type: matchedPromo.type,    // 'percentage' or 'flat'
+            value: parseFloat(matchedPromo.value)
         };
         statusMsg.style.display = "block";
         statusMsg.style.color = "#25d366";
-        statusMsg.innerText = `Coupon code ${inputtedCode} successfully applied!`;
+        statusMsg.innerText = `Coupon code ${matchedPromo.code} successfully applied!`;
         updateCartUI();
     } else {
         statusMsg.style.display = "block";
         statusMsg.style.color = "#ff4444";
         statusMsg.innerText = "Invalid luxury promotional key code.";
     }
+}
+
+// 3. ADMIN MANAGEMENT PANEL: Generate live interactive grid view for active promos
+function renderAdminPromoConsoleGrid() {
+    const container = document.getElementById('adminPromoCodeTableContainer');
+    if (!container) return;
+
+    if (couponRegistryCache.length === 0) {
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No coupon parameters minted yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+            <thead>
+                <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
+                    <th style="padding:10px;">Code</th>
+                    <th style="padding:10px;">Type</th>
+                    <th style="padding:10px;">Discount Value</th>
+                    <th style="padding:10px; text-align:center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${couponRegistryCache.map(promo => `
+                    <tr style="border-bottom:1px solid #f1f1f5;">
+                        <td style="padding:10px; font-weight:700; color:var(--purple-primary); monospace;">${promo.code}</td>
+                        <td style="padding:10px; text-transform:uppercase; font-size:0.75rem;">${promo.type}</td>
+                        <td style="padding:10px; font-weight:600;">${promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}</td>
+                        <td style="padding:10px; text-align:center;">
+                            <button onclick="executeAdminCouponPurgePipeline(event, ${promo.id}, '${promo.code}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Coupon">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// 4. WRITE CHANNEL: Add brand new promo codes to Supabase
+async function handleAdminPromoFormSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('promoFormSubmitBtn');
+    if (!submitBtn) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Minting...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    const newPromoPayload = {
+        code: document.getElementById('newPromoCodeInput').value.toUpperCase().trim(),
+        type: document.getElementById('newPromoTypeSelect').value,
+        value: parseFloat(document.getElementById('newPromoValueInput').value) || 0
+    };
+
+    if (!newPromoPayload.code || newPromoPayload.value <= 0) {
+        alert("Please provide valid properties before executing synchronization.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Coupons`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(newPromoPayload)
+        });
+
+        if (!response.ok) throw new Error("Supabase duplicate entry or structure mismatch constraint broken.");
+
+        alert(`✨ Successfully Generated Coupon Code: ${newPromoPayload.code}`);
+        document.getElementById('adminPromoCreatorForm').reset();
+        
+        await loadLiveCouponDatabaseEngine(); // Re-fetch from DB
+        renderAdminPromoConsoleGrid();        // Re-draw panel grid UI
+        
+    } catch (err) {
+        console.error(err);
+        alert("Pipeline Sync Interrupted: Verify code name uniqueness or structural field formats.");
+    } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+    }
+}
+
+// 5. DELETE CHANNEL: Wiping codes instantly via trash icons
+async function executeAdminCouponPurgePipeline(event, couponId, couponCode) {
+    if (event) event.stopPropagation();
+    const verify = confirm(`Are you completely sure you want to permanently delete promotional key "${couponCode}"?`);
+    if (!verify) return;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Coupons?id=eq.${couponId}`, {
+            method: 'DELETE',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error("Deletion execution tracking drop.");
+
+        await loadLiveCouponDatabaseEngine();
+        renderAdminPromoConsoleGrid();
+        
+    } catch (err) {
+        console.error(err);
+        alert("Unable to delete entry row from cloud workspace layer.");
+    }
+}
+
+// 6. UI INTERACTION ROUTINES
+function openAdminPromoConsoleOverlay(event) {
+    if (event) event.preventDefault();
+    if (!INTEGRATED_ADMIN_AUTH_STATE) {
+        alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
+        return;
+    }
+    const overlay = document.getElementById('adminPromoConsoleOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        renderAdminPromoConsoleGrid();
+    }
+}
+
+function closeAdminPromoConsoleOverlay() {
+    const overlay = document.getElementById('adminPromoConsoleOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 function triggerCartNotification(title) {
@@ -1114,9 +1280,8 @@ window.addEventListener('scroll', () => {
 window.addEventListener('DOMContentLoaded', () => {
     // ➔ THE CRITICAL FIX: Trigger product sheet load engine immediately on app startup!
     loadProductDatabaseEngine();
-    
+    loadLiveCouponDatabaseEngine();
     initializeLuxuryBannerCarousel();
-    mountCouponHelperBadges();
     applyStrictIndianPhoneValidationRules('invClientPhone');
     applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
@@ -1171,7 +1336,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const applyCouponBtn = document.getElementById('applyCouponBtn');
-    if (applyCouponBtn) applyCouponBtn.addEventListener('click', applyCouponEngineAction);
+    // if (applyCouponBtn) applyCouponBtn.addEventListener('click', applyCouponEngineAction);
 
     const giftCheckbox = document.getElementById('giftCheckbox');
     if (giftCheckbox) {
@@ -2927,7 +3092,7 @@ const ANGEL_LEGAL_VAULT_POLICIES = {
         html: `
             <p>By entering, purchasing, or interacting with the Angel Jewellery showroom ecosystem, you agree to comply with our absolute standard operational terms:</p>
             <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Inventory Discrepancy Control</h4>
-            <p>While our SheetDB link engines work in real-time, order queues that happen at the exact same split-second take priority by timestamp sequence. If an item runs out of stock mid-checkout, we will issue an immediate 100% gateway refund to your payment root source.</p>
+            <p>While our Supabase link engines work in real-time, order queues that happen at the exact same split-second take priority by timestamp sequence. If an item runs out of stock mid-checkout, we will issue an immediate 100% gateway refund to your payment root source.</p>
             <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Intended Use and Copyright</h4>
             <p>All catalog media assets, brand banners, and custom code modules remain the exclusive property of Angel Jewellery. Unauthorized duplication or commercial reselling is strictly prohibited.</p>
         `

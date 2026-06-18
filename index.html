@@ -571,6 +571,10 @@
                     onmouseout="this.style.background='#ffffff'; this.style.color='#ff1493';">
                         <i class="fas fa-plus-circle" style="font-size: 1.05rem; color: inherit;"></i>
                 </a>
+                <!-- SYSTEM ACCORDION TRIGGER — SECURE COUPON CONTROL BUTTON -->
+                <button id="adminPromoMasterFooterLink" onclick="openAdminPromoConsoleOverlay(event)" class="admin-footer-circular-btn" style="display: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #202c55; background: transparent; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; padding: 0; box-sizing: border-box; outline: none;" title="Manage Promos">
+                    <i class="fas fa-ticket-alt" style="color: #cca43b; font-size: 1.1rem; transition: color 0.2s ease;"></i>
+                </button>
             </div>
         </div>
         <!-- =========================================================================
@@ -790,6 +794,69 @@
         </div>
     </div>
 </div>
+
+<div id="adminPromoConsoleOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 27, 37, 0.7); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+    <div style="background: #ffffff; width: 100%; max-width: 700px; border-radius: 8px; border: 1px solid var(--purple-primary); box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh; animation: promoModalSlideUp 0.3s ease; font-family: 'Montserrat', sans-serif;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5;">
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); letter-spacing: 0.5px; text-transform: uppercase;">
+                <i class="fas fa-ticket-alt" style="color: #cca43b; margin-right: 6px;"></i> Promo Code Master Control
+            </h3>
+            <button onclick="closeAdminPromoConsoleOverlay()" style="background: transparent; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; outline: none;" onmouseover="this.style.color='var(--pink-accent)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+        </div>
+
+        <div style="overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
+            
+            <div>
+                <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.8px; font-weight: 700;">Active Coupons Vault</h4>
+                <div id="adminPromoCodeTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 45vh; overflow-y: auto;">
+                    </div>
+            </div>
+
+            <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content;">
+                <h4 style="margin: 0 0 14px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.8px; font-weight: 700;">Mint New Promo Key</h4>
+                
+                <form id="adminPromoCreatorForm" onsubmit="handleAdminPromoFormSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                    
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Promo Coupon Code</label>
+                        <input type="text" id="newPromoCodeInput" placeholder="e.g. JEWEL20" required style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-family: monospace; font-weight: 700; text-transform: uppercase;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Discount Scaling Type</label>
+                        <select id="newPromoTypeSelect" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; background: #ffffff; font-weight: 600; color: #333;">
+                            <option value="percentage">Percentage Off (%)</option>
+                            <option value="flat">Flat Rate Cash Off (₹)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Rate / Value Magnitude</label>
+                        <input type="number" id="newPromoValueInput" placeholder="e.g. 15 or 500" required min="1" step="any" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-weight: 600;">
+                    </div>
+
+                    <button type="submit" id="promoFormSubmitBtn" style="margin-top: 6px; background: var(--purple-primary); color: #ffffff; border: none; padding: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--pink-accent)'" onmouseout="this.style.background='var(--purple-primary)'">
+                        ADD PROMO CODE
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes promoModalSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 680px) {
+        #adminPromoConsoleOverlay > div { width: 95% !important; max-height: 90vh !important; }
+        #adminPromoConsoleOverlay div[style*="display: grid"] { grid-template-columns: 1fr !important; gap: 20px !important; padding: 16px !important; }
+    }
+</style>
+
 
 <style>
     @keyframes faqModalSlideUp {
