@@ -1602,8 +1602,22 @@ function openInvoiceScreen() {
     if (activeDiscount.code) {
         if (activeDiscount.type === "percentage") discountAmount = (grandSubtotal * activeDiscount.value) / 100;
         else if (activeDiscount.type === "flat") discountAmount = activeDiscount.value;
+        if (discountAmount > grandSubtotal) discountAmount = grandSubtotal;
     }
-    let finalPayableTotal = grandSubtotal - discountAmount;
+    let netTotalBeforeShipping = grandSubtotal - discountAmount;
+
+    // ➔ THE UPGRADE: FETCH CONFIG LOGISTICS PARAMETERS DYNAMICALLY
+    const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
+    const FLAT_SHIPPING_CHARGE_RATE = ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
+
+    let shippingChargeAmount = 0;
+    if (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) {
+        shippingChargeAmount = FLAT_SHIPPING_CHARGE_RATE;
+    } else {
+        shippingChargeAmount = 0;
+    }
+
+    let finalPayableTotal = netTotalBeforeShipping + shippingChargeAmount;
     globalPayableAmountInPaise = finalPayableTotal * 100;
 
     pricingSummary.innerHTML = `
@@ -1614,9 +1628,16 @@ function openInvoiceScreen() {
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#25d366; font-weight:600;">
             <span>Coupon Promo (${activeDiscount.code}):</span><span>-${formatCurrency(discountAmount)}</span>
         </div>` : ''}
+        
+        <!-- DYNAMIC SHIPPING ENTRY ROW CONTAINER -->
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:var(--text-muted); font-weight:500;">
-            <span>Insured Vault Delivery:</span><span style="color:#25d366; font-weight:600;">FREE</span>
+            <span>Shipping Charges :</span>
+            ${shippingChargeAmount === 0 && netTotalBeforeShipping >= SHIPPING_THRESHOLD_LIMIT ? 
+                `<span style="color:#25d366; font-weight:700; text-transform:uppercase; font-size:0.8rem; letter-spacing:0.5px;">🎉 FREE</span>` : 
+                `<span style="color:var(--text-dark-primary); font-weight:600;">${formatCurrency(shippingChargeAmount)}</span>`
+            }
         </div>
+        
         <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:700; border-top:2px solid var(--purple-primary); padding-top:12px; margin-top:10px; color:var(--purple-primary);">
             <span>Total Gross Bill:</span><span>${formatCurrency(finalPayableTotal)}</span>
         </div>
@@ -1626,6 +1647,11 @@ function openInvoiceScreen() {
     const overlay = document.getElementById('cartOverlay');
     if (drawer) drawer.style.right = "-100%";
     if (overlay) overlay.style.display = "none";
+    
+    // Add layout tracking fix if configured
+    if (typeof document.body.classList.add === 'function') {
+        document.body.classList.add('modal-open-active');
+    }
     
     invoiceOverlay.style.display = 'flex';
 }
