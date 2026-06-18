@@ -2920,46 +2920,162 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
 let currentSelectedFeedbackFormRatingValue = 5;
 
 // =========================================================================
-// SUPABASE COMBINED CHANNELS — REVIEWS & TESTIMONIALS DISPATCH (READ/WRITE)
+// SUPABASE TESTIMONIALS ENGINE — LIVE 20 CARD FETCH WITH DOT PAGINATION
 // =========================================================================
+
+let MASTER_FEEDBACK_DATASET = []; // Stores up to 20 fetched reviews from Supabase
+let feedbackCurrentPage = 0;
+const REVIEWS_PER_PAGE_COUNT = 4;
+let feedbackSwipeStartX = 0;
+
 async function loadLiveCustomerFeedbackShowroom() {
     const feedbackCanvas = document.getElementById('liveClientFeedbackGridCanvas');
     if (!feedbackCanvas) return;
 
+    // Modify styling on your parent container to act as a sliding carousel track window wrapper
+    feedbackCanvas.style.display = "flex";
+    feedbackCanvas.style.transition = "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+    feedbackCanvas.style.width = "100%";
+
+    // Wrap canvas element inside a hidden track container if not already configured in HTML
+    let trackWindow = feedbackCanvas.parentElement;
+    if (trackWindow && trackWindow.id !== "feedbackCarouselTrackWindow") {
+        trackWindow.style.overflow = "hidden";
+        trackWindow.style.width = "100%";
+        trackWindow.style.cursor = "grab";
+    }
+
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=4`;
+    
+    // ➔ THE UPGRADE: Fetch up to 20 rows dynamically
+    const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=20`;
 
     try {
         const response = await fetch(feedbackUrl, {
             method: 'GET',
             headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
         });
-        const dynamicReviewsArray = await response.json();
+        MASTER_FEEDBACK_DATASET = await response.json();
 
-        if (dynamicReviewsArray.length === 0) {
-            feedbackCanvas.innerHTML = `<div style="grid-column:1/-1; color:#777; font-size:0.88rem; padding:20px 0; text-align:center;">No reviews posted yet. Be the first to share your aura!</div>`;
+        if (MASTER_FEEDBACK_DATASET.length === 0) {
+            feedbackCanvas.innerHTML = `<div style="width:100%; color:#777; font-size:0.88rem; padding:20px 0; text-align:center;">No reviews posted yet. Be the first to share your aura!</div>`;
             return;
         }
 
-        feedbackCanvas.innerHTML = dynamicReviewsArray.map(review => {
+        // Render card layout matching your 4 elements column fraction configuration rules
+        feedbackCanvas.innerHTML = MASTER_FEEDBACK_DATASET.map(review => {
             const numericRating = parseInt(review.rating) || 5;
             return `
-                <div class="feedback-display-card" style="background:#ffffff; border:1px solid #e8e8ef; border-radius:8px; padding:25px; box-sizing:border-box; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
-                    <div>
-                        <div style="color:#cca43b; font-size:1.1rem; margin-bottom:10px;">${'★'.repeat(numericRating).padEnd(5, '☆')}</div>
-                        <p style="color:#4a4a5a; font-size:0.85rem; line-height:1.6; font-style:italic; margin:0 0 15px 0;">"${review.review}"</p>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dotted #e8e8ef; padding-top:12px;">
-                        <h4 style="color:#202c55; margin:0; font-size:0.82rem; font-weight:700; text-transform:uppercase;">${review.name || 'Anonymous Collector'}</h4>
-                        <small style="color:#aaa; font-size:0.72rem;">${new Date(review.created_at).toLocaleDateString('en-IN')}</small>
+                <div class="feedback-display-card review-master-card">
+                    <div style="background:#ffffff; border:1px solid #e8e8ef; border-radius:8px; padding:25px; box-sizing:border-box; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.01); height:100%;">
+                        <div>
+                            <div style="color:#cca43b; font-size:1.1rem; margin-bottom:10px;">${'★'.repeat(numericRating).padEnd(5, '☆')}</div>
+                            <p style="color:#4a4a5a; font-size:0.85rem; line-height:1.6; font-style:italic; margin:0 0 15px 0;">"${review.review}"</p>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dotted #e8e8ef; padding-top:12px; margin-top:auto;">
+                            <h4 style="color:#202c55; margin:0; font-size:0.82rem; font-weight:700; text-transform:uppercase;">${review.name || 'Anonymous Collector'}</h4>
+                            <small style="color:#aaa; font-size:0.72rem;">${new Date(review.created_at).toLocaleDateString('en-IN')}</small>
+                        </div>
                     </div>
                 </div>`;
         }).join('');
+
+        // Calculate layout frames dynamically
+        recalculateFeedbackPaginationMetrics();
+        window.removeEventListener('resize', recalculateFeedbackPaginationMetrics);
+        window.addEventListener('resize', recalculateFeedbackPaginationMetrics);
+
+        // Attach touch swipe gesture event controllers
+        attachFeedbackGestureTracks(trackWindow);
+
     } catch (err) {
-        feedbackCanvas.innerHTML = `<div style="grid-column:1/-1; color:#ff1493; font-size:0.82rem; text-align:center;">Feedback showroom failed to connect.</div>`;
+        feedbackCanvas.innerHTML = `<div style="width:100%; color:#ff1493; font-size:0.82rem; text-align:center;">Feedback showroom failed to connect.</div>`;
     }
 }
+
+function recalculateFeedbackPaginationMetrics() {
+    const screenWidth = window.innerWidth;
+    let itemsPerPage = REVIEWS_PER_PAGE_COUNT; // 4 per page on desktop windows
+
+    if (screenWidth <= 640) itemsPerPage = 1;      // Mobile card row collapse
+    else if (screenWidth <= 1024) itemsPerPage = 2; // Tablet split card layout
+
+    const totalPages = Math.ceil(MASTER_FEEDBACK_DATASET.length / itemsPerPage);
+    renderFeedbackCarouselPaginationDots(totalPages);
+    slideFeedbackCarouselTrack();
+}
+
+function renderFeedbackCarouselPaginationDots(totalPages) {
+    let dotsBar = document.getElementById('feedbackCarouselPaginationDots');
+    
+    // Create container dynamically below track if it's missing in HTML layout
+    if (!dotsBar) {
+        dotsBar = document.createElement('div');
+        dotsBar.id = "feedbackCarouselPaginationDots";
+        dotsBar.style.cssText = "display:flex; justify-content:center; align-items:center; gap:10px; margin-top:30px; width:100%;";
+        document.getElementById('liveClientFeedbackGridCanvas').parentElement.after(dotsBar);
+    }
+
+    dotsBar.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    for (let i = 0; i < totalPages; i++) {
+        const dot = document.createElement('div');
+        dot.style.width = (i === feedbackCurrentPage) ? "24px" : "8px";
+        dot.style.height = "8px";
+        dot.style.borderRadius = "20px";
+        dot.style.background = (i === feedbackCurrentPage) ? "var(--pink-accent, #ff1493)" : "#e8e8ef";
+        dot.style.cursor = "pointer";
+        dot.style.transition = "all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        
+        dot.addEventListener('click', () => {
+            feedbackCurrentPage = i;
+            recalculateFeedbackPaginationMetrics();
+        });
+        dotsBar.appendChild(dot);
+    }
+}
+
+function slideFeedbackCarouselTrack() {
+    const canvas = document.getElementById('liveClientFeedbackGridCanvas');
+    if (!canvas) return;
+    const shiftOffset = feedbackCurrentPage * 100;
+    canvas.style.transform = `translateX(-${shiftOffset}%)`;
+}
+
+function attachFeedbackGestureTracks(trackWindow) {
+    if (!trackWindow) return;
+
+    trackWindow.addEventListener('mousedown', (e) => { feedbackSwipeStartX = e.clientX; });
+    trackWindow.addEventListener('mouseup', (e) => {
+        const deltaX = e.clientX - feedbackSwipeStartX;
+        handleFeedbackSwipeNavigation(deltaX);
+    });
+
+    trackWindow.addEventListener('touchstart', (e) => { feedbackSwipeStartX = e.touches[0].clientX; }, {passive: true});
+    trackWindow.addEventListener('touchend', (e) => {
+        const deltaX = e.changedTouches[0].clientX - feedbackSwipeStartX;
+        handleFeedbackSwipeNavigation(deltaX);
+    }, {passive: true});
+}
+
+function handleFeedbackSwipeNavigation(deltaX) {
+    const screenWidth = window.innerWidth;
+    let itemsPerPage = REVIEWS_PER_PAGE_COUNT;
+    if (screenWidth <= 640) itemsPerPage = 1;
+    else if (screenWidth <= 1024) itemsPerPage = 2;
+
+    const totalPages = Math.ceil(MASTER_FEEDBACK_DATASET.length / itemsPerPage);
+
+    if (deltaX > 50 && feedbackCurrentPage > 0) {
+        feedbackCurrentPage--; // Swipe Right -> Previous Page
+    } else if (deltaX < -50 && feedbackCurrentPage < totalPages - 1) {
+        feedbackCurrentPage++; // Swipe Left -> Next Page
+    }
+    recalculateFeedbackPaginationMetrics();
+}
+
 
 async function submitCustomerFeedbackPipeline(event) {
     event.preventDefault();
