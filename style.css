@@ -235,6 +235,20 @@ header.scrolled .logo img { height: 45px; }
         font-weight: 700;
         color: var(--purple-primary, #202c55);
     }
+
+     .value-prop-card:hover {
+        background: #ffffff !important;
+        border-color: var(--pink-accent, #ff1493) !important;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(32, 44, 85, 0.06);
+    }
+    .value-prop-card:hover .icon-frame {
+        transform: scale(1.08);
+        background: rgba(255, 20, 147, 0.03) !important;
+    }
+    .interactive-prop-card:hover h4 {
+        color: var(--pink-accent, #ff1493) !important;
+    }
 @media (max-width: 768px) {
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */

@@ -1888,7 +1888,7 @@ async function executeLiveOrderTrackingSearch() {
             return;
         }
 
-        statusMsg.innerHTML = `Discovered <strong>${customerOrders.length}</strong> authenticated order masterpiece files matching your profile:`;
+        statusMsg.innerHTML = `Found <strong>${customerOrders.length}</strong> Orders:`;
         
         container.innerHTML = customerOrders.map(order => {
             const ordStatus = String(order.status || 'Paid').trim();
