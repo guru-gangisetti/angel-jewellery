@@ -432,10 +432,10 @@ function filterCatalog(passedSearchQuery) {
     }
 
     // D. HOMEPAGE SHOWCASE ROUTERS — Fired independently with zero rendering block conflicts
-    if (productDatabase && productDatabase.length > 0) {
-        if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
-        if (typeof renderTrendingSection === 'function') renderTrendingSection();
-    }
+    // if (productDatabase && productDatabase.length > 0) {
+    //     if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
+    //     if (typeof renderTrendingSection === 'function') renderTrendingSection();
+    // }
     // document.getElementById('collection-main-title').scrollIntoView({
     //                     behavior: "smooth",
     //                     block: "start"
@@ -443,7 +443,7 @@ function filterCatalog(passedSearchQuery) {
 }
 
 // =========================================================================
-// 2. VAULT SALE SECTION RENDERER
+// 2. VAULT SALE SECTION RENDERER (AUTO-HIDE IF EMPTY)
 // =========================================================================
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
@@ -476,11 +476,11 @@ function renderVaultSaleSection() {
     console.log(`Vault Sale Module Evaluation: Found ${saleItems.length} matching offer items.`);
 
     if (saleItems.length === 0) {
-        saleSection.style.display = 'none';
+        saleSection.style.setProperty("display", "none", "important");
         return;
     }
 
-    saleSection.style.display = 'block';
+    saleSection.style.setProperty("display", "block", "important");
     saleGrid.innerHTML = "";
 
     saleItems.forEach(product => {
@@ -540,7 +540,7 @@ function renderVaultSaleSection() {
 }
 
 // =========================================================================
-// 3. TRENDING SECTION RENDERER
+// 3. TRENDING SECTION RENDERER (AUTO-HIDE IF EMPTY)
 // =========================================================================
 function renderTrendingSection() {
     const trendingSection = document.getElementById('trendingSection');
@@ -554,11 +554,11 @@ function renderTrendingSection() {
     );
 
     if (trendingItems.length === 0) {
-        trendingSection.style.display = 'none';
+        trendingSection.style.setProperty("display", "none", "important");
         return;
     }
 
-    trendingSection.style.display = 'block';
+    trendingSection.style.setProperty("display", "block", "important");
     trendingGrid.innerHTML = "";
 
     trendingItems.forEach(product => {
@@ -615,7 +615,7 @@ function renderTrendingSection() {
         `;
         trendingGrid.appendChild(trendingCard);
     });
-}        
+} 
 
 function addToCartEngine(id) {
     const targetItem = productDatabase.find(p => p.id === id);
