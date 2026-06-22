@@ -154,7 +154,7 @@ function openAdminFormModalForCreation(event) {
     document.getElementById('masterJewelryAdminForm').reset();
     document.getElementById('formActionProductId').value = "";
     document.getElementById('formProductId').disabled = false;
-    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Curate New Masterpiece`;
+    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Add New Item`;
     document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
 }
@@ -177,6 +177,7 @@ function openAdminFormModalForEditing(event, id) {
     const trueCurrentStock = liveCacheData ? liveCacheData.stock : product.stock;
     document.getElementById('formProductStock').value = trueCurrentStock;
     document.getElementById('formProductBadge').value = product.badge === "Sold Out" ? "" : product.badge;
+    document.getElementById('formProductStyle').value = product.style ? String(product.style).trim().toLowerCase() : "";
     document.getElementById('formProductImage').value = product.image;
     document.getElementById('formProductDesc').value = product.description;
 
@@ -220,7 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
                 status: computedStatusFlag,
                 image: document.getElementById('formProductImage').value.trim(),
-                description: document.getElementById('formProductDesc').value.trim()
+                description: document.getElementById('formProductDesc').value.trim(),
+                style: document.getElementById('formProductStyle').value
             };
 
             try {
@@ -354,16 +356,15 @@ function filterCatalog(passedSearchQuery) {
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
                 const displayCategory = product.category || product.type || 'Luxury Collection';
 
-                // ➔ HARDENED EMBEDDED ENGINE CONTROL LINK MARKUP (FORCED HIGHER Z-INDEX LAYER)
                 const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
                     <button type="button" class="admin-action-inline-trigger" 
                             onclick="openAdminFormModalForEditing(event, ${product.id})" 
-                            style="position: absolute; top: 0px; left: 0px; z-index: 10; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                            style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
                         <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
                     </button>
                     <button type="button" class="admin-action-inline-trigger" 
                         onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${safeTitleString}')" 
-                        style="position: absolute; top: 0px; right: 0px; z-index: 10; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px;  padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
+                        style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px;  padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
                         onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
                         onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
                     <i class="fas fa-trash-alt"></i>
@@ -2729,7 +2730,6 @@ function generateDynamicCatalogFilters() {
         if (navTitle) navTitle.style.setProperty("display", "none", "important");
         if (navHeader) navHeader.style.setProperty("display", "none", "important");
         
-        // Use flex layout here so miniature elements sit beautifully side-by-side
         foldersGrid.style.setProperty("display", "flex", "important");
         foldersGrid.style.setProperty("flex-wrap", "wrap", "important");
         foldersGrid.style.setProperty("justify-content", "center", "important");
@@ -2740,6 +2740,13 @@ function generateDynamicCatalogFilters() {
     productDatabase.forEach(product => {
         if (product.category) {
             const cleanKey = product.category.trim();
+            const lowerKey = cleanKey.toLowerCase();
+
+            // ➔ THE FILTER UPGRADE: Ignore "flash" or "flash vault" completely from the circle grid listings
+            if (lowerKey === 'flash' || lowerKey === 'flash vault') {
+                return; // Skips adding this item to the folders map grid array
+            }
+
             if (!categoryMap[cleanKey]) {
                 categoryMap[cleanKey] = {
                     name: cleanKey,
@@ -2751,7 +2758,7 @@ function generateDynamicCatalogFilters() {
         }
     });
 
-    // ➔ THE 100PX RESHAPE: Re-maps categories into ultra-premium minimalist circle nodes
+    // Re-maps remaining premium categories into ultra-premium minimalist circle nodes
     foldersGrid.innerHTML = Object.values(categoryMap).map(folder => {
         return `
             <div class="category-compact-node-card" 
@@ -2760,17 +2767,14 @@ function generateDynamicCatalogFilters() {
                  onmouseover="this.style.transform='translateY(-3px)'"
                  onmouseout="this.style.transform='translateY(0)'">
                 
-                <!-- 100px by 100px Premium Circular Frame Asset Overlay -->
                 <div style="width: 150px; height: 150px; min-width: 100px; min-height: 100px; border-radius: 50%; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
                     <img src="${folder.thumbnail}" alt="${folder.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                     
-                    <!-- Subtle Floating Numeric Count Notification Accent -->
                     <div style="position: absolute; bottom: 4px; right: 4px; background: #202c55; color: #ffffff; font-size: 0.58rem; padding: 2px 6px; font-weight: 700; border-radius: 10px; font-family: 'Montserrat';">
                         ${folder.itemCount}
                     </div>
                 </div>
 
-                <!-- Text Identifier Node Block -->
                 <div style="margin-top: 10px; text-align: center; width: 100%;">
                     <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; color: #202c55; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         ${folder.name}
@@ -2782,6 +2786,9 @@ function generateDynamicCatalogFilters() {
     }).join('');
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — CATALOG LEVEL VIEW SCREEN NAVIGATION ROUTERS
+// =========================================================================
 function selectShowroomCategoryFolder(targetCategoryName) {
     currentSelectedFilterCategoryKey = targetCategoryName;
 
@@ -2789,22 +2796,21 @@ function selectShowroomCategoryFolder(targetCategoryName) {
     const productGridCanvas = document.getElementById('productGrid');
     const navHeader = document.getElementById('showroomNavigationHeader');
     const navTitle = document.getElementById('activeShowroomCategoryTitle');
-    const mainSectionTitle = document.getElementById('collection-main-title');
 
+    // 1. Hide the circles and reveal the product cards grid layer
     if (foldersGrid) foldersGrid.style.display = "none";
-    if (mainSectionTitle) mainSectionTitle.style.display = "none";
-    
     if (productGridCanvas) productGridCanvas.style.setProperty("display", "grid", "important");
-    if (navHeader) navHeader.style.setProperty("display", "flex", "important");
     
-    // ➔ THE FIX: Find the empty parent section block wrapper and force it to display elegantly
-    const parentSectionWrapper = productGridCanvas.closest('.products-section');
+    // 2. Force open the empty wrapper section template block framework
+    const parentSectionWrapper = productGridCanvas?.closest('.products-section');
     if (parentSectionWrapper) parentSectionWrapper.style.setProperty("display", "block", "important");
     
+    // 3. Dynamic layout updates: Pop up the subtitle and the navigation row together
     if (navTitle) {
         navTitle.innerText = `${targetCategoryName} Collection`;
-        navTitle.style.setProperty("display", "block", "important");
-        navTitle.style.setProperty("text-align", "center", "important");
+    }
+    if (navHeader) {
+        navHeader.style.setProperty("display", "flex", "important");
     }
 
     if (typeof filterCatalog === "function") {
@@ -2823,27 +2829,24 @@ function returnToMainShowroomFolders() {
     const foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
     const productGridCanvas = document.getElementById('productGrid');
     const navHeader = document.getElementById('showroomNavigationHeader');
-    const navTitle = document.getElementById('activeShowroomCategoryTitle');
-    const mainSectionTitle = document.getElementById('collection-main-title');
-
-    if (productGridCanvas) productGridCanvas.style.display = "none";
-    if (navHeader) navHeader.style.display = "none";
-    if (navTitle) navTitle.style.display = "none";
-    
-    // ➔ THE FIX: Hide the empty parent section block completely when returning to folder view
     const parentSectionWrapper = productGridCanvas?.closest('.products-section');
+
+    // 1. Hide product layers
+    if (productGridCanvas) productGridCanvas.style.display = "none";
     if (parentSectionWrapper) parentSectionWrapper.style.setProperty("display", "none", "important");
     
-    if (foldersGrid) foldersGrid.style.setProperty("display", "grid", "important");
-    if (mainSectionTitle) mainSectionTitle.style.setProperty("display", "block", "important");
+    // 2. Hide subtitle and back-action hub wrapper completely
+    if (navHeader) navHeader.style.setProperty("display", "none", "important");
+
+    // 3. Re-draw circle folders grid gallery back onto canvas lines
+    if (foldersGrid) foldersGrid.style.setProperty("display", "flex", "important");
 
     if (typeof generateDynamicCatalogFilters === "function") {
         generateDynamicCatalogFilters();
     }
-
     if (typeof renderFlashVaultShowroom === 'function') {
-            renderFlashVaultShowroom();
-        }
+        renderFlashVaultShowroom();
+    }
 
     const scrollAnchor = document.getElementById('catalog');
     if (scrollAnchor) {
@@ -3038,27 +3041,15 @@ let feedbackCurrentPage = 0;
 const REVIEWS_PER_PAGE_COUNT = 4;
 let feedbackSwipeStartX = 0;
 
+// =========================================================================
+// ANGEL JEWELLERY — DYNAMIC INFINITE TEXTIMONIALS MARQUEE CORE ENGINE
+// =========================================================================
 async function loadLiveCustomerFeedbackShowroom() {
     const feedbackCanvas = document.getElementById('liveClientFeedbackGridCanvas');
     if (!feedbackCanvas) return;
 
-    // Modify styling on your parent container to act as a sliding carousel track window wrapper
-    feedbackCanvas.style.display = "flex";
-    feedbackCanvas.style.transition = "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-    feedbackCanvas.style.width = "100%";
-
-    // Wrap canvas element inside a hidden track container if not already configured in HTML
-    let trackWindow = feedbackCanvas.parentElement;
-    if (trackWindow && trackWindow.id !== "feedbackCarouselTrackWindow") {
-        trackWindow.style.overflow = "hidden";
-        trackWindow.style.width = "100%";
-        trackWindow.style.cursor = "grab";
-    }
-
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    
-    // ➔ THE UPGRADE: Fetch up to 20 rows dynamically
     const feedbackUrl = `${sbUrl}/rest/v1/Feedback?select=*&order=created_at.desc&limit=20`;
 
     try {
@@ -3066,41 +3057,47 @@ async function loadLiveCustomerFeedbackShowroom() {
             method: 'GET',
             headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
         });
-        MASTER_FEEDBACK_DATASET = await response.json();
+        const masterDataset = await response.json();
 
-        if (MASTER_FEEDBACK_DATASET.length === 0) {
+        if (!masterDataset || masterDataset.length === 0) {
             feedbackCanvas.innerHTML = `<div style="width:100%; color:#777; font-size:0.88rem; padding:20px 0; text-align:center;">No reviews posted yet. Be the first to share your aura!</div>`;
             return;
         }
 
-        // Render card layout matching your 4 elements column fraction configuration rules
-        feedbackCanvas.innerHTML = MASTER_FEEDBACK_DATASET.map(review => {
+        // Helper mapper to standardize beautiful luxury cards layout
+        const generateCardMarkupHTML = (review) => {
             const numericRating = parseInt(review.rating) || 5;
             return `
-                <div class="feedback-display-card review-master-card">
-                    <div style="background:#ffffff; border:1px solid #e8e8ef; border-radius:8px; padding:25px; box-sizing:border-box; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.01); height:100%;">
+                <div class="review-card-unit">
+                    <div style="background:#ffffff; border:1px solid #e8e8ef; border-radius:8px; padding:20px; box-sizing:border-box; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.01); height:100%; min-height:180px;">
                         <div>
-                            <div style="color:#cca43b; font-size:1.1rem; margin-bottom:10px;">${'★'.repeat(numericRating).padEnd(5, '☆')}</div>
-                            <p style="color:#4a4a5a; font-size:0.85rem; line-height:1.6; font-style:italic; margin:0 0 15px 0;">"${review.review}"</p>
+                            <div style="color:#cca43b; font-size:0.9rem; margin-bottom:8px;">${'★'.repeat(numericRating).padEnd(5, '☆')}</div>
+                            <p style="color:#4a4a5a; font-size:0.78rem; line-height:1.5; font-style:italic; margin:0 0 12px 0;">"${review.review}"</p>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dotted #e8e8ef; padding-top:12px; margin-top:auto;">
-                            <h4 style="color:#202c55; margin:0; font-size:0.82rem; font-weight:700; text-transform:uppercase;">${review.name || 'Anonymous Collector'}</h4>
-                            <small style="color:#aaa; font-size:0.72rem;">${new Date(review.created_at).toLocaleDateString('en-IN')}</small>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dotted #e8e8ef; padding-top:10px; margin-top:auto;">
+                            <h4 style="color:#202c55; margin:0; font-size:0.75rem; font-weight:700; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${review.name || 'Anonymous'}</h4>
+                            <small style="color:#aaa; font-size:0.68rem;">${new Date(review.created_at).toLocaleDateString('en-IN', {day:'numeric', month:'short'})}</small>
                         </div>
                     </div>
                 </div>`;
-        }).join('');
+        };
 
-        // Calculate layout frames dynamically
-        recalculateFeedbackPaginationMetrics();
-        window.removeEventListener('resize', recalculateFeedbackPaginationMetrics);
-        window.addEventListener('resize', recalculateFeedbackPaginationMetrics);
+        // Render initial batch array
+        const baselineCardsHTML = masterDataset.map(review => generateCardMarkupHTML(review)).join('');
+        
+        // ➔ THE SEAMLESS CLONE TRICK: Multiplies track strings to simulate continuous flow loops
+        feedbackCanvas.innerHTML = baselineCardsHTML + baselineCardsHTML;
 
-        // Attach touch swipe gesture event controllers
-        attachFeedbackGestureTracks(trackWindow);
+        // Trigger the rolling continuous loop animation cleanly
+        feedbackCanvas.classList.add('marquee-running-track');
+
+        // Hide pagination dot docks safely if present anywhere in DOM framework logs
+        const oldDotsDock = document.getElementById('feedbackCarouselPaginationDots');
+        if (oldDotsDock) oldDotsDock.style.display = 'none';
 
     } catch (err) {
-        feedbackCanvas.innerHTML = `<div style="width:100%; color:#ff1493; font-size:0.82rem; text-align:center;">Feedback showroom failed to connect.</div>`;
+        console.error("Feedback showroom error:", err);
+        feedbackCanvas.innerHTML = `<div style="width:100%; color:#cca43b; font-size:0.82rem; text-align:center;">Feedback showroom failed to connect.</div>`;
     }
 }
 
@@ -3446,12 +3443,18 @@ function renderFlashVaultShowroom() {
             document.head.appendChild(styleTag);
         }
 
-        const catalogTarget = document.getElementById('catalog');
-        if (catalogTarget) {
-            catalogTarget.parentNode.insertBefore(section, catalogTarget);
+        const trendingTarget = document.getElementById('trendingSection');
+        if (trendingTarget) {
+            // ➔ THE TRENDING RELOCATION FIX: Injects the Flash Vault cleanly AFTER the trending carousel
+            trendingTarget.parentNode.insertBefore(section, trendingTarget.nextSibling);
         } else {
-            document.body.appendChild(section);
-        }
+            const catalogTarget = document.getElementById('catalog');
+            if (catalogTarget) {
+                catalogTarget.parentNode.insertBefore(section, catalogTarget.nextSibling);
+            } else {
+                document.body.appendChild(section);
+            }
+        }    
     }
 
     const grid = document.getElementById('flashVaultGrid');
