@@ -3703,8 +3703,6 @@ function selectStyleClusterFilter(clusterKeyword) {
 
     const cleanKeyword = String(clusterKeyword).trim().toLowerCase();
 
-    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaa : ', cleanKeyword);
-    
     // ➔ THE CRITICAL FIX: Filters your true database using your brand new 'style' field values
     const matchedStylePool = productDatabase.filter(p => p && String(p.style).trim().toLowerCase() === cleanKeyword);
 
@@ -3799,6 +3797,36 @@ function exportCurrentAdminOrdersToCSV() {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
+}
+
+// =========================================================================
+// 💎 ANGEL JEWELLERY — FLASH VAULT PAGINATION NAVIGATION CORE ENGINE (FIXED)
+// =========================================================================
+function shiftFlashVaultPage(directionOrPage) {
+    // 1. Fallback initialization for current page tracking if not declared globally
+    if (typeof flashVaultCurrentPage === 'undefined') {
+        window.flashVaultCurrentPage = 0;
+    }
+    
+    // 2. Determine the target page calculation sequence
+    if (directionOrPage === -1) {
+        if (flashVaultCurrentPage > 0) flashVaultCurrentPage--;
+    } else if (directionOrPage === 1) {
+        flashVaultCurrentPage++;
+    } else {
+        // If a direct page index was passed (0-indexed matching your collection array)
+        const pageIndex = parseInt(directionOrPage);
+        if (!isNaN(pageIndex)) {
+            flashVaultCurrentPage = pageIndex;
+        }
+    }
+
+    // 3. ➔ THE FIX: Call your actual rendering engine function
+    if (typeof renderFlashVaultShowroom === 'function') {
+        renderFlashVaultShowroom();
+    } else {
+        console.warn("Flash Vault rendering function 'renderFlashVaultShowroom' not detected.");
+    }
 }
 
 // Global modal overlay backdrop click tracking dismissals
