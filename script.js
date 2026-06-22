@@ -336,14 +336,20 @@ function filterCatalog(passedSearchQuery) {
         });
 
         // C. RENDERING CANVAS: Map your loaded items directly into your HTML grid
-        if (filteredResults.length === 0) {
+       if (filteredResults.length === 0) {
             productGrid.innerHTML = `
                 <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted, #777); font-weight: 500; font-family: 'Montserrat', sans-serif;">
                     <i class="fas fa-search" style="font-size: 2rem; color: #e8e8ef; display: block; margin-bottom: 12px;"></i>
                     No masterpieces discoverable matching your criteria.
                 </div>`;
         } else {
-            productGrid.innerHTML = filteredResults.map(product => {
+            // A. Safely resolve your active category folder tracking key name
+            const activeTabTracker = (typeof currentActiveTab !== 'undefined') 
+                ? currentActiveTab 
+                : (typeof currentSelectedFilterCategoryKey !== 'undefined' ? currentSelectedFilterCategoryKey : 'all');
+
+            // B. Compile all individual product card layouts cleanly
+            const compiledProductCardsHTML = filteredResults.map(product => {
                 const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
                 const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
                 
@@ -403,25 +409,7 @@ function filterCatalog(passedSearchQuery) {
                             <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
                                     onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
                                     ${isSoldOut ? 'disabled' : ''} 
-                                    style="width: 100%; 
-                                            padding: 11px 0; 
-                                            font-size: 0.72rem; 
-                                            font-weight: 700; 
-                                            text-transform: uppercase; 
-                                            letter-spacing: 1.5px; 
-                                            cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; 
-                                            border-radius: 4px; 
-                                            display: inline-flex; 
-                                            align-items: center; 
-                                            justify-content: center; 
-                                            gap: 6px; 
-                                            margin-top: 5px;
-                                            font-family: 'Montserrat', sans-serif;
-                                            transition: all 0.3s ease;
-                                            background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; 
-                                            color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; 
-                                            border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};
-                                            box-shadow: ${isSoldOut ? 'none !important' : ''};">
+                                    style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'}; box-shadow: ${isSoldOut ? 'none !important' : ''};">
                                 <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
                                 ${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}
                             </button>
@@ -429,6 +417,24 @@ function filterCatalog(passedSearchQuery) {
                     </div>
                 `;
             }).join('');
+            
+            // C. ➔ THE IN-BOX TITLE CONDITION SEQUENCE (FIXED FOR GRID ALIGNMENT)
+            if (activeTabTracker !== 'all' && activeTabTracker !== '') {
+                productGrid.classList.add('filtered-collection-frame');
+                productGrid.innerHTML = `
+                    <!-- THE FIX: grid-column: 1 / -1 ensures the title spans the whole top row smoothly -->
+                    <div class="in-box-collection-header" style="grid-column: 1 / -1; text-align: left; padding: 10px 15px; border-bottom: 1px solid #cca43b; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+                        <span style="color: #cca43b; font-size: 0.62rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 4px;">Now Presenting</span>
+                        <h2 style="color: #202c55; font-size: 1.35rem; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat';">${activeTabTracker}</h2>
+                    </div>
+                    
+                    <!-- We drop back into your pristine product mapping array grid elements directly -->
+                    ${compiledProductCardsHTML}
+                `;
+            } else {
+                productGrid.classList.remove('filtered-collection-frame');
+                productGrid.innerHTML = compiledProductCardsHTML;
+            }
         }
     }
 
