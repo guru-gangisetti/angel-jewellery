@@ -2508,7 +2508,6 @@ function renderSegregatedAdminOrders() {
     
     const pendingValueHeading = document.getElementById('analyticsPendingValue');
     const shippedValueHeading = document.getElementById('analyticsShippedValue');
-    // ➔ Target your new combined UI selector node
     const combinedValueHeading = document.getElementById('analyticsCombinedValue');
 
     if (!ordersContainer || !adminOrdersCache) return;
@@ -2545,6 +2544,21 @@ function renderSegregatedAdminOrders() {
     if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
 
     let targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
+    const aggregateRevenue = targetDisplayDataset.reduce((sum, item) => sum + (parseFloat(item.total_amount) || 0), 0);
+    const pendingShipmentsCount = targetDisplayDataset.filter(item => String(item.status).toLowerCase() !== 'shipped').length;
+
+    const summaryWidgetHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; font-family:'Montserrat';">
+            <div style="background: #fafafa; border: 1px solid #e8e8ef; padding: 14px; border-radius: 6px; text-align: left;">
+                <span style="font-size: 0.65rem; color: #777; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block;">Tabular Net Volume</span>
+                <strong style="font-size: 1.25rem; color: #202c55; font-weight: 700; margin-top: 4px; display: block;">${formatCurrency(aggregateRevenue)}</strong>
+            </div>
+            <div style="background: #fafafa; border: 1px solid #e8e8ef; padding: 14px; border-radius: 6px; text-align: left;">
+                <span style="font-size: 0.65rem; color: #777; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block;">Awaiting Dispatch</span>
+                <strong style="font-size: 1.25rem; color: #ff1493; font-weight: 700; margin-top: 4px; display: block;">${pendingShipmentsCount} Rows</strong>
+            </div>
+        </div>
+    `;
 
     if (adminConsoleSearchQueryString) {
         targetDisplayDataset = targetDisplayDataset.filter(order => {
@@ -3745,6 +3759,46 @@ function closeStylePortfolioModal() {
     const modal = document.getElementById('stylePortfolioModalShield');
     if (modal) modal.style.display = "none";
     document.body.style.overflow = ""; 
+}
+
+function exportCurrentAdminOrdersToCSV() {
+    // Target the same filtered data array currently being displayed
+    if (!adminOrdersCache || adminOrdersCache.length === 0) {
+        alert("No transaction rows available to export.");
+        return;
+    }
+    
+    // Create the spreadsheet header structure
+    const csvHeaders = ["Payment Reference ID", "Client Name", "Phone No", "Delivery Address", "Items Purchased", "Total Bill Amt", "Status", "Date Matrix"];
+    
+    const csvRows = [csvHeaders.join(",")];
+    
+    adminOrdersCache.forEach(order => {
+        const itemsCleaned = `"${(order.order_items || '').replace(/"/g, '""')}"`;
+        const addressCleaned = `"${(order.address || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        
+        const rowData = [
+            order.payment_id || 'N/A',
+            `"${(order.customer_name || 'Anonymous').replace(/"/g, '""')}"`,
+            order.phone || 'N/A',
+            addressCleaned,
+            itemsCleaned,
+            order.total_amount || 0,
+            order.status || 'Paid',
+            `"${order.Date || 'N/A'}"`
+        ];
+        csvRows.push(rowData.join(","));
+    });
+    
+    // Trigger download sequence seamlessly via standard Blob architecture
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", encodedUri);
+    downloadAnchor.setAttribute("download", `Angel_Jewellery_Orders_Ledger_${new Date().toLocaleDateString('en-IN')}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    document.body.removeChild(downloadAnchor);
 }
 
 // Global modal overlay backdrop click tracking dismissals
