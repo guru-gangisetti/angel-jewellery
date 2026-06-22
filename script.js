@@ -70,14 +70,15 @@ async function loadProductDatabaseEngine() {
                 status: updatedStatus
             };
 
-            return {
+           return {
                 id: parsedUniqueId,
                 title: item.title,
                 price: verifiedPrice,
                 category: item.category || 'Luxury Collection',
                 image: item.image || 'assets/placeholder.png',
                 badge: updatedStatus === "sold" ? "Sold Out" : (item.badge || ''),
-                description: item.description || ''
+                description: item.description || '',
+                style: item.style ? String(item.style).trim().toLowerCase() : ''
             };
         });
 
@@ -198,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const submitBtn = document.getElementById('formSubmitActionBtn');
             const originalButtonText = submitBtn.innerText;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Upserting Database Parameters...`;
+            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Adding to Database...`;
 
             const editingTargetRowId = document.getElementById('formActionProductId').value;
             const isEditOperationMode = editingTargetRowId !== "";
@@ -645,6 +646,9 @@ function removeFromCart(id) {
     updateCartUI();
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — SHOPPING BAG ENGINE WITH VISUAL INLINE HIGHLIGHTS
+// =========================================================================
 function updateCartUI() {
     const cartItemsList = document.getElementById('cartItemsList');
     const cartCountBadge = document.getElementById('cartCountBadge');
@@ -666,44 +670,76 @@ function updateCartUI() {
         activeDiscount = { code: "", type: "", value: 0 };
         if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
         if (document.getElementById('couponStatusMessage')) document.getElementById('couponStatusMessage').style.display = "none";
-        if (document.getElementById('giftCheckbox')) document.getElementById('giftCheckbox').checked = false;
-        if (document.getElementById('giftMessageWrapper')) document.getElementById('giftMessageWrapper').style.display = "none";
-        if (document.getElementById('giftMessageInput')) document.getElementById('giftMessageInput').value = "";
         return;
     }
 
     if (cartFooterSection) cartFooterSection.style.display = "flex";
     if (shippingProgressBox) shippingProgressBox.style.display = "block";
 
+    let isOversellingDetected = false;
+
     shoppingCart.forEach(item => {
         totalItemsCount += item.quantity;
         grandSubtotal += (item.price * item.quantity);
+
+        // Cross-reference live database limits
+        const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id];
+        let trueAvailableStock = liveCache ? (parseInt(liveCache.stock) || 0) : 5;
+        const isThisItemOversold = item.quantity > trueAvailableStock;
+
+        let stockWarningLayout = "";
+        let itemRowStyles = "display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid #e8e8ef; position: relative; transition: all 0.3s ease; box-sizing: border-box; align-items: center;";
+
+        if (isThisItemOversold) {
+            isOversellingDetected = true;
+            
+            // ➔ THE HIGHLIGHT: Soft red background tint with a crisp crimson border outline
+            itemRowStyles += " background: #fffdfd; border: 1px solid #d9383a; border-radius: 6px; margin: 5px 0;";
+            
+            // ➔ THE REVELATION: Show exactly how many pieces are left in the vault
+            stockWarningLayout = `
+                <div style="color: #d9383a; font-size: 0.72rem; font-weight: 700; margin-top: 5px; background: rgba(217, 56, 58, 0.06); padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-family: 'Montserrat';">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 0.65rem;"></i> Max Available: ${trueAvailableStock} Piece${trueAvailableStock !== 1 ? 's' : ''}
+                </div>
+            `;
+        }
         
         const itemRow = document.createElement('div');
-        itemRow.className = "cart-item-row";
+        itemRow.style.cssText = itemRowStyles;
         itemRow.innerHTML = `
-            <img src="${item.image}" alt="${item.title}">
-            <div style="flex-grow:1;">
-                <h4 class="cart-item-title">${item.title}</h4>
-                <p class="cart-item-meta">${item.category}</p>
-                <p class="cart-item-price">${formatCurrency(item.price)}</p>
-                <div class="cart-item-controls">
-                    <i class="fas fa-minus" onclick="changeQty(${item.id}, -1)"></i>
-                    <span>${item.quantity}</span>
-                    <i class="fas fa-plus" onclick="changeQty(${item.id}, 1)"></i>
+            <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef;">
+            <div style="flex-grow:1; text-align: left;">
+                <h4 class="cart-item-title" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title}</h4>
+                <p class="cart-item-meta" style="margin: 2px 0; font-size: 0.72rem; color: #777; font-family: 'Montserrat';">${item.category}</p>
+                <p class="cart-item-price" style="margin: 2px 0 6px 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(item.price)}</p>
+                <div class="cart-item-controls" style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                    <i class="fas fa-minus" onclick="changeQty(${item.id}, -1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
+                    <span style="font-size: 0.85rem; font-weight: 700; min-width: 15px; text-align: center; font-family: 'Montserrat'; color: ${isThisItemOversold ? '#d9383a' : '#111116'}">${item.quantity}</span>
+                    <i class="fas fa-plus" onclick="changeQty(${item.id}, 1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
                 </div>
+                ${stockWarningLayout}
             </div>
-            <i class="fas fa-trash" onclick="removeFromCart(${item.id})"></i>
+            <i class="fas fa-trash" onclick="removeFromCart(${item.id})" style="cursor: pointer; color: #aaa; font-size: 0.9rem; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
         `;
         cartItemsList.appendChild(itemRow);
     });
+
+    if (isOversellingDetected) {
+        const errorBanner = document.createElement('div');
+        errorBanner.style.cssText = "background: #fff5f5; border: 1px solid #d9383a; border-radius: 6px; padding: 12px; margin: 10px 15px 20px 15px; font-family: 'Montserrat'; text-align: left; box-sizing: border-box;";
+        errorBanner.innerHTML = `
+            <h5 style="margin: 0 0 6px 0; color: #d9383a; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Stock Limit Exceeded</h5>
+            <p style="margin: 0; color: #555; font-size: 0.75rem; line-height: 1.4; font-weight: 500;">Some pieces highlighted below exceed available showroom limits. Please use the minus buttons to adjust before checkout.</p>
+        `;
+        cartItemsList.insertBefore(errorBanner, cartItemsList.firstChild);
+    }
 
     if (cartCountBadge) {
         cartCountBadge.innerText = totalItemsCount;
         cartCountBadge.style.opacity = "1";
     }
     
-    // ➔ EXTRACT PARAMETERS DYNAMICALLY FROM GLOBAL CONFIG MASTER OBJECT
+    // Calculate shipping progress triggers
     const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
     const FLAT_SHIPPING_CHARGE_RATE = ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
 
@@ -730,14 +766,7 @@ function updateCartUI() {
     }
     let netTotalBeforeShipping = grandSubtotal - discountAmount;
 
-    // ➔ COMPUTE INLINE FREIGHT LOGISTICS ASSIGNMENTS FROM ACCESSED VARIABLE VALUES
-    let shippingChargeAmount = 0;
-    if (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) {
-        shippingChargeAmount = FLAT_SHIPPING_CHARGE_RATE; 
-    } else {
-        shippingChargeAmount = 0;  
-    }
-
+    let shippingChargeAmount = (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) ? FLAT_SHIPPING_CHARGE_RATE : 0;
     let finalPayableTotal = netTotalBeforeShipping + shippingChargeAmount;
 
     let summaryHTML = `<div class="totals-row"><span>Items Subtotal:</span><span>${formatCurrency(grandSubtotal)}</span></div>`;
@@ -752,14 +781,22 @@ function updateCartUI() {
     }
 
     summaryHTML += `<div class="totals-row grand-payable"><span>Final Payable:</span><span>${formatCurrency(finalPayableTotal)}</span></div>`;
-    
     if (cartTotalQty) cartTotalQty.innerHTML = summaryHTML;
     
     finalTotalCost = finalPayableTotal; 
 
+    // Handle action checkout button updates
     const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
     if (primaryCheckoutButtonElement) {
-        primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;
+        if (isOversellingDetected) {
+            primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-ban"></i> Adjust Quantities to Unlock`;
+            primaryCheckoutButtonElement.disabled = true;
+            primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: #e1e1e6 !important; color: #8e8e9f !important; cursor: not-allowed; box-shadow: none !important;";
+        } else {
+            primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;
+            primaryCheckoutButtonElement.disabled = false;
+            primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: var(--purple-primary, #202c55); color: #fff; cursor: pointer; transition: all 0.2s;";
+        }
         primaryCheckoutButtonElement.style.display = "flex"; 
     }
 }
@@ -1306,6 +1343,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadProductDatabaseEngine();
     loadLiveCouponDatabaseEngine();
     initializeLuxuryBannerCarousel();
+    setTimeout(renderFlashVaultShowroom, 800);
     applyStrictIndianPhoneValidationRules('invClientPhone');
     applyStrictIndianPhoneValidationRules('trackingPhoneInput');
     
@@ -2803,6 +2841,10 @@ function returnToMainShowroomFolders() {
         generateDynamicCatalogFilters();
     }
 
+    if (typeof renderFlashVaultShowroom === 'function') {
+            renderFlashVaultShowroom();
+        }
+
     const scrollAnchor = document.getElementById('catalog');
     if (scrollAnchor) {
         window.scrollTo({ top: scrollAnchor.offsetTop - 20, behavior: 'smooth' });
@@ -2885,7 +2927,7 @@ async function synchronizeLiveStorefrontInventory() {
             generateDynamicCatalogFilters();
             filterCatalog();
         }
-        
+        renderFlashVaultShowroom();
         renderTrendingSection();
         renderVaultSaleSection();
         
@@ -2895,7 +2937,7 @@ async function synchronizeLiveStorefrontInventory() {
 }
 
 // =========================================================================
-// SUPABASE LIVE DEDUCTION CHANNELS — UPDATE PRODUCTS STOCK LEVELS
+// SUPABASE LIVE DEDUCTION CHANNELS — DYNAMIC STOCK QUANTITY SYNCHRONIZATION
 // =========================================================================
 async function executeSupabaseInventoryDeduction(cartItemsArray) {
     if (!cartItemsArray || cartItemsArray.length === 0) return;
@@ -2903,19 +2945,16 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
 
-    console.log("Processing inventory levels synchronization down to Supabase nodes...");
+    console.log("Processing precise inventory levels synchronization down to Supabase nodes...");
 
-    // Loop through every item purchased in the checkout batch array
     for (const item of cartItemsArray) {
         try {
             const currentProductId = parseInt(item.id);
-            const purchasedQuantity = parseInt(item.quantity) || 1;
+            const purchasedQuantity = parseInt(item.quantity) || 1; 
 
-            // Look up what we currently have cached locally for this specific key
             const currentCachedData = MASTER_LIVE_INVENTORY_CACHE[currentProductId];
             if (!currentCachedData) continue;
 
-            // Math deduction step
             const currentStockLevel = parseInt(currentCachedData.stock) || 0;
             const absoluteNewStockLevel = Math.max(0, currentStockLevel - purchasedQuantity);
             const computedStatusFlag = absoluteNewStockLevel <= 0 ? "sold" : "available";
@@ -2928,7 +2967,7 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
                 "badge": absoluteNewStockLevel <= 0 ? "Sold Out" : ""
             };
 
-            // Fire the network sync write call to your database index row
+            // Post write update cleanly to your table row index
             await fetch(itemPatchUrl, {
                 method: 'PATCH',
                 headers: {
@@ -2939,7 +2978,7 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
                 body: JSON.stringify(stockPayload)
             });
 
-            console.log(`✨ Product ID #${currentProductId} stock deducted down to: ${absoluteNewStockLevel}`);
+            console.log(`✨ Product ID #${currentProductId}: Successfully deducted ${purchasedQuantity} piece(s). Balance left: ${absoluteNewStockLevel}`);
 
         } catch (err) {
             console.error(`Inventory modification trace failed for item identification index:`, err);
@@ -3349,10 +3388,228 @@ function toggleFaqAccordionUnit(headerElement) {
     }
 }
 
-// Close modal instantly if the user taps outside the main modal boundaries
+// =========================================================================
+// ANGEL JEWELLERY — SMART RESPONSIVE FLASH VAULT MODULE
+// =========================================================================
+let flashVaultCurrentPage = 0;
+const FLASH_VAULT_ITEMS_PER_PAGE = 6; 
+
+function renderFlashVaultShowroom() {
+    let section = document.getElementById('flashVaultSection');
+    
+    // 1. If it's missing or stuck inside the cart drawer layout, build it cleanly right above catalog section
+    if (!section || section.parentElement.id === "cartDrawer") {
+        if(section) section.remove(); // Safely remove any incorrectly placed container
+        
+        console.log("🏗️ Injecting Flash Vault container cleanly above the catalog grid tracker...");
+        section = document.createElement('section');
+        section.id = 'flashVaultSection';
+        section.style.cssText = "max-width: 1200px; margin: 40px auto; padding: 40px 20px; background: #fafafa; border-radius: 8px; margin:8px 8px 8px 25px; border: 2px dashed #ff1493; font-family: 'Montserrat', sans-serif; display: block !important;";
+        
+        section.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e8e8ef; padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                <div style="text-align: left;">
+                    <span style="font-size: 0.65rem; background: #202c55; color: #fff; padding: 4px 10px; font-weight: 700; letter-spacing: 1.5px; border-radius: 2px; text-transform: uppercase;">⚡ Limited Stock</span>
+                    <h2 style="color: #202c55; font-size: 1.4rem; font-weight: 600; margin: 8px 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;">Pick Any Item @ ₹350</h2>
+                    <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: #777;">Single piece earrings & small trinkets. Once sold, it will be gone!</p>
+                </div>
+                <div style="background: #ffffff; border: 1px solid #e8e8ef; padding: 8px 16px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: #ff1493; letter-spacing: 0.5px;">
+                    PRICE FOR ANY PIECE: <span style="font-size: 1rem; color: #202c55;">₹350</span>
+                </div>
+            </div>
+            
+            <div id="flashVaultGrid" class="responsive-flash-vault-grid"></div>
+            
+            <div id="flashVaultPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 30px;"></div>
+        `;
+
+        // Inject the CSS Media Query rules into the page head automatically if they don't exist
+        if (!document.getElementById('flashVaultResponsiveStyles')) {
+            const styleTag = document.createElement('style');
+            styleTag.id = 'flashVaultResponsiveStyles';
+            styleTag.innerHTML = `
+                /* Desktop Layout: Fits as many columns as possible (min 160px per card) */
+                .responsive-flash-vault-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                    gap: 15px;
+                }
+                
+                /* Mobile Layout Check (Screens under 768px wide): FORCES EXACTLY 2 COLUMNS */
+                @media (max-width: 768px) {
+                    .responsive-flash-vault-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 12px !important;
+                    }
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+
+        const catalogTarget = document.getElementById('catalog');
+        if (catalogTarget) {
+            catalogTarget.parentNode.insertBefore(section, catalogTarget);
+        } else {
+            document.body.appendChild(section);
+        }
+    }
+
+    const grid = document.getElementById('flashVaultGrid');
+    const paginationDock = document.getElementById('flashVaultPagination');
+    if (!grid) return;
+
+    // 2. Filter dataset
+    const vaultPool = productDatabase.filter(p => {
+        if (!p || !p.category) return false;
+        const catLower = String(p.category).trim().toLowerCase();
+        return catLower === 'flash vault' || catLower === 'flash';
+    });
+
+    // Mock testing placeholder array
+    if (vaultPool.length === 0) {
+        vaultPool.push({
+            id: 9991,
+            title: "Premium Stone Drop Earrings",
+            price: 350,
+            image: "images/mini-haram-14.jpeg",
+            category: "Flash"
+        }, {
+            id: 9992,
+            title: "Handcrafted Heritage Trinket",
+            price: 350,
+            image: "images/pendent-chains-4.jpeg",
+            category: "Flash"
+        });
+    }
+
+    const totalPages = Math.ceil(vaultPool.length / FLASH_VAULT_ITEMS_PER_PAGE);
+    const sliceStart = flashVaultCurrentPage * FLASH_VAULT_ITEMS_PER_PAGE;
+    const activePageSlice = vaultPool.slice(sliceStart, sliceStart + FLASH_VAULT_ITEMS_PER_PAGE);
+
+    // 3. Render cards dynamically
+    grid.innerHTML = activePageSlice.map(item => {
+        const liveInventory = MASTER_LIVE_INVENTORY_CACHE[item.id] || { stock: 1, status: 'available' };
+        const isClaimed = liveInventory.stock <= 0 || liveInventory.status === 'sold';
+        const safeTitle = item.title.replace(/'/g, "\\'");
+
+        return `
+            <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); opacity: ${isClaimed ? '0.65' : '1'};">
+                <div style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative;">
+                    <img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                    ${isClaimed ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
+                </div>
+                <div style="text-align: left; margin-bottom: 8px;">
+                    <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55;">₹350</p>
+                </div>
+                ${isClaimed ? `
+                    <button disabled style="width: 100%; padding: 6px 0; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; background: #e1e1e6; color: #8e8e9f; border: none; border-radius: 3px; cursor: not-allowed;">Sold Out</button>
+                ` : `
+                    <button onclick="addToCartEngine(${item.id}, '${safeTitle}')" style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s;">Add to Bag</button>
+                `}
+            </div>
+        `;
+    }).join('');
+
+    if (totalPages <= 1) {
+        paginationDock.innerHTML = "";
+        return;
+    }
+
+    paginationDock.innerHTML = `
+        <button ${flashVaultCurrentPage === 0 ? 'disabled' : ''} onclick="shiftFlashVaultPage(-1)" style="padding: 5px 12px; font-size: 0.7rem; font-weight: 700; border: 1px solid #e8e8ef; background: #fff; border-radius: 4px; cursor: pointer; opacity: ${flashVaultCurrentPage === 0 ? '0.4' : '1'};"><i class="fas fa-chevron-left"></i></button>
+        <span style="font-size: 0.72rem; font-weight: 600; color: #555;">Page ${flashVaultCurrentPage + 1} of ${totalPages}</span>
+        <button ${flashVaultCurrentPage === totalPages - 1 ? 'disabled' : ''} onclick="shiftFlashVaultPage(1)" style="padding: 5px 12px; font-size: 0.7rem; font-weight: 700; border: 1px solid #e8e8ef; background: #fff; border-radius: 4px; cursor: pointer; opacity: ${flashVaultCurrentPage === totalPages - 1 ? '0.4' : '1'};"><i class="fas fa-chevron-right"></i></button>
+    `;
+}
+
+// Global modal overlay backdrop click tracking dismissals
 window.addEventListener('click', (e) => {
     const overlay = document.getElementById('faqSystemModalOverlay');
     if (e.target === overlay) {
         closeFaqSystemModalOverlay();
+    }
+});
+
+// =========================================================================
+// ANGEL JEWELLERY — STYLE CLUSTER MODAL HUB (DYNAMIC VAULT SELECTION)
+// =========================================================================
+function selectStyleClusterFilter(clusterKeyword) {
+    const modal = document.getElementById('stylePortfolioModalShield');
+    const grid = document.getElementById('portfolioModalProductsGrid');
+    const mainTitle = document.getElementById('portfolioModalMainTitle');
+    const miniTag = document.getElementById('portfolioMiniTag');
+
+    if (!modal || !grid || !productDatabase || productDatabase.length === 0) return;
+
+    const cleanKeyword = String(clusterKeyword).trim().toLowerCase();
+
+    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaa : ', cleanKeyword);
+    
+    // ➔ THE CRITICAL FIX: Filters your true database using your brand new 'style' field values
+    const matchedStylePool = productDatabase.filter(p => p && String(p.style).trim().toLowerCase() === cleanKeyword);
+
+    // Dynamic Title Header layouts matching your keyword hooks
+    let descriptiveTitle = `${clusterKeyword} Showcase`;
+    if (cleanKeyword === 'cz') descriptiveTitle = "CZ & Silver Polish Curation";
+    if (cleanKeyword === 'antique') descriptiveTitle = "Antique Temple Masterpieces";
+    if (cleanKeyword === 'handcrafted') descriptiveTitle = "Heritage Devotion Editions";
+    if (cleanKeyword === 'navratna') descriptiveTitle = "Navratna & Multi-Stone Strings";
+
+    if (mainTitle) mainTitle.innerText = descriptiveTitle;
+    if (miniTag) miniTag.innerText = `Angel Jewellery • ${clusterKeyword}`;
+
+    if (matchedStylePool.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #777; font-weight: 500;">
+                <i class="fas fa-gem" style="font-size: 1.5rem; color: #e8e8ef; display: block; margin-bottom: 10px;"></i>
+                New masterpieces are currently being curated for this style segment.
+            </div>`;
+    } else {
+        grid.innerHTML = matchedStylePool.map(product => {
+            const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+            const displayPrice = product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on Request';
+            const safeTitleString = product.title.replace(/'/g, "\\'");
+
+            return `
+                <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box;">
+                    <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative; cursor: pointer;">
+                        <img src="${product.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                        ${isSoldOut ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${product.title}</h4>
+                        <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${displayPrice}</p>
+                    </div>
+                    <button class="btn-order-wa" ${isSoldOut ? 'disabled' : ''} onclick="addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');" style="width: 100%; padding: 8px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 4px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; font-family: 'Montserrat'; transition: all 0.2s;">
+                        ${isSoldOut ? 'Restocking' : 'Add to Bag'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden"; 
+    
+    const bodyScrollTrack = document.getElementById('portfolioModalScrollBody');
+    if (bodyScrollTrack) bodyScrollTrack.scrollTop = 0;
+}
+
+function closeStylePortfolioModal() {
+    const modal = document.getElementById('stylePortfolioModalShield');
+    if (modal) modal.style.display = "none";
+    document.body.style.overflow = ""; 
+}
+
+// Global modal overlay backdrop click tracking dismissals
+window.addEventListener('click', (e) => {
+    const overlay = document.getElementById('faqSystemModalOverlay');
+    const portfolioOverlay = document.getElementById('stylePortfolioModalShield');
+    if (e.target === overlay) {
+        closeFaqSystemModalOverlay();
+    }
+    if (e.target === portfolioOverlay) {
+        closeStylePortfolioModal();
     }
 });
