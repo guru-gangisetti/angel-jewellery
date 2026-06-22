@@ -646,8 +646,18 @@ header.scrolled ~ #catalog,
 
 #wishlistDrawer .cart-item-row .btn-luxury { background: transparent; color: var(--purple-primary); border: 1px solid var(--purple-primary); border-radius: 4px; padding: 6px 12px; font-size: 0.65rem; letter-spacing: 1px; }
 #wishlistDrawer .cart-item-row .btn-luxury:hover { background: var(--pink-accent); color: #ffffff; border-color: var(--pink-accent); }
+.admin-wrench-hover-patch i {
+        color: #cca43b;
+        transition: color 0.3s ease;
+    }
+    .admin-wrench-hover-patch:hover {
+        background: #cca43b !important;
+        border-color: #cca43b !important;
+    }
+    .admin-wrench-hover-patch:hover i {
+        color: #ffffff !important;
+    }
 
-/* --- WISH TOAST ANCHORS --- */
 .wishlist-heart-btn {
     position: absolute; top: 15px; right: 15px; z-index: 3;
     background: #ffffff; width: 34px; height: 34px; border-radius: 50%;
