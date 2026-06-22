@@ -659,6 +659,14 @@
                     <input type="text" id="adminConsoleSearchInput" oninput="handleAdminConsoleSearch(this.value)" placeholder="Search by name, phone, or Ref ID..." style="width: 100%; padding: 10px 14px 10px 35px; border: 1px solid var(--border-subtle, #e8e8ef); border-radius: 4px; font-size: 0.82rem; font-family: 'Montserrat', sans-serif; box-sizing: border-box;">
                     <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.85rem;"></i>
                 </div>
+                <div class="admin-view-switcher-dock" style="display: inline-flex; background: #f4f4f7; padding: 4px; border-radius: 6px; border: 1px solid #e8e8ef; box-sizing: border-box;">
+                    <button type="button" id="adminViewModeCardsBtn" onclick="toggleAdminConsoleLayoutMode('cards')" style="background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;" title="Card Visual Ledger Mode">
+                        <i class="fas fa-th-large"></i> Cards
+                    </button>
+                    <button type="button" id="adminViewModeTableBtn" onclick="toggleAdminConsoleLayoutMode('table')" style="background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;" title="Compact Spreadsheet Grid Mode">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                </div>
             </div>
 
             <div id="adminAnalyticsStrip" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; text-align: left;">

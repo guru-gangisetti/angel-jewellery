@@ -2119,9 +2119,6 @@ function closeTrackingScreenOverlay() {
 }
 
 // =========================================================================
-// SUPABASE PRODUCTION CHANNEL — ADMINISTRATIVE MASTER ORDERS PANEL
-// =========================================================================
-// =========================================================================
 // SUPABASE SECURE PANEL — SYNCING REAL DATA MATRIX FOR ANALYTICS
 // =========================================================================
 function openAdminMasterConsole(event) {
@@ -2185,10 +2182,13 @@ function openAdminMasterConsole(event) {
             "Order Images": order.order_images,
             "status": order.status || 'Paid',
             "Status": order.status || 'Paid',
-            // Fixes your calculation errors completely right here:
             "total_amount": order.total_amount,
             "Total Amount": order.total_amount,
-            "Total Paid": order.total_amount 
+            "Total Paid": order.total_amount,
+            "Courier": order.courier || 'Standard Logistics',
+            "courier": order.courier || 'Standard Logistics',
+            "Tracking Number": order.tracking_number || 'N/A',
+            "tracking_number": order.tracking_number || 'N/A'
         }));
         
         statusMsg.innerHTML = "";
@@ -2200,6 +2200,158 @@ function openAdminMasterConsole(event) {
         statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate Supabase tables.";
     });
 }
+
+// =========================================================================
+// ANGEL JEWELLERY — DUAL DISPLAY ADMINISTRATIVE TRACKING MATRIX STATE CONTROL
+// =========================================================================
+let currentAdminLayoutViewMode = "cards"; // Active display state tracker cache: 'cards' or 'table'
+
+function toggleAdminConsoleLayoutMode(targetViewMode) {
+    if (currentAdminLayoutViewMode === targetViewMode) return;
+    currentAdminLayoutViewMode = targetViewMode;
+
+    const cardsBtn = document.getElementById('adminViewModeCardsBtn');
+    const tableBtn = document.getElementById('adminViewModeTableBtn');
+
+    if (!cardsBtn || !tableBtn) return;
+
+    // Apply high-contrast interactive toggle coloring styles cleanly
+    if (targetViewMode === 'cards') {
+        cardsBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+        tableBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+    } else {
+        tableBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+        cardsBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+    }
+
+    // Trigger full ledger redraw
+    renderSegregatedAdminOrders();
+}
+
+// =========================================================================
+// 1. UPDATED TABULAR RENDERER (ADDED ROW ID AND TIGHT COURIER PANEL)
+// =========================================================================
+function renderTabularSpreadsheetAdminOrders(datasetArray) {
+    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
+    if (!ordersContainer) return;
+
+    if (!document.getElementById('adminTableResponsiveStylesTag')) {
+        const styleSheetNode = document.createElement("style");
+        styleSheetNode.id = "adminTableResponsiveStylesTag";
+        styleSheetNode.innerHTML = `
+            .admin-compact-table-scroller { width: 100%; overflow-x: auto; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; box-shadow: 0 4px 15px rgba(32,44,85,0.01); box-sizing: border-box; }
+            .admin-master-data-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 0.82rem; font-family: 'Montserrat', sans-serif; }
+            .admin-master-data-table th { background: #f4f4f7; color: var(--text-muted, #777); font-weight: 700; padding: 12px 16px; border-bottom: 2px solid #e8e8ef; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.8px; text-align: left; }
+            .admin-master-data-table td { padding: 14px 16px; border-bottom: 1px solid #f1f1f5; color: #111116; font-weight: 500; vertical-align: middle; transition: background-color 0.2s ease; }
+            .admin-master-data-table tr:hover td { background: #fafafa; }
+            /* Highlight class for active shipping action */
+            .admin-master-data-table tr.active-shipping-row td { background: #fff9e6 !important; border-top: 1px solid #cca43b; border-bottom: 1px solid #cca43b; }
+            .table-action-mini-pill { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; height: 26px; box-sizing: border-box; }
+        `;
+        document.head.appendChild(styleSheetNode);
+    }
+ordersContainer.innerHTML = `
+        <div class="admin-compact-table-scroller">
+            <table class="admin-master-data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">Reference ID</th>
+                        <th>Client details</th>
+                        <th>Purchased masterpieces</th>
+                        <th style="width: 110px;">Total Bill</th>
+                        <th style="width: 100px;">Status</th>
+                        <!-- ➔ NEW HEADER COLUMN ADDED -->
+                        <th style="width: 140px;">Tracking Waybill</th>
+                        <th style="text-align: center; width: 180px;">Quick Actions Hub</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${datasetArray.map(order => {
+                        const ordPaymentId = order.payment_id || 'N/A';
+                        const ordClientName = order.customer_name || 'Anonymous';
+                        const ordPhone = String(order.phone || '').replace(/[^0-9]/g, '');
+                        const ordTotalAmount = order.total_amount ? (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) : '₹0';
+                        const ordDate = order['Date'] || order.Date || 'N/A';
+                        
+                        const isShipped = String(order.status).toLowerCase() === 'shipped';
+                        const badgeStyle = isShipped 
+                            ? "background: rgba(255, 20, 147, 0.08); color: var(--pink-accent, #ff1493); font-weight:700;" 
+                            : "background: rgba(32, 44, 85, 0.06); color: var(--purple-primary, #202c55); font-weight:700;";
+
+                        const itemsSummary = (order.order_items || '').split(',').map(i => i.trim()).join(' | ');
+
+                        const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status update! ✨`;
+                        const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
+
+                        const inlineShipActionHTML = !isShipped 
+                            ? `<button class="table-action-mini-pill" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary, #202c55); color:#fff; border:none;"><i class="fas fa-shipping-fast"></i> Ship</button>`
+                            : `<span style="font-size:0.7rem; color:#8a8da0; font-weight:600;"><i class="fas fa-check-circle"></i> Handed Off</span>`;
+
+                        // ➔ MAP DYNAMIC WAYBILL MARKUP METRICS
+                        const partnerCompany = order.Courier || order.courier || 'Standard Logistics';
+                        const trackingWaybillNo = order['Tracking Number'] || order.tracking_number || 'N/A';
+                        const tableTrackingCellHTML = isShipped 
+                            ? `<div style="font-weight:700; color:#202c55; font-size:0.75rem;">${partnerCompany}</div>
+                               <div style="font-family:monospace; font-size:0.72rem; color:#777; margin-top:2px;">${trackingWaybillNo}</div>`
+                            : `<span style="color:#aaa; font-style:italic; font-size:0.75rem;">Not Shipped Yet</span>`;
+
+                        const safeName = ordClientName.replace(/'/g, "\\'");
+                        const safePhone = String(order.phone).replace(/'/g, "\\'");
+                        const safeAddress = String(order.address).replace(/'/g, "\\'").replace(/\n/g, " ");
+
+                        return `
+                            <tr id="order-row-${ordPaymentId}">
+                                <td style="font-family: monospace; font-weight: 700; color: var(--purple-primary, #202c55);">
+                                    #${ordPaymentId.slice(0, 12)}...
+                                    <span style="display:block; font-size:0.65rem; color:#aaa; font-weight:500; font-family:'Montserrat'; margin-top:2px;">${ordDate}</span>
+                                </td>
+                                <td>
+                                    <div style="font-weight:700; color:#111116;">${ordClientName}</div>
+                                    <div style="font-size:0.72rem; color:#777; margin-top:2px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${order.address}">${order.address}</div>
+                                </td>
+                                <td style="font-size: 0.78rem; color:#4a4a5a; max-width: 250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${itemsSummary}">
+                                    ${itemsSummary}
+                                </td>
+                                <td style="font-weight:700; color: var(--purple-primary, #202c55);">${ordTotalAmount}</td>
+                                <td>
+                                    <span style="${badgeStyle} font-size:0.6rem; padding:4px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:0.5px; display:inline-block; text-align:center;">
+                                        ${isShipped ? 'Shipped' : 'Placed'}
+                                    </span>
+                                </td>
+                                
+                                <!-- ➔ NEW DATA CELL INJECTED INTO ROW -->
+                                <td>${tableTrackingCellHTML}</td>
+                                
+                                <td style="text-align: center; position: relative;">
+                                    <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                                        <button class="table-action-mini-pill" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background:transparent; border:1px solid #e8e8ef; color:#111116;" title="Copy Tag"><i class="far fa-copy"></i></button>
+                                        <a href="${whatsappUpdateLink}" target="_blank" class="table-action-mini-pill" style="background:transparent; border:1px solid #25d366; color:#25d366;"><i class="fab fa-whatsapp"></i> Ping</a>
+                                        <div id="shipped-action-slot-${ordPaymentId}" style="display:contents;">${inlineShipActionHTML}</div>
+                                    </div>
+
+                                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel" style="position: absolute; display: none; background: #ffffff; border: 1px solid #202c55; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 6px; margin-top: 8px; right: 0; z-index: 100; padding: 12px; width: 240px; box-sizing: border-box; text-align: left;">
+                                        <p style="margin: 0 0 8px 0; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #202c55; letter-spacing: 0.5px;">Logistics Partner</p>
+                                        <div style="display: flex; gap: 8px; margin-bottom: 8px; font-size: 0.72rem; font-weight: 700;">
+                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="DTDC" checked style="accent-color:#202c55;"> DTDC</label>
+                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="Delhivery" style="accent-color:#202c55;"> Delhivery</label>
+                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="Blue Dart" style="accent-color:#202c55;"> Blue Dart</label>
+                                        </div>
+                                        <div style="display: flex; gap: 6px; width: 100%;">
+                                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Waybill No" style="padding: 6px 8px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; flex-grow: 1; min-width: 0; outline: none; font-family:'Montserrat';">
+                                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #fff; border: none; padding: 0 10px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; cursor: pointer; height: 28px;">OK</button>
+                                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; border: 1px solid #e8e8ef; padding: 0 8px; font-size: 0.65rem; border-radius: 4px; color: #777; cursor: pointer; height: 28px;">✕</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+    
 
 function switchAdminConsoleTab(targetTabKey) {
     currentAdminActiveTab = targetTabKey;
@@ -2447,267 +2599,257 @@ function renderSegregatedAdminOrders() {
         document.head.appendChild(styleSheetNode);
     }
 
-    const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
+     const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
+    if (currentAdminLayoutViewMode === "table") {
+        renderTabularSpreadsheetAdminOrders(chronologicallyReversedStack);
+    } else {
+        ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
+            const ordStatus = String(order.status || order['Status'] || '').trim();
+            const ordPaymentId = order['Payment ID'] || order.payment_id || 'N/A';
+            const ordClientName = order['Client Name'] || order.customer_name || 'Anonymous';
+            const ordPhone = String(order['Phone'] || order.phone || '');
+            const ordAddress = order['Address'] || order.address || '';
+            const ordDate = order['Date'] || (order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A');
+            const ordTotalAmount = order['Total Paid'] || (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) || '₹0';
 
-    ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
-        const ordStatus = String(order.status || order['Status'] || '').trim();
-        const ordPaymentId = order['Payment ID'] || order.payment_id || 'N/A';
-        const ordClientName = order['Client Name'] || order.customer_name || 'Anonymous';
-        const ordPhone = String(order['Phone'] || order.phone || '');
-        const ordAddress = order['Address'] || order.address || '';
-        const ordDate = order['Date'] || (order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A');
-        const ordTotalAmount = order['Total Paid'] || (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) || '₹0';
+            const isShipped = ordStatus.toLowerCase() === 'shipped';
+            const displayStatus = isShipped ? "Shipped" : "Order Placed";
+            const badgeStyle = isShipped 
+                ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
+                : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
 
-        const isShipped = ordStatus.toLowerCase() === 'shipped';
-        const displayStatus = isShipped ? "Shipped" : "Order Placed";
-        const badgeStyle = isShipped 
-            ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
-            : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+            const cleanPhone = ordPhone.replace(/[^0-9]/g, '');
+            const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
+            const whatsappUpdateLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(clientMessage)}`;
 
-        const cleanPhone = ordPhone.replace(/[^0-9]/g, '');
-        const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
-        const whatsappUpdateLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(clientMessage)}`;
-
-        let shippedActionButtonHTML = "";
-        let logisticsMetadataHTML = ""; 
-        
-        if (!isShipped) {
-            shippedActionButtonHTML = `
-                <button class="btn-admin-action-unit" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary);">
-                    <i class="fas fa-shipping-fast"></i> Ship
-                </button>
-            `;
-        } else {
-            const partner = order['Courier'] || order.courier || 'Standard Logistics';
-            const trackingNum = order['Tracking Number'] || order.tracking_number || 'N/A';
-            logisticsMetadataHTML = `
-                <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; text-align: center">
-                    <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
-                </div>
-            `;
-        }
-        
-        const itemNamesArray = (order['Order Items'] || order.order_items || '').split(',').map(str => str.trim());
-        const itemImagesArray = (order['Order Images'] || order.order_images || '').split(',').map(str => str.trim());
-
-        const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
-            if (!itemString) return '';
-            let parsedTitle = itemString;
-            let parsedQuantity = "1";
-            const qtyMatch = itemString.match(/\(x(\d+)\)/);
-            if (qtyMatch) {
-                parsedTitle = itemString.replace(qtyMatch[0], '').trim();
-                parsedQuantity = qtyMatch[1];
+            let shippedActionButtonHTML = "";
+            let logisticsMetadataHTML = ""; 
+            
+            if (!isShipped) {
+                shippedActionButtonHTML = `
+                    <button class="btn-admin-action-unit" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary);">
+                        <i class="fas fa-shipping-fast"></i> Ship
+                    </button>
+                `;
+            } else {
+                const partner = order['Courier'] || order.courier || 'Standard Logistics';
+                const trackingNum = order['Tracking Number'] || order.tracking_number || 'N/A';
+                logisticsMetadataHTML = `
+                    <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; text-align: center">
+                        <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
+                    </div>
+                `;
             }
-            const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
+            
+            const itemNamesArray = (order['Order Items'] || order.order_items || '').split(',').map(str => str.trim());
+            const itemImagesArray = (order['Order Images'] || order.order_images || '').split(',').map(str => str.trim());
+
+            const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
+                if (!itemString) return '';
+                let parsedTitle = itemString;
+                let parsedQuantity = "1";
+                const qtyMatch = itemString.match(/\(x(\d+)\)/);
+                if (qtyMatch) {
+                    parsedTitle = itemString.replace(qtyMatch[0], '').trim();
+                    parsedQuantity = qtyMatch[1];
+                }
+                const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
+
+                return `
+                    <tr style="border-bottom: 1px solid #f1f1f5;">
+                        <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
+                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                                <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                            </div>
+                        </td>
+                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
+                            ${parsedTitle}
+                        </td>
+                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
+                            ${parsedQuantity}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const safeName = ordClientName.replace(/'/g, "\\'");
+            const safePhone = ordPhone.replace(/'/g, "\\'");
+            const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
 
             return `
-                <tr style="border-bottom: 1px solid #f1f1f5;">
-                    <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                        <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
-                            <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+            <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+                
+                <div class="admin-card-header">
+                    <div class="admin-header-left">
+                        <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
+                            Transaction ID: <strong style="color: var(--purple-primary);">${ordPaymentId}</strong>
+                        </span>
+                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
+                            ${ordClientName}
+                        </h4>
+                    </div>
+                    <div class="admin-header-right">
+                        <div style="line-height: 1.3;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">${ordDate}</span>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${ordTotalAmount}</span>
                         </div>
-                    </td>
-                    <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
-                        ${parsedTitle}
-                    </td>
-                    <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
-                        ${parsedQuantity}
-                    </td>
-                </tr>
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                            <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
+                                ${displayStatus}
+                            </span>
+                            ${logisticsMetadataHTML}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
+                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                        <thead>
+                            <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
+                                <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
+                                <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece</th>
+                                <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inventoryRowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-shipping-bar">
+                    <div class="admin-shipping-info-row">
+                        <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
+                            <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
+                            <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${ordAddress}
+                        </div>
+                        
+                        <div class="admin-actions-flex-wrapper">
+                            <button class="btn-admin-action-unit" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle, #e8e8ef);" title="Copy Address Tag">
+                                <i class="far fa-copy"></i> Label
+                            </button>
+                            <a href="tel:${cleanPhone}" class="btn-admin-action-unit" style="background: #ffffff; color: var(--purple-primary); border: 1px solid var(--purple-primary);" title="Call Client">
+                                <i class="fas fa-phone-alt"></i> ${cleanPhone}
+                            </a>
+                            <div id="shipped-action-slot-${ordPaymentId}" style="display: contents;">${shippedActionButtonHTML}</div>
+                            <a href="${whatsappUpdateLink}" target="_blank" class="btn-admin-action-unit" style="background: #ffffff; color: #25d366; border: 1px solid #25d366;" title="WhatsApp Alert">
+                                <i class="fab fa-whatsapp"></i> Chat
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel">
+                        <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
+                        <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary);"> DTDC
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary);"> Delhivery
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
+                            </label>
+                        </div>
+                        <div class="tracking-form" style="display: flex; gap: 8px;">
+                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
+                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
+                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
             `;
         }).join('');
 
-        const safeName = ordClientName.replace(/'/g, "\\'");
-        const safePhone = ordPhone.replace(/'/g, "\\'");
-        const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
-
-        return `
-        <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
-            
-            <div class="admin-card-header">
-                <div class="admin-header-left">
-                    <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                        Transaction ID: <strong style="color: var(--purple-primary);">${ordPaymentId}</strong>
-                    </span>
-                    <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
-                        ${ordClientName}
-                    </h4>
-                </div>
-                <div class="admin-header-right">
-                    <div style="line-height: 1.3;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">${ordDate}</span>
-                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${ordTotalAmount}</span>
-                    </div>
-                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                        <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
-                            ${displayStatus}
-                        </span>
-                        ${logisticsMetadataHTML}
-                    </div>
-                </div>
-            </div>
-
-            <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
-                <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
-                    <thead>
-                        <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
-                            <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
-                            <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece</th>
-                            <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${inventoryRowsHTML}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="admin-shipping-bar">
-                <div class="admin-shipping-info-row">
-                    <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
-                        <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
-                        <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${ordAddress}
-                    </div>
-                    
-                    <div class="admin-actions-flex-wrapper">
-                        <button class="btn-admin-action-unit" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle, #e8e8ef);" title="Copy Address Tag">
-                            <i class="far fa-copy"></i> Label
-                        </button>
-                        <a href="tel:${cleanPhone}" class="btn-admin-action-unit" style="background: #ffffff; color: var(--purple-primary); border: 1px solid var(--purple-primary);" title="Call Client">
-                            <i class="fas fa-phone-alt"></i> ${cleanPhone}
-                        </a>
-                        <div id="shipped-action-slot-${ordPaymentId}" style="display: contents;">${shippedActionButtonHTML}</div>
-                        <a href="${whatsappUpdateLink}" target="_blank" class="btn-admin-action-unit" style="background: #ffffff; color: #25d366; border: 1px solid #25d366;" title="WhatsApp Alert">
-                            <i class="fab fa-whatsapp"></i> Chat
-                        </a>
-                    </div>
-                </div>
-
-                <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel">
-                    <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
-                    <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
-                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary);"> DTDC
-                        </label>
-                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary);"> Delhivery
-                        </label>
-                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
-                        </label>
-                    </div>
-                    <div class="tracking-form" style="display: flex; gap: 8px;">
-                        <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
-                        <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
-                        <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-        `;
-    }).join('');
+    }
 }
 
+// =========================================================================
+// 2. REFRACTORED ACTION SHOW/HIDE PANEL HANDLERS (WITH ROW INTERACTION HIGHLIGHTS)
+// =========================================================================
 function revealCourierAllocationPanel(paymentId) {
+    // A. Close all other open panels first and reset prior highlights
+    document.querySelectorAll('.courier-allocation-panel').forEach(pane => pane.style.display = 'none');
+    document.querySelectorAll('.admin-master-data-table tr').forEach(row => row.classList.remove('active-shipping-row'));
+
+    // B. Open targeted panel
     const panel = document.getElementById(`courier-panel-${paymentId}`);
     if (panel) panel.style.display = 'block';
+
+    // C. Add luxury highlight styling to matching table container row element
+    const activeRow = document.getElementById(`order-row-${paymentId}`);
+    if (activeRow) activeRow.classList.add('active-shipping-row');
 }
 
 function hideCourierAllocationPanel(paymentId) {
     const panel = document.getElementById(`courier-panel-${paymentId}`);
     if (panel) panel.style.display = 'none';
+
+    // Remove row interaction highlights smoothly
+    const activeRow = document.getElementById(`order-row-${paymentId}`);
+    if (activeRow) activeRow.classList.remove('active-shipping-row');
 }
 
-// =========================================================================
-// SUPABASE UPDATE CHANNEL — SYNCHRONIZE DISPATCH LOGS & COURIER TRACKING
-// =========================================================================
-function updateShippingStatus(paymentId, buttonElement) {
-    if (!paymentId || !buttonElement) return;
-
+async function updateShippingStatus(paymentId, btn) {
+    const panel = document.getElementById(`courier-panel-${paymentId}`);
     const trackingInput = document.getElementById(`tracking-input-${paymentId}`);
-    const trackingNumber = trackingInput ? trackingInput.value.trim() : "";
     
-    if (!trackingNumber) {
-        alert("Please provide a valid tracking reference number before generating the dispatch record.");
-        if (trackingInput) trackingInput.focus();
+    // Find which courier radio option was selected in the table row context
+    const courierRadio = document.querySelector(`input[name="table-courier-${paymentId}"]:checked`);
+    
+    if (!trackingInput || !trackingInput.value.trim()) {
+        alert("Please enter a valid Waybill / Tracking Number.");
         return;
     }
-
-    const assignedCourierOptions = document.getElementsByName(`courier-${paymentId}`);
-    let selectedCourierValue = "DTDC";
-    for (let i = 0; i < assignedCourierOptions.length; i++) {
-        if (assignedCourierOptions[i].checked) {
-            selectedCourierValue = assignedCourierOptions[i].value;
-            break;
-        }
-    }
-
-    buttonElement.disabled = true;
-    const originalButtonText = buttonElement.innerText;
-    buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Syncing...`;
-
+    
+    const selectedCourier = courierRadio ? courierRadio.value : "Standard Logistics";
+    const trackingNumber = trackingInput.value.trim();
+    
+    // Change button state to show progress
+    const originalBtnText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+    
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const updateUrl = `${sbUrl}/rest/v1/Orders?payment_id=eq.${paymentId}`;
     
-    // Target exact order record matching your filtered payment identifier 
-    const supabaseUpdateEndpoint = `${sbUrl}/rest/v1/Orders?payment_id=eq.${encodeURIComponent(paymentId)}`;
-
-    // Prepare clean database-mapped payload structure
-    const updatePayload = {
-        "status": "Shipped",
-        "courier": selectedCourierValue,
-        "tracking_number": trackingNumber
-    };
-
-    fetch(supabaseUpdateEndpoint, {
-        method: 'PATCH', 
-        headers: {
-            "apikey": sbKey,
-            "Authorization": `Bearer ${sbKey}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation" // Tells Supabase to return the modified row array data
-        },
-        body: JSON.stringify(updatePayload)
-    })
-    .then(response => {
-        if (!response.ok) throw new Error(`Supabase patch connection failed with status: ${response.status}`);
-        return response.json();
-    })
-    .then(updatedRowsArray => {
-        // Supabase returns an array of modified rows upon a successful representation patch query
-        if (updatedRowsArray && updatedRowsArray.length > 0) {
-            console.log(`Supabase database row successfully synchronized for payment ID: ${paymentId}`);
-
-            // Keep the admin UI matching your database parameters seamlessly
-            const cachedOrderObjectIndex = adminOrdersCache.findIndex(o => o['Payment ID'] === paymentId);
-            if (cachedOrderObjectIndex > -1) {
-                adminOrdersCache[cachedOrderObjectIndex]['Status'] = 'Shipped';
-                adminOrdersCache[cachedOrderObjectIndex]['Courier'] = selectedCourierValue;
-                adminOrdersCache[cachedOrderObjectIndex]['Tracking Number'] = trackingNumber;
-            }
-            
-            setTimeout(renderSegregatedAdminOrders, 400);
-
-            // Pop up the system success confirmation toast notification
-            const dynamicToast = document.createElement('div');
-            dynamicToast.className = "copied-toast";
-            dynamicToast.innerHTML = `<i class="fas fa-check-circle"></i> Ledger & Waybill Synced!`;
-            document.body.appendChild(dynamicToast);
-            setTimeout(() => { dynamicToast.remove(); }, 2400);
-
-        } else {
-            throw new Error("No record matching that payment target filter was updated on the server.");
+    try {
+        const response = await fetch(updateUrl, {
+            method: 'PATCH',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                status: 'shipped',
+                courier: selectedCourier,
+                tracking_number: trackingNumber
+            })
+        });
+        
+        if (!response.ok) throw new Error("Database failed to update shipment routing records.");
+        
+        // Remove tracking panel display & strip out active row highlights safely
+        if (panel) panel.style.display = 'none';
+        const activeRow = document.getElementById(`order-row-${paymentId}`);
+        if (activeRow) activeRow.classList.remove('active-shipping-row');
+        
+        if (typeof openAdminMasterConsole === 'function') {
+            await openAdminMasterConsole(); 
         }
-    })
-    .catch(err => {
-        console.error("Critical Supabase dispatch update exception caught:", err);
-        buttonElement.disabled = false;
-        buttonElement.innerText = originalButtonText;
-        alert("Failed to update tracking metrics on the server cluster. Please check your configurations and try again.");
-    });
+        
+    } catch (err) {
+        console.error("Fulfillment sync error:", err);
+        alert("Failed to sync shipment updates to the database. Check console details.");
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+    }
 }
 
 // =========================================================================
