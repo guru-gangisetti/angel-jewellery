@@ -138,11 +138,17 @@ function challengeAdminIdentityGateway(event) {
         }
         
         // Refresh catalog view grids to render "Edit" inline buttons on product cards
-        if (typeof filterCatalog === "function") {
+       if (typeof filterCatalog === "function") {
             filterCatalog(); 
         }
         if (typeof renderFlashVaultShowroom === "function") {
             renderFlashVaultShowroom();
+        }
+        if (typeof renderVaultSaleSection === "function") {
+            renderVaultSaleSection();
+        }
+        if (typeof renderTrendingSection === "function") {
+            renderTrendingSection();
         }
     } else {
         alert("❌ Identity Handshake Blocked: Invalid Passcode.");
@@ -260,7 +266,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!response.ok) throw new Error("Supabase cloud workspace rejected writing parameters.");
                 closeAdminFormVaultModal();
                 await loadProductDatabaseEngine();
-                if (typeof filterCatalog === "function") filterCatalog();
+                if (typeof filterCatalog === "function") filterCatalog(); 
+                if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
+                if (typeof renderVaultSaleSection === "function") renderVaultSaleSection();
+                if (typeof renderTrendingSection === "function") renderTrendingSection();
 
             } catch (error) {
                 console.error("Supabase write pipeline execution breakdown caught:", error);
@@ -453,7 +462,7 @@ function filterCatalog(passedSearchQuery) {
 }
 
 // =========================================================================
-// 2. VAULT SALE SECTION RENDERER (AUTO-HIDE IF EMPTY)
+// 2. VAULT SALE SECTION RENDERER (FIXED)
 // =========================================================================
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
@@ -497,12 +506,22 @@ function renderVaultSaleSection() {
         const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
         const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
         
+        // Create the card element frame first so it exists in memory!
         const saleCard = document.createElement('div');
         saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        
-        saleCard.style.cursor = 'pointer';
+        saleCard.style.cssText = "cursor: pointer; position: relative;";
         saleCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
+        // Admin controls markup safely generated matching your authentication state variables
+        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
+            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
+            </button>
+            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        ` : '';
+
         const badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
 
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
@@ -522,6 +541,7 @@ function renderVaultSaleSection() {
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         saleCard.innerHTML = `
+            ${adminEditInlineControlMarkup}
             <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
                 ${badgeHTML}
                 <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
@@ -550,7 +570,7 @@ function renderVaultSaleSection() {
 }
 
 // =========================================================================
-// 3. TRENDING SECTION RENDERER (AUTO-HIDE IF EMPTY)
+// 3. TRENDING SECTION RENDERER (FIXED)
 // =========================================================================
 function renderTrendingSection() {
     const trendingSection = document.getElementById('trendingSection');
@@ -575,12 +595,22 @@ function renderTrendingSection() {
         const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
         const isFavorited = wishlistMemory.includes(product.id);
         
+        // Create the card element frame first so it exists in memory!
         const trendingCard = document.createElement('div');
         trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        
-        trendingCard.style.cursor = 'pointer';
+        trendingCard.style.cssText = "cursor: pointer; position: relative;";
         trendingCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
+        // Admin controls markup safely generated matching your authentication state variables
+        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
+            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
+            </button>
+            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        ` : '';
+
         let badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
         
         let pricingLayoutHTML = "";
@@ -600,6 +630,7 @@ function renderTrendingSection() {
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         trendingCard.innerHTML = `
+            ${adminEditInlineControlMarkup}
             <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
                 ${badgeHTML}
                 <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
@@ -625,7 +656,7 @@ function renderTrendingSection() {
         `;
         trendingGrid.appendChild(trendingCard);
     });
-} 
+}
 
 function addToCartEngine(id) {
     const targetItem = productDatabase.find(p => p.id === id);
