@@ -848,72 +848,246 @@
         <span class="bubble-tooltip">Chat With Us</span>
     </a>
 
-<footer class="luxury-brand-footer" style="background: #ffffff; border-top: 1px solid #e8e8ef; padding: 10px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; width: 100%;">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center;">
-        <div>
-            <h3 style="color: var(--purple-primary, #202c55); font-size: 1.3rem; font-weight: 700; letter-spacing: 2px; margin: 0 0 8px 0;">ANGEL JEWELLERY</h3>
+<!-- =========================================================================
+     💎 ANGEL JEWELLERY — POLISHED BRAND CENTRED FOOTER
+     ========================================================================= -->
+<footer class="angel-brand-footer">
+    <div class="footer-centered-wrapper">
+        
+        <!-- Brand Title Section -->
+        <div class="footer-logo-row">
+            <h3 class="footer-main-title">ANGEL JEWELLERY</h3>
         </div>
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; align-items: center;">
+
+        <!-- Interactive Channels & Admin Cluster Group -->
+        <div class="footer-interactive-row">
             <!-- Mobile Voice & WhatsApp Channel -->
-            <a id="footerPhoneLink" href="#" style="text-decoration: none; color: #6c757d; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: color 0.3s ease;">
-                <i class="fas fa-phone-alt" style="color: var(--purple-primary, #202c55); font-size: 0.9rem;"></i> 
+            <a id="footerPhoneLink" href="#" class="footer-contact-link">
+                <i class="fas fa-phone-alt phone-icon-accent"></i> 
                 <span id="footerPhoneText">+91 9160 133 199</span>
             </a>
-            <a href="https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl" target="_blank" class="footer-social-icon" aria-label="Follow our Instagram Journey" style="width: 40px; height: 40px; border: 1px solid #e8e8ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--purple-primary, #202c55); text-decoration: none; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);">
-                <i class="fab fa-instagram" style="font-size: 1.15rem;"></i>
+
+            <!-- Social Media & Admin Panel Grid -->
+            <a href="https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl" target="_blank" class="footer-action-circle" aria-label="Follow our Instagram Journey">
+                <i class="fab fa-instagram"></i>
             </a>
-            <a id="footerWorkspaceWhatsapp" href="#" target="_blank" class="footer-social-icon" aria-label="Chat with Concierge Workspace" style="width: 40px; height: 40px; border: 1px solid #e8e8ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--purple-primary, #202c55); text-decoration: none; transition: all 0.3s cubic-bezier(0.25, 1, 0.4, 1);">
-                <i class="fab fa-whatsapp" style="font-size: 1.15rem;"></i>
+            
+            <a id="footerWorkspaceWhatsapp" href="#" target="_blank" class="footer-action-circle" aria-label="Chat with Concierge Workspace">
+                <i class="fab fa-whatsapp"></i>
             </a>
 
-            <!-- =========================================================================
-                 🔒 THE PRIVACY GATEWAY ADMINISTRATIVE PORTAL CONSOLE CLUSTER
-                 ========================================================================= -->
-            <div class="secure-admin-footer-group" style="display: inline-flex; align-items: center; gap: 12px; background: #fafafa; padding: 4px 14px; border-radius: 30px; border: 1px solid #f1f1f6;">
-                
+            <!-- 🔒 ADMINISTRATIVE PORTAL INTEGRATION -->
+            <div class="secure-admin-footer-group">
                 <!-- 1. Master Passkey Challenge Trigger (The Lock Button) -->
-                <a href="#" onclick="challengeAdminIdentityGateway(event)" class="footer-social-icon" aria-label="Authenticate Master Identity Link" style="width: 36px; height: 36px; border: 1px solid #e8e8ef; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--purple-primary, #202c55); text-decoration: none; transition: all 0.3s ease;">
-                    <i class="fa fa-lock" style="font-size: 1.05rem;"></i>
+                <a href="#" onclick="challengeAdminIdentityGateway(event)" class="footer-action-circle admin-lock" aria-label="Authenticate Master Identity Link">
+                    <i class="fa fa-lock"></i>
                 </a>
 
                 <!-- 2. Master Order Desk Terminal Ledger (The Wrench Button — Starts Hidden) -->
-                <a href="#" id="footerAdminWrenchDeskBtn" onclick="openAdminMasterConsole(event)" class="footer-social-icon admin-wrench-hover-patch" aria-label="Open Master Orders Desk Console" style="display: none; width: 36px; height: 36px; border: 1px solid #202c55; border-radius: 50%; align-items: center; justify-content: center; color: var(--purple-primary, #202c55); text-decoration: none; transition: all 0.3s ease; background: #ffffff;">
-                    <i class="fas fa-wrench" style="font-size: 1.05rem;"></i>
+                <a href="#" id="footerAdminWrenchDeskBtn" onclick="openAdminMasterConsole(event)" class="footer-action-circle admin-wrench" aria-label="Open Master Orders Desk Console" style="display: none;">
+                    <i class="fas fa-wrench"></i>
                 </a>
 
                 <!-- 3. Curate Piece Modal Trigger (The Add New Form Button — Starts Hidden) -->
-               <a href="#" id="footerAdminAddNewPieceFormBtn" onclick="openAdminFormModalForCreation(event)" class="footer-social-icon" aria-label="Add New Item Form Window" 
-                    style="display: none; width: 36px; height: 36px; border: 1px solid #ff1493; border-radius: 50%; align-items: center; justify-content: center; color: #ff1493; text-decoration: none; transition: all 0.3s ease; background: #ffffff;"
-                    onmouseover="this.style.background='#ff1493'; this.style.color='#ffffff';"
-                    onmouseout="this.style.background='#ffffff'; this.style.color='#ff1493';">
-                        <i class="fas fa-plus-circle" style="font-size: 1.05rem; color: inherit;"></i>
+                <a href="#" id="footerAdminAddNewPieceFormBtn" onclick="openAdminFormModalForCreation(event)" class="footer-action-circle admin-add" aria-label="Add New Item Form Window" style="display: none;">
+                    <i class="fas fa-plus-circle"></i>
                 </a>
-                <!-- SYSTEM ACCORDION TRIGGER — SECURE COUPON CONTROL BUTTON -->
-                <button id="adminPromoMasterFooterLink" onclick="openAdminPromoConsoleOverlay(event)" class="admin-footer-circular-btn" style="display: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #202c55; background: transparent; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; padding: 0; box-sizing: border-box; outline: none;" title="Manage Promos">
-                    <i class="fas fa-ticket-alt" style="color: #cca43b; font-size: 1.1rem; transition: color 0.2s ease;"></i>
+
+                <!-- 4. SYSTEM ACCORDION TRIGGER — SECURE COUPON CONTROL BUTTON (Starts Hidden) -->
+                <button id="adminPromoMasterFooterLink" onclick="openAdminPromoConsoleOverlay(event)" class="footer-action-circle admin-promo" title="Manage Promos" style="display: none;">
+                    <i class="fas fa-ticket-alt"></i>
                 </button>
             </div>
         </div>
-        <!-- =========================================================================
-             ANGEL JEWELLERY — LUXURY LEGAL INTERACTIVE FOOTER ROUTING ROW
-             ========================================================================= -->
-        <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px dotted rgba(32,44,85,0.1); padding: 15px 0 10px 0;">
-            <a href="#" onclick="openAngelStorePolicyModal(event, 'privacy')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Privacy Policy</a>
-            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
-            <a href="#" onclick="openAngelStorePolicyModal(event, 'shipping')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Shipping Policy</a>
-            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
-            <a href="#" onclick="openAngelStorePolicyModal(event, 'refund')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Refund & Exchange</a>
-            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
-            <a href="#" onclick="openAngelStorePolicyModal(event, 'terms')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">Terms of Service</a>
-            <span style="color: #e8e8ef; font-size: 0.7rem;">|</span>
-            <a href="#" onclick="openFaqSystemModalOverlay(event, 'terms')" style="font-family: 'Montserrat'; font-size: 0.7rem; font-weight: 600; color: #6c757d; text-decoration: none; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;" onmouseover="this.style.color='#202c55'" onmouseout="this.style.color='#6c757d'">FAQs & Support</a>
+
+        <!-- Luxury Legal Interactive Footer Routing Row -->
+        <div class="footer-legal-routing-row">
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'privacy')" class="legal-link">Privacy Policy</a>
+            <span class="legal-divider">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'shipping')" class="legal-link">Shipping Policy</a>
+            <span class="legal-divider">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'refund')" class="legal-link">Refund & Exchange</a>
+            <span class="legal-divider">|</span>
+            <a href="#" onclick="openAngelStorePolicyModal(event, 'terms')" class="legal-link">Terms of Service</a>
+            <span class="legal-divider">|</span>
+            <a href="#" onclick="openFaqSystemModalOverlay(event)" class="legal-link">FAQs & Support</a>
         </div>
 
-        <div style="margin-top: 15px; opacity: 0.5;">
-            <p style="color: #6c757d; font-size: 0.72rem; letter-spacing: 0.5px; margin: 0;">&copy; 2026 Angel Jewellery. All Rights Reserved. Crafted for Permanence.</p>
+        <!-- Copyright Block -->
+        <div class="footer-copyright-row">
+            <p class="copyright-text">&copy; 2026 Angel Jewellery. All Rights Reserved. Crafted for Permanence.</p>
         </div>
+        
     </div>
 </footer>
+
+<style>
+    .angel-brand-footer {
+        background: #ffffff;
+        border-top: 1px solid #e8e8ef;
+        padding: 40px 20px 30px 20px;
+        font-family: 'Montserrat', sans-serif;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .footer-centered-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 24px;
+    }
+
+    .footer-logo-row {
+        margin: 0;
+    }
+
+    .footer-main-title {
+        color: #202c55;
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        margin: 0;
+    }
+
+    .footer-interactive-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 24px;
+        align-items: center;
+    }
+
+    .footer-contact-link {
+        text-decoration: none;
+        color: #6c757d;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: color 0.2s ease;
+    }
+
+    .footer-contact-link:hover {
+        color: #202c55;
+    }
+
+    .phone-icon-accent {
+        color: #202c55;
+        font-size: 0.9rem;
+    }
+
+    /* Core Action Circle Buttons styling mirroring your exact proportions */
+    .footer-action-circle {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #e8e8ef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #202c55;
+        text-decoration: none;
+        background: #ffffff;
+        font-size: 1.1rem;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 1);
+        cursor: pointer;
+        padding: 0;
+        box-sizing: border-box;
+        outline: none;
+    }
+
+    .footer-action-circle:hover {
+        border-color: #202c55;
+        background: #202c55;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(32, 44, 85, 0.1);
+    }
+
+    /* Inline Administrative Gateway Container */
+    .secure-admin-footer-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #fafafa;
+        padding: 4px 12px;
+        border-radius: 30px;
+        border: 1px solid #f1f1f6;
+    }
+
+    .secure-admin-footer-group .footer-action-circle {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Custom Color Accents for Admin Tools */
+    .admin-add {
+        border-color: #ff1493 !important;
+        color: #ff1493 !important;
+    }
+    .admin-add:hover {
+        background: #ff1493 !important;
+        border-color: #ff1493 !important;
+        color: #ffffff !important;
+    }
+
+    .admin-promo i {
+        color: #cca43b;
+    }
+    .admin-promo:hover i {
+        color: #ffffff;
+    }
+
+    /* Legal Links Deck Alignment */
+    .footer-legal-routing-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        border-top: 1px dotted rgba(32, 44, 85, 0.15);
+        padding-top: 16px;
+        width: 100%;
+    }
+
+    .legal-link {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-decoration: none;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        transition: color 0.2s ease;
+    }
+
+    .legal-link:hover {
+        color: #202c55;
+    }
+
+    .legal-divider {
+        color: #e8e8ef;
+        font-size: 0.75rem;
+        user-select: none;
+    }
+
+    .footer-copyright-row {
+        margin-top: -4px;
+    }
+
+    .copyright-text {
+        color: #6c757d;
+        font-size: 0.72rem;
+        letter-spacing: 0.5px;
+        margin: 0;
+        opacity: 0.65;
+    }
+</style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="script.js"></script>
