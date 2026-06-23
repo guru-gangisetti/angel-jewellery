@@ -26,7 +26,7 @@ const ANGEL_STORE_CONFIG = {
         FLAT_SHIPPING_FEE: 50          // Flat rate delivery fee below threshold
     },
     SECURITY: {
-        MASTER_ADMIN_PASSKEY: "a" // Replace with your actual password string
+        MASTER_ADMIN_PASSKEY: "angelswathi" // Replace with your actual password string
     },
     // 5. Angel's Picks — Dynamic Trending Showcase Curation
     TRENDING_COLLECTION: [

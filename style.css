@@ -559,6 +559,8 @@ header.scrolled ~ #catalog,
     border: 1px solid var(--pink-accent) !important;
 }
 
+.admin-action-inline-trigger { display: inline-flex !important; }
+
 /* =========================================================================
    LUXURY SCROLL-ISOLATED SIDEBAR DRAWERS
    ========================================================================= */

@@ -141,6 +141,9 @@ function challengeAdminIdentityGateway(event) {
         if (typeof filterCatalog === "function") {
             filterCatalog(); 
         }
+        if (typeof renderFlashVaultShowroom === "function") {
+            renderFlashVaultShowroom();
+        }
     } else {
         alert("❌ Identity Handshake Blocked: Invalid Passcode.");
     }
@@ -3181,6 +3184,7 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
         alert(`✨ Successfully Deleted! "${productTitle}" has been cleanly scrubbed from your database rows.`);
         if (MASTER_LIVE_INVENTORY_CACHE[productId]) delete MASTER_LIVE_INVENTORY_CACHE[productId];
         await loadProductDatabaseEngine();
+        if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
         if (typeof filterCatalog === "function") filterCatalog();
 
     } catch (error) {
@@ -3657,8 +3661,26 @@ function renderFlashVaultShowroom() {
         const isClaimed = liveInventory.stock <= 0 || liveInventory.status === 'sold';
         const safeTitle = item.title.replace(/'/g, "\\'");
 
+        // Admin Edit Inline Controls mirrored perfectly from the primary filter catalog engine
+        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
+            <button type="button" 
+                    onclick="openAdminFormModalForEditing(event, ${item.id})" 
+                    style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${item.id}
+            </button>
+            <button type="button" 
+                    onclick="executeAdminItemDeletionPipeline(event, ${item.id}, '${safeTitle}')" 
+                    style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
+                    onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
+                    onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        ` : '';
         return `
             <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); opacity: ${isClaimed ? '0.65' : '1'};">
+                
+                ${adminEditInlineControlMarkup}
+
                 <div style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative;">
                     <img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;">
                     ${isClaimed ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
@@ -3668,7 +3690,7 @@ function renderFlashVaultShowroom() {
                     <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55;">₹350</p>
                 </div>
                 ${isClaimed ? `
-                    <button disabled style="width: 100%; padding: 6px 0; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; background: #e1e1e6; color: #8e8e9f; border: none; border-radius: 3px; cursor: not-allowed;">Sold Out</button>
+                    <button disabled style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: #e1e1e6; color: #8e8e9f; border: none; border-radius: 3px; cursor: not-allowed;">Sold Out</button>
                 ` : `
                     <button onclick="addToCartEngine(${item.id}, '${safeTitle}')" style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s;">Add to Bag</button>
                 `}
