@@ -3968,7 +3968,8 @@ function renderFlashVaultShowroom() {
             </button>
         ` : '';
         return `
-            <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); opacity: ${isClaimed ? '0.65' : '1'};">
+            <div onclick="openQuickViewShield(${item.id})" 
+                 style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); opacity: ${isClaimed ? '0.65' : '1'}; cursor: pointer;">
                 
                 ${adminEditInlineControlMarkup}
 
@@ -3977,13 +3978,14 @@ function renderFlashVaultShowroom() {
                     ${isClaimed ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
                 </div>
                 <div style="text-align: left; margin-bottom: 8px;">
-                    <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</h4>
-                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55;">₹350</p>
+                    <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${item.title}</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">₹350</p>
                 </div>
+                
                 ${isClaimed ? `
                     <button disabled style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: #e1e1e6; color: #8e8e9f; border: none; border-radius: 3px; cursor: not-allowed;">Sold Out</button>
                 ` : `
-                    <button onclick="addToCartEngine(${item.id}, '${safeTitle}')" style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s;">Add to Bag</button>
+                    <button onclick="event.stopPropagation(); addToCartEngine(${item.id}, '${safeTitle}')" style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s;">Add to Bag</button>
                 `}
             </div>
         `;
