@@ -1,3 +1,77 @@
+
+// =========================================================================
+// 💎 ANGEL JEWELLERY — GLOBAL MULTI-GRID METADATA DECK LAYOUT OVERRIDES
+// =========================================================================
+if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlobalMobileCardOverrides')) {
+    const mobileOverridesStyleNode = document.createElement("style");
+    mobileOverridesStyleNode.id = "angelJewelryGlobalMobileCardOverrides";
+    mobileOverridesStyleNode.innerHTML = `
+        /* Main structural setups for card spacing */
+        .product-card {
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            height: 100% !important;
+        }
+
+        /* Lock the image boxes below the top header deck with 100% clarity */
+        .product-image-container, 
+        .product-img-wrapper {
+            position: relative !important;
+            width: 100% !important;
+            aspect-ratio: 1 / 1 !important;
+            overflow: hidden !important;
+            border-radius: 6px !important;
+            margin-bottom: 12px !important;
+            z-index: 1 !important;
+        }
+
+        .product-image-container img, 
+        .product-img-wrapper img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+
+        /* ➔ TARGET RESPONSIVE PATTERN: FIXES SQUEEZED GRIDS REVEALED IN image_dd0ac4.png */
+        @media (max-width: 768px) {
+            /* Force the main catalog grid to split into 2 even columns instead of shrinking */
+            #productGrid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+                width: 100% !important;
+                padding: 0 4px !important;
+                box-sizing: border-box !important;
+            }
+
+            .product-card {
+                padding: 10px !important;
+            }
+
+            /* Prevent long titles from breaking card symmetry on small screens */
+            .product-card h3 {
+                font-size: 0.8rem !important;
+                min-height: 32px !important;
+                margin: 4px 0 !important;
+            }
+
+            .product-card p {
+                font-size: 0.85rem !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Adjust mobile button sizing to fit the 2-column layout */
+            .product-card .btn-order-wa {
+                padding: 8px 0 !important;
+                font-size: 0.65rem !important;
+            }
+        }
+    `;
+    document.head.appendChild(mobileOverridesStyleNode);
+}
 /* =========================================================================
    ANGEL JEWELLERY — COMPLETE MASTER RUNTIME ENGINE APPLICATIVE LOGIC
    ========================================================================= */
@@ -396,17 +470,20 @@ function filterCatalog(passedSearchQuery) {
                         
                         ${adminEditInlineControlMarkup}
 
-                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 2px; margin-bottom: 14px; z-index:1;">
-                            ${badgeHTML}
-                            
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box;">
+                            <div style="flex-grow: 1; text-align: left;">
+                                ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                            </div>
                             <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
                                     onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
                                     aria-label="Add to wishlist"
-                                    style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
-                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'}; transition: color 0.2s ease;"></i>
+                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
+                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'}; transition: color 0.2s ease;"></i>
                             </button>
+                        </div>
 
-                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px" onerror="this.src='assets/placeholder.png'">
+                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 6px; margin-bottom: 14px; z-index:1;">
+                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
                         </div>
                         
                         <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
@@ -542,15 +619,21 @@ function renderVaultSaleSection() {
 
         saleCard.innerHTML = `
             ${adminEditInlineControlMarkup}
-            <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
-                ${badgeHTML}
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
+                <div style="flex-grow: 1; text-align: left;">
+                    ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                </div>
                 <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
                         onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
                         aria-label="Add to wishlist" 
-                        style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'};"></i>
+                        style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
                 </button>
-                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+            </div>
+
+            <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
+                <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
             </div>
             <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Jewellery'} • Special Offer</p>
@@ -631,15 +714,21 @@ function renderTrendingSection() {
 
         trendingCard.innerHTML = `
             ${adminEditInlineControlMarkup}
-            <div class="product-img-wrapper" style="background: #ffffff; position: relative;">
-                ${badgeHTML}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
+                <div style="flex-grow: 1; text-align: left;">
+                    ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                </div>
                 <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
                         onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
                         aria-label="Add to wishlist" 
-                        style="position: absolute; top: 15px; right: 15px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #ffffff; border: none; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; outline: none;">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 1rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#777'};"></i>
+                        style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
                 </button>
-                <img src="${product.image}" loading="lazy" alt="${product.title}" onload="this.classList.add('loaded')">
+            </div>
+
+            <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
+                <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
             </div>
             <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Luxury Masterpiece'}</p>
@@ -866,6 +955,9 @@ function toggleWishlistEngine(event, id, targetButton) {
     filterCatalog(); 
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — WISHLIST UI CARDS RENDERING LOGIC
+// =========================================================================
 function updateWishlistUI() {
     const wishlistItemsList = document.getElementById('wishlistItemsList');
     const wishlistCountBadge = document.getElementById('wishlistCountBadge');
@@ -889,22 +981,19 @@ function updateWishlistUI() {
 
         const isSoldOut = item.badge && item.badge.toLowerCase() === 'sold out';
 
-        let actionButtonHTML = "";
-        const currentItemIdKey = parseInt(product.id);
-        const cachedStockInfo = MASTER_LIVE_INVENTORY_CACHE[currentItemIdKey] || { stock: 5, status: 'available' };
+        // Cross-reference live inventory limits using the corrected item key parameter
+        const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id] || { stock: 5, status: 'available' };
         let checkoutButtonMarkup = "";
         
-       // Check if the item is entirely sold out
-        if (cachedStockInfo.stock <= 0 || cachedStockInfo.status === "sold") {
+        if (liveCache.stock <= 0 || liveCache.status === "sold") {
             checkoutButtonMarkup = `
-                <button type="button" disabled class="btn btn-sold-out" style="background: #e1e1e6 !important; color: #8e8e9f !important; border: 1px solid #dcdce0 !important; cursor: not-allowed; width: 100%; height: 44px; font-weight: 600; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">
-                    <i class="fas fa-lock" style="font-size:0.75rem; margin-right:6px;"></i> Recrafting in Vault
+                <button type="button" disabled style="background: #e1e1e6 !important; color: #8e8e9f !important; border: 1px solid #dcdce0 !important; cursor: not-allowed; width: 100%; height: 38px; font-size: 0.7rem; font-weight: 600; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">
+                    <i class="fas fa-lock" style="font-size:0.65rem; margin-right:4px;"></i> Vault Restocking
                 </button>
             `;
         } else {
-            // Your existing functional buy button markup:
             checkoutButtonMarkup = `
-                <button type="button" class="btn btn-primary" onclick="addToCartEngine(${product.id})" style="background: #202c55; color: #ffffff; width: 100%; height: 44px; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; cursor: pointer;">
+                <button type="button" onclick="addToCartEngine(${item.id})" style="background: #202c55; color: #ffffff; border: none; border-radius: 4px; width: 100%; height: 38px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; font-family: 'Montserrat'; transition: background 0.2s;">
                     ADD TO CART
                 </button>
             `;
@@ -912,14 +1001,17 @@ function updateWishlistUI() {
 
         const row = document.createElement('div');
         row.className = "cart-item-row";
+        row.style.cssText = "display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid #e8e8ef; position: relative; box-sizing: border-box; align-items: center;";
         row.innerHTML = `
-            <img src="${item.image}" alt="${item.title}" style="opacity: ${isSoldOut ? '0.5' : '1'};">
-            <div style="flex-grow:1; opacity: ${isSoldOut ? '0.7' : '1'};">
-                <h4 class="cart-item-title">${item.title}</h4>
-                <p class="cart-item-price" style="margin-bottom:8px;">${formatCurrency(item.price)}</p>
-                ${actionButtonHTML}
+            <img src="${item.image}" alt="${item.title}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef; opacity: ${isSoldOut ? '0.5' : '1'};">
+            <div style="flex-grow:1; text-align: left; padding-right: 25px; box-sizing: border-box;">
+                <h4 class="cart-item-title" style="margin: 0; font-size: 0.82rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title}</h4>
+                <p class="cart-item-price" style="margin: 2px 0 8px 0; font-size: 0.82rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(item.price)}</p>
+                <div style="width: 100%; max-width: 140px;">
+                    ${checkoutButtonMarkup}
+                </div>
             </div>
-            <i class="fas fa-trash" onclick="toggleWishlistEngine(null, ${item.id}, null)" style="cursor:pointer; color:var(--text-muted); font-size:0.95rem; position:absolute; right:20px; top:50%; transform:translateY(-50%);"></i>
+            <i class="fas fa-trash" onclick="toggleWishlistEngine(null, ${item.id}, null)" style="cursor:pointer; color:#aaa; font-size:0.9rem; position:absolute; right:15px; top:50%; transform:translateY(-50%); transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
         `;
         wishlistItemsList.appendChild(row);
     });

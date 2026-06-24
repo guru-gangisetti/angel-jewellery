@@ -402,8 +402,9 @@
             </div>
         </div>
         
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-            <div class="product-grid" id="saleProductGrid" style="margin: 0; padding: 0;"></div>
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; overflow: hidden;">
+            <div id="saleProductGrid" class="modern-trending-carousel-track" style="display: flex; gap: 24px; overflow-x: auto; padding: 10px 4px 25px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0;">
+            </div>
         </div>
 
         <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; width: 100%; max-width: 800px; gap: 15px; padding: 0 20px; box-sizing: border-box;">
@@ -430,26 +431,35 @@
         </div>
     </section>
 
-    <style>
-        /* Hide scrollbars for the modern sliding trending track */
-        .modern-trending-carousel-track::-webkit-scrollbar { display: none; }
-        
-        /* Desktop & Tablet slider card constraint proportions */
-        #trendingProductGrid .product-card {
-            flex: 0 0 calc(25% - 18px) !important;
-            min-width: 250px !important;
-            box-sizing: border-box;
-        }
+   <style>
+    /* Hide scrollbars for both modern sliding tracks */
+    .modern-trending-carousel-track::-webkit-scrollbar { display: none; }
+    
+    /* Desktop & Tablet slider card constraint proportions for BOTH tracks */
+    #trendingProductGrid .product-card,
+    #saleProductGrid .product-card {
+        flex: 0 0 calc(25% - 18px) !important;
+        min-width: 250px !important;
+        box-sizing: border-box;
+    }
 
-        /* Mobile View constraints adjustment loops */
-        @media (max-width: 900px) {
-            #trendingProductGrid .product-card { flex: 0 0 calc(50% - 12px) !important; min-width: 180px !important; }
+    /* Mobile View constraints adjustment loops */
+    @media (max-width: 900px) {
+        #trendingProductGrid .product-card,
+        #saleProductGrid .product-card { 
+            flex: 0 0 calc(50% - 12px) !important; 
+            min-width: 180px !important; 
         }
-        @media (max-width: 550px) {
-            #trendingProductGrid .product-card { flex: 0 0 calc(70% - 10px) !important; min-width: 160px !important; }
-            #catalog, #saleSection, #trendingSection { padding: 60px 0 !important; }
+    }
+    @media (max-width: 550px) {
+        #trendingProductGrid .product-card,
+        #saleProductGrid .product-card { 
+            flex: 0 0 calc(70% - 10px) !important; 
+            min-width: 160px !important; 
         }
-    </style>
+        #catalog, #saleSection, #trendingSection { padding: 60px 0 !important; }
+    }
+</style>
 
 <div id="cartDrawer">
     <div class="cart-header">
