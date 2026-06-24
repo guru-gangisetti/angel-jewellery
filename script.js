@@ -941,20 +941,49 @@ function updateCartUI() {
     }
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — INSTANT WISHLIST TOGGLE ENGINE (OUTLINE TO SOLID FILL)
+// =========================================================================
 function toggleWishlistEngine(event, id, targetButton) {
     if (event) event.stopPropagation();
+    
     const matchIndex = wishlistMemory.indexOf(id);
-    if (matchIndex > -1) {
-        wishlistMemory.splice(matchIndex, 1);
-        if (targetButton) targetButton.classList.remove('active');
-    } else {
-        wishlistMemory.push(id);
-        if (targetButton) targetButton.classList.add('active');
-    }
-    updateWishlistUI();
-    filterCatalog(); 
-}
+    const isAdding = matchIndex === -1;
 
+    if (!isAdding) {
+        // Remove from wishlist memory pool
+        wishlistMemory.splice(matchIndex, 1);
+        if (targetButton) {
+            targetButton.classList.remove('active');
+            // ➔ THE CRITICAL INSTANT FIX: Force inner icon back to empty outline format
+            const heartIcon = targetButton.querySelector('i');
+            if (heartIcon) {
+                heartIcon.className = "far fa-heart";
+                heartIcon.style.color = "#77778b";
+            }
+        }
+    } else {
+        // Add into wishlist memory pool
+        wishlistMemory.push(id);
+        if (targetButton) {
+            targetButton.classList.add('active');
+            // ➔ THE CRITICAL INSTANT FIX: Force inner icon to solid filled format
+            const heartIcon = targetButton.querySelector('i');
+            if (heartIcon) {
+                heartIcon.className = "fas fa-heart";
+                heartIcon.style.color = "var(--pink-accent, #ff1493)";
+            }
+        }
+    }
+    
+    // Synchronize both drawer and background gallery catalog grids instantly
+    if (typeof updateWishlistUI === 'function') updateWishlistUI();
+    if (typeof filterCatalog === 'function') {
+        // Pass the active input text query to keep current search filtering active
+        const searchInput = document.getElementById('searchInput');
+        filterCatalog(searchInput ? searchInput.value : undefined);
+    } 
+}
 // =========================================================================
 // ANGEL JEWELLERY — WISHLIST UI CARDS RENDERING LOGIC
 // =========================================================================
