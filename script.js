@@ -2597,11 +2597,85 @@ document.addEventListener("DOMContentLoaded", () => {
 // ANGEL JEWELLERY — THREE-TAB RESPONSIVE ADMINISTRATIVE CONSOLE LAYOUT
 // =========================================================================
 function renderSegregatedAdminOrders() {
+if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
+        const mobileOverrideNode = document.createElement("style");
+        mobileOverrideNode.id = "adminMasterConsoleMobileOverrides";
+        mobileOverrideNode.innerHTML = `
+            #adminConsoleTabsWrapper, 
+            .analytics-cards-row-wrapper-selector { 
+                display: flex !important; 
+                gap: 10px !important; 
+                flex-wrap: wrap !important; 
+            }
+            
+            #adminConsoleTabsWrapper > button,
+            [id^="analytics"] {
+                flex: 1 1 calc(33.33% - 10px) !important;
+                min-width: 120px !important;
+            }
+
+            @media (max-width: 768px) {
+                .admin-card-header {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 10px !important;
+                }
+                .admin-header-right {
+                    text-align: left !important;
+                    width: 100% !important;
+                    justify-content: space-between !important;
+                    flex-direction: row-reverse !important;
+                    border-top: 1px dashed #e8e8ef !important;
+                    padding-top: 10px !important;
+                }
+                
+                /* ➔ FIX FOR THE LEFT-SIDE OFFSET OVERFLOW SHOWN IN image_7d8643.png */
+                .admin-action-row-container {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 15px !important;
+                }
+                
+                /* Switch out grid layout patterns for an automated 50-50 percentage split row wrap system */
+                .admin-card-actions-group {
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    gap: 8px !important;
+                    width: 100% !important;
+                    margin-left: 0 !important;
+                    justify-content: flex-start !important;
+                }
+                
+                /* Target every child direct element including nested structural wrapper slots */
+                .admin-card-actions-group > button,
+                .admin-card-actions-group > a,
+                .admin-card-actions-group > div {
+                    flex: 1 1 calc(50% - 6px) !important;
+                    width: calc(50% - 6px) !important;
+                    max-width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+
+                /* Flatten nested child selectors inside dynamic slot blocks so they keep proportional size mapping */
+                .admin-card-actions-group > div {
+                    display: flex !important;
+                    gap: 8px !important;
+                }
+                .admin-card-actions-group > div > * {
+                    flex: 1 1 100% !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+            }
+        `;
+        document.head.appendChild(mobileOverrideNode);
+    }
+
     const statusMsg = document.getElementById('adminConsoleStatus');
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     const pendingCountSpan = document.getElementById('adminPendingCount');
     const shippedCountSpan = document.getElementById('adminShippedCount');
-    const cancelledCountSpan = document.getElementById('adminCancelledCount'); // Ensure this ID is added in index.html to your third tab badge
+    const cancelledCountSpan = document.getElementById('adminCancelledCount');
     
     const pendingValueHeading = document.getElementById('analyticsPendingValue');
     const shippedValueHeading = document.getElementById('analyticsShippedValue');
@@ -2632,7 +2706,7 @@ function renderSegregatedAdminOrders() {
     if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
     if (combinedValueHeading) combinedValueHeading.innerText = formatCurrency(combinedTotalSum);
 
-    // Segregate cache matrices into 3 groups
+    // Segregate cache matrices into 3 distinct operational groups
     const pendingOrdersList = adminOrdersCache.filter(order => {
         const s = String(order.status || '').trim().toLowerCase();
         return s !== 'shipped' && s !== 'cancelled' && s !== 'refunded';
@@ -2666,7 +2740,7 @@ function renderSegregatedAdminOrders() {
 
     if (targetDisplayDataset.length === 0) {
         ordersContainer.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:#f9f9fb; border-radius:6px; border:1px dashed var(--border-subtle)">
+            <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:#f9f9fb; border-radius:6px; border:1px dashed var(--border-subtle, #e8e8ef)">
                 No orders match your active filter settings.
             </div>`;
         return;
@@ -2677,6 +2751,17 @@ function renderSegregatedAdminOrders() {
     if (currentAdminLayoutViewMode === "table" && typeof renderTabularSpreadsheetAdminOrders === 'function') {
         renderTabularSpreadsheetAdminOrders(chronologicallyReversedStack);
     } else {
+        // Initialize dynamic custom chat hover style tag context rule globally once
+        if (!document.getElementById('angelAdminChatHoverStyles')) {
+            const hoverStyleNode = document.createElement("style");
+            hoverStyleNode.id = "angelAdminChatHoverStyles";
+            hoverStyleNode.innerHTML = `
+                .admin-chat-action-btn { background: #ffffff !important; color: #25d366 !important; border: 1px solid #25d366 !important; }
+                .admin-chat-action-btn:hover { background: #25d366 !important; color: #ffffff !important; }
+            `;
+            document.head.appendChild(hoverStyleNode);
+        }
+
         ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
             const ordStatus = String(order.status || 'Paid').trim();
             const ordPaymentId = order.payment_id || 'N/A';
@@ -2690,6 +2775,7 @@ function renderSegregatedAdminOrders() {
             const isCancelled = ordStatus.toLowerCase() === 'cancelled';
             const isRefunded = ordStatus.toLowerCase() === 'refunded';
 
+            // Escape strings for clipboard methods safely
             const safeName = ordClientName.replace(/'/g, "\\'");
             const safePhone = ordPhone.trim();
             const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
@@ -2699,11 +2785,13 @@ function renderSegregatedAdminOrders() {
             if (isCancelled) badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;";
             if (isRefunded) badgeStyle = "background: rgba(42, 123, 106, 0.1); color: #2a7b6a;";
 
-            const clientMessage = `Hello ${ordClientName},\n\nRegarding your Angel Jewellery cancelled order request...`;
+            const clientMessage = `Hello ${ordClientName},\n\nRegarding your Angel Jewellery order portfolio update...`;
             const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
+
             const sharedActionStyle = "display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; height: 36px !important; padding: 0 14px !important; font-size: 0.72rem !important; font-weight: 700 !important; text-transform: uppercase !important; font-family: 'Montserrat', sans-serif !important; letter-spacing: 0.5px !important; border-radius: 4px !important; cursor: pointer !important; text-decoration: none !important; box-sizing: border-box !important; transition: all 0.2s ease !important; white-space: nowrap !important; margin: 0 !important; line-height: 1 !important;";
+
             const chatButtonHTML = `
-                <a href="${whatsappUpdateLink}" target="_blank" style="${sharedActionStyle} background: #ffffff !important; color: #25d366 !important; border: 1px solid #25d366 !important;" onmouseover="this.style.background='#25d366' !important; this.style.color='#fff' !important;" onmouseout="this.style.background='#fff' !important; this.style.color='#25d366' !important;">
+                <a href="${whatsappUpdateLink}" target="_blank" class="admin-chat-action-btn" style="${sharedActionStyle}" title="WhatsApp Client">
                     <i class="fab fa-whatsapp" style="font-size: 0.9rem;"></i> Chat
                 </a>
             `;
@@ -2728,7 +2816,6 @@ function renderSegregatedAdminOrders() {
                 `;
             }
 
-            // Dynamic block layout displaying custom cancel reason and PhonePe details if populated
             let cancelDetailsBlockHTML = "";
             if (isCancelled || isRefunded) {
                 cancelDetailsBlockHTML = `
@@ -2769,6 +2856,7 @@ function renderSegregatedAdminOrders() {
             return `
             <div style="background: #ffffff; border: 1px solid var(--purple-primary, #202c55); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); font-family: 'Montserrat', sans-serif;">
                 
+                <!-- Card Header -->
                 <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
                     <div class="admin-header-left" style="text-align: left; flex: 1;">
                         <span style="font-size: 0.68rem; color: var(--text-muted, #777); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
@@ -2789,6 +2877,7 @@ function renderSegregatedAdminOrders() {
                     </div>
                 </div>
 
+                <!-- Items Table Row -->
                 <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
                     <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
                         <tbody>
@@ -2797,18 +2886,20 @@ function renderSegregatedAdminOrders() {
                     </table>
                 </div>
 
-                <!-- ➔ LOGISTICS BAR CONTAINER OVERRIDE -->
+                <!-- Shipping & Control Row Panel -->
                 <div style="display: flex; background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #e8e8ef; flex-direction: column; gap: 15px; width: 100%; box-sizing: border-box;">
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
-                        <!-- Destination Layout Block -->
+                    <!-- Added 'admin-action-row-container' class here -->
+                    <div class="admin-action-row-container" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
+                        
+                        <!-- Destination address frame -->
                         <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4; text-align: left; flex: 1; min-width: 200px;">
                             <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
                             <span style="color: var(--text-muted, #777); font-weight: 600;">Ship To:</span> ${ordAddress}
                         </div>
                         
-                        <!-- Fixed, Clean Horizontal Button Row Layout -->
-                        <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap;">
+                        <!-- ➔ Added 'admin-card-actions-group' class name hook here to fix horizontal clipping -->
+                        <div class="admin-card-actions-group" style="display: flex; gap: 8px; align-items: center; justify-content: flex-end;">
                             <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="${sharedActionStyle} background: transparent !important; color: var(--text-dark-primary, #111116) !important; border: 1px solid #e8e8ef !important;" title="Copy Address Tag">
                                 <i class="far fa-copy"></i> Label
                             </button>
@@ -2817,8 +2908,7 @@ function renderSegregatedAdminOrders() {
                                 <i class="fas fa-phone-alt"></i> Call
                             </a>
                             
-                            <!-- Dynamic Tabs Action Slot Insertion Point -->
-                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
                                 ${contextButtonsHTML}
                             </div>
                         </div>
@@ -2826,7 +2916,7 @@ function renderSegregatedAdminOrders() {
 
                     ${cancelDetailsBlockHTML}
 
-                    <!-- Hidden Courier Assign Element Form Slider -->
+                    <!-- Courier Slider Form Panel -->
                     <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel" style="display: none; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 16px; width: 100%; box-sizing: border-box; margin-top: 5px;">
                         <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary, #202c55); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
                         <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
@@ -2845,7 +2935,6 @@ function renderSegregatedAdminOrders() {
 
             </div>
             `;
-           
         }).join('');
     }
 }
