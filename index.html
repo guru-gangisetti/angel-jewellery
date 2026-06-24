@@ -1424,11 +1424,37 @@
     }
     /* Mobile responsive constraint patches for the internal grid cards */
     @media (max-width: 560px) {
-        #portfolioModalProductsGrid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-        }
-        #stylePortfolioModalShield > div { padding: 10px; max-height: 92vh !important; }
+      /* =========================================================================
+               💎 SIGNATURE MOSAIC PORTFOLIO STYLE CLUSTER MODAL OVERRIDES
+               ========================================================================= */
+            #stylePortfolioModalShield {
+                padding: 10px !important;
+            }
+
+            #stylePortfolioModalShield > div {
+                max-height: 90vh !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* ➔ THE CRITICAL ANTI-OVERFLOW TRACK STABILIZATION: */
+            #portfolioModalScrollBody {
+                padding: 16px 12px !important;
+                overflow-x: hidden !important; /* Kills horizontal track completely */
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Clean up grid margins to fit perfectly inside the modal frames */
+            #portfolioModalProductsGrid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+            }
     }
 </style>
 

@@ -4012,22 +4012,23 @@ window.addEventListener('click', (e) => {
 });
 
 // =========================================================================
-// ANGEL JEWELLERY — STYLE CLUSTER MODAL HUB (DYNAMIC VAULT SELECTION)
+// ANGEL JEWELLERY — STYLE CLUSTER MODAL HUB (DEDICATED STABLE 2-COLUMN VIEW)
 // =========================================================================
 function selectStyleClusterFilter(clusterKeyword) {
     const modal = document.getElementById('stylePortfolioModalShield');
     const grid = document.getElementById('portfolioModalProductsGrid');
     const mainTitle = document.getElementById('portfolioModalMainTitle');
     const miniTag = document.getElementById('portfolioMiniTag');
+    const scrollBody = document.getElementById('portfolioModalScrollBody');
 
     if (!modal || !grid || !productDatabase || productDatabase.length === 0) return;
 
     const cleanKeyword = String(clusterKeyword).trim().toLowerCase();
 
-    // ➔ THE CRITICAL FIX: Filters your true database using your brand new 'style' field values
+    // Filters database records safely using active cluster hooks
     const matchedStylePool = productDatabase.filter(p => p && String(p.style).trim().toLowerCase() === cleanKeyword);
 
-    // Dynamic Title Header layouts matching your keyword hooks
+    // Apply custom headers dynamically
     let descriptiveTitle = `${clusterKeyword} Showcase`;
     if (cleanKeyword === 'cz') descriptiveTitle = "CZ & Silver Polish Curation";
     if (cleanKeyword === 'antique') descriptiveTitle = "Antique Temple Masterpieces";
@@ -4037,9 +4038,22 @@ function selectStyleClusterFilter(clusterKeyword) {
     if (mainTitle) mainTitle.innerText = descriptiveTitle;
     if (miniTag) miniTag.innerText = `Angel Jewellery • ${clusterKeyword}`;
 
+    // ➔ THE INLINE FORCE STABILIZER: Kills horizontal scroll and enforces clean structure globally
+    if (scrollBody) {
+        scrollBody.style.cssText = "padding: 16px 12px; overflow-x: hidden !important; width: 100%; box-sizing: border-box; background: #fafafa; flex-grow: 1;";
+    }
+
+    // Set responsive grid properties directly inline so they are applied instantly on click
+    const isMobileViewport = window.innerWidth <= 768;
+    if (isMobileViewport) {
+        grid.style.cssText = "display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;";
+    } else {
+        grid.style.cssText = "display: grid !important; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important; gap: 20px !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;";
+    }
+
     if (matchedStylePool.length === 0) {
         grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #777; font-weight: 500;">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #777; font-weight: 500; font-family:'Montserrat';">
                 <i class="fas fa-gem" style="font-size: 1.5rem; color: #e8e8ef; display: block; margin-bottom: 10px;"></i>
                 New masterpieces are currently being curated for this style segment.
             </div>`;
@@ -4050,16 +4064,22 @@ function selectStyleClusterFilter(clusterKeyword) {
             const safeTitleString = product.title.replace(/'/g, "\\'");
 
             return `
-                <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box;">
-                    <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative; cursor: pointer;">
+                <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box; width: 100%;">
+                    
+                    <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" 
+                         style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative; cursor: pointer;">
                         <img src="${product.image}" style="width: 100%; height: 100%; object-fit: cover;">
                         ${isSoldOut ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
                     </div>
-                    <div style="margin-bottom: 8px;">
+
+                    <div style="margin-bottom: 8px; text-align: left;">
                         <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${product.title}</h4>
                         <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${displayPrice}</p>
                     </div>
-                    <button class="btn-order-wa" ${isSoldOut ? 'disabled' : ''} onclick="addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');" style="width: 100%; padding: 8px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 4px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; font-family: 'Montserrat'; transition: all 0.2s;">
+
+                    <button class="btn-order-wa" ${isSoldOut ? 'disabled' : ''} 
+                            onclick="addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');" 
+                            style="width: 100%; padding: 8px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: ${isSoldOut ? '#e1e1e6 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8e8e9f !important' : '#fff !important'}; border: none; border-radius: 4px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; font-family: 'Montserrat'; transition: all 0.2s;">
                         ${isSoldOut ? 'Restocking' : 'Add to Bag'}
                     </button>
                 </div>
@@ -4070,8 +4090,7 @@ function selectStyleClusterFilter(clusterKeyword) {
     modal.style.display = "flex";
     document.body.style.overflow = "hidden"; 
     
-    const bodyScrollTrack = document.getElementById('portfolioModalScrollBody');
-    if (bodyScrollTrack) bodyScrollTrack.scrollTop = 0;
+    if (scrollBody) scrollBody.scrollTop = 0;
 }
 
 function closeStylePortfolioModal() {
