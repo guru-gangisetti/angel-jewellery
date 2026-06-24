@@ -2812,6 +2812,17 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
                     <button onclick="executeAdminOrderRefundPipeline(event, ${order.id})" style="${sharedActionStyle} background: #2a7b6a !important; color: #ffffff !important; border: none !important;">
                         <i class="fas fa-hand-holding-usd"></i> Processed Refund
                     </button>
+                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;">
+                        <i class="fas fa-undo-alt"></i> Move Back to Ordered
+                    </button>
+                    ${chatButtonHTML}
+                `;
+            }else if (isRefunded) {
+                // Refunded Tab: Just allow moving back to Ordered + Chat if adjustment is needed
+                contextButtonsHTML = `
+                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;">
+                        <i class="fas fa-undo-alt"></i> Move Back to Ordered
+                    </button>
                     ${chatButtonHTML}
                 `;
             }
@@ -4191,5 +4202,54 @@ async function executeAdminOrderRefundPipeline(event, databaseRowId) {
         alert("Sync interrupted: Unable to modify server rows.");
         actionBtn.disabled = false;
         actionBtn.innerHTML = `<i class="fas fa-hand-holding-usd"></i> Processed Refund`;
+    }
+}
+// =========================================================================
+// SUPABASE SECURE CHANNEL — REVERSE CANCELLATION & FLIP STATUS BACK TO ORDERED
+// =========================================================================
+async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
+    if (event) event.preventDefault();
+
+    const doubleCheck = confirm("⚠️ Reverse Cancellation Confirmation:\nAre you sure you want to move this order back to active status?\n\nThis will wipe out stored cancel reasons and PhonePe details.");
+    if (!doubleCheck) return;
+
+    const reverseBtn = event.currentTarget;
+    reverseBtn.disabled = true;
+    reverseBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Reversing...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${databaseRowId}`;
+
+    try {
+        const response = await fetch(patchTargetUrl, {
+            method: 'PATCH',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                status: 'Paid',          // Returns status cleanly back to the active order pool
+                cancel_reason: null,     // Wipes cancel reason column clear
+                refund_phonepe: null     // Wipes phonepe entry column clear
+            })
+        });
+
+        if (!response.ok) throw new Error(`Database rejected operation update: ${response.status}`);
+        
+        alert("✨ Order restored successfully! Row shifted back to active Pending fulfillment queue.");
+        
+        // Refresh local master dashboard arrays and redraw layouts instantly
+        if (typeof openAdminMasterConsole === 'function') {
+            await openAdminMasterConsole();
+        }
+
+    } catch (err) {
+        console.error("Reversal database adjustment execution failure caught:", err);
+        alert("Sync Error: Unable to re-route tracking metrics. Check your network link.");
+        reverseBtn.disabled = false;
+        reverseBtn.innerHTML = `<i class="fas fa-undo-alt"></i> Move Back to Ordered`;
     }
 }
