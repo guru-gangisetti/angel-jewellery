@@ -4064,7 +4064,7 @@ function selectStyleClusterFilter(clusterKeyword) {
             const safeTitleString = product.title.replace(/'/g, "\\'");
 
             return `
-                <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box; width: 100%;">
+                <div class="mosaic-tile" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box; width: 100%;">
                     
                     <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" 
                          style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative; cursor: pointer;">
