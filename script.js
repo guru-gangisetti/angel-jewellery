@@ -1966,7 +1966,7 @@ function exitConfirmationAndReset() {
 }
 
 // =========================================================================
-// SUPABASE PUBLIC CHANNEL — HIGH-FIDELITY LIVE CLIENT ORDER VISUAL TRACKER
+// SUPABASE PUBLIC CHANNEL — LIVE CLIENT ORDER VISUAL TRACKER WITH GLOBAL TOP NOTE
 // =========================================================================
 async function executeLiveOrderTrackingSearch() {
     const inputPhone = document.getElementById('trackingPhoneInput').value.trim();
@@ -2014,21 +2014,71 @@ async function executeLiveOrderTrackingSearch() {
             return;
         }
 
-        statusMsg.innerHTML = `Found <strong>${customerOrders.length}</strong> Orders:`;
+        statusMsg.innerHTML = `
+            <div style="font-family: 'Montserrat', sans-serif; text-align: left;">
+                <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: var(--text-dark-primary); font-weight: 600;">Found <strong>${customerOrders.length}</strong> Orders:</p>
+                <div style="font-size: 0.75rem; color: #77778b; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; background: #fafafa; border: 1px solid #e8e8ef; padding: 6px 12px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+                    <i class="far fa-clock" style="font-size: 0.85rem; color: var(--purple-primary);"></i> 
+                    <span>Cancellation Policy Note: Orders can be cancelled within 24 hours of placement.</span>
+                </div>
+            </div>
+        `;
         
         container.innerHTML = customerOrders.map(order => {
-            const ordStatus = String(order.status || 'Paid').trim();
-            const isShipped = ordStatus.toLowerCase() === 'shipped';
-            const displayStatus = isShipped ? "Shipped" : "Order Placed";
+            const ordPaymentId = order.payment_id || 'N/A';
+            const ordStatus = String(order.status || 'Paid').trim().toLowerCase();
+            const isShipped = ordStatus === 'shipped';
+            const isCancelled = ordStatus === 'cancelled';
             
-            const badgeStyle = isShipped 
-                ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
-                : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+            let displayStatus = "Order Placed";
+            if (isShipped) displayStatus = "Shipped";
+            if (isCancelled) displayStatus = "Cancelled";
+            
+            let badgeStyle = "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+            if (isShipped) badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);";
+            if (isCancelled) badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;";
 
             const ordDate = order.created_at ? new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'short' }) : 'N/A';
             const ordTotalAmount = order.total_amount ? (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) : '₹0';
 
-            // Logistics tracking metadata block
+            // 24-HOUR CANCELLATION TIMER MATHEMATICS
+            const orderTimestamp = order.created_at ? new Date(order.created_at).getTime() : 0;
+            const currentTimestamp = new Date().getTime();
+            const hoursElapsed = orderTimestamp ? (currentTimestamp - orderTimestamp) / (1000 * 60 * 60) : 999;
+            
+            const isWithinCancellationWindow = hoursElapsed < 24;
+            const isEligibleToCancel = isWithinCancellationWindow && !isShipped && !isCancelled;
+
+            let cancellationControlMarkup = "";
+            if (isEligibleToCancel) {
+                cancellationControlMarkup = `
+                    <div style="margin-top: 5px; width: 100%;">
+                        <button onclick="toggleCancellationFormView('${order.id}')" id="cancelTriggerBtn_${order.id}" style="background: #ffffff; color: #d9383a; border: 1px solid #d9383a; padding: 8px 14px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                            <i class="fas fa-times-circle"></i> Cancel Order
+                        </button>
+
+                        <div id="cancelFormBlock_${order.id}" style="display: none; margin-top: 12px; background: #fff5f5; border: 1px solid #d9383a; border-radius: 6px; padding: 15px; box-sizing: border-box;">
+                            <h5 style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; color: #d9383a; text-transform: uppercase; letter-spacing: 0.5px;">Cancellation Specifications</h5>
+                            
+                            <div style="margin-bottom: 10px;">
+                                <label style="display:block; font-size: 0.65rem; font-weight: 700; color: #202c55; text-transform: uppercase; margin-bottom: 4px;">Reason for Cancellation:</label>
+                                <textarea id="cancelReason_${order.id}" placeholder="Please let us know your reason..." style="width: 100%; height: 50px; padding: 8px; font-size: 0.78rem; border: 1px solid #e2e4ed; border-radius: 4px; outline: none; font-family: 'Montserrat'; resize: none; box-sizing: border-box;"></textarea>
+                            </div>
+
+                            <div style="margin-bottom: 12px;">
+                                <label style="display:block; font-size: 0.65rem; font-weight: 700; color: #202c55; text-transform: uppercase; margin-bottom: 4px;">PhonePe Number for Refund:</label>
+                                <input type="text" id="cancelPhonePe_${order.id}" maxlength="10" placeholder="e.g. 9876543210" style="width: 100%; padding: 8px; font-size: 0.78rem; border: 1px solid #e2e4ed; border-radius: 4px; outline: none; font-family: 'Montserrat'; box-sizing: border-box;">
+                            </div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="submitClientCancellationForm(event, ${order.id}, '${ordPaymentId}')" style="flex: 1; background: #d9383a; color: #fff; border: none; padding: 8px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px;">Confirm Cancel</button>
+                                <button onclick="toggleCancellationFormView('${order.id}')" style="background: #ffffff; color: #777; border: 1px solid #e2e4ed; padding: 8px 12px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; text-transform: uppercase;">Keep Order</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             let logisticsMetadataHTML = ""; 
             if (isShipped) {
                 const partner = order.courier || 'Standard Logistics';
@@ -2040,7 +2090,6 @@ async function executeLiveOrderTrackingSearch() {
                 `;
             }
 
-            // Parse cart items and imagery arrays
             const itemNamesArray = (order.order_items || '').split(',').map(str => str.trim());
             const itemImagesArray = (order.order_images || '').split(',').map(str => str.trim());
 
@@ -2078,7 +2127,7 @@ async function executeLiveOrderTrackingSearch() {
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
                     <div style="text-align: left; flex: 1;">
                         <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                            Reference ID: <strong style="color: var(--purple-primary);">#${order.id}</strong>
+                            Reference ID: <strong style="color: var(--purple-primary);">#${ordPaymentId}</strong>
                         </span>
                         <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
                             ${order.customer_name}
@@ -2115,6 +2164,8 @@ async function executeLiveOrderTrackingSearch() {
                     <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
                     <span style="color: var(--text-muted); font-weight: 600;">Shipping Destination:</span> ${order.address}
                 </div>
+
+                ${cancellationControlMarkup}
 
             </div>
             `;
@@ -2228,7 +2279,9 @@ function openAdminMasterConsole(event) {
             "Courier": order.courier || 'Standard Logistics',
             "courier": order.courier || 'Standard Logistics',
             "Tracking Number": order.tracking_number || 'N/A',
-            "tracking_number": order.tracking_number || 'N/A'
+            "tracking_number": order.tracking_number || 'N/A',
+            "cancel_reason": order.cancel_reason || '',
+            "refund_phonepe": order.refund_phonepe || ''
         }));
         
         statusMsg.innerHTML = "";
@@ -2398,14 +2451,17 @@ function switchAdminConsoleTab(targetTabKey) {
     
     const pendingBtn = document.getElementById('adminTabPendingBtn');
     const shippedBtn = document.getElementById('adminTabShippedBtn');
+    const cancelledBtn = document.getElementById('adminTabCancelledBtn'); // Targeted matching button ID
     
-    if (targetTabKey === 'pending') {
-        pendingBtn.style.cssText = "background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-        shippedBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    } else {
-        shippedBtn.style.cssText = "background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary); padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-        pendingBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    }
+    // Reset background maps
+    if (pendingBtn) pendingBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+    if (shippedBtn) shippedBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+    if (cancelledBtn) cancelledBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
+    
+    // Highlight selected node context rules
+    if (targetTabKey === 'pending' && pendingBtn) pendingBtn.style.setProperty("background", "var(--purple-primary)", "important"), pendingBtn.style.setProperty("color", "#fff", "important");
+    if (targetTabKey === 'shipped' && shippedBtn) shippedBtn.style.setProperty("background", "var(--purple-primary)", "important"), shippedBtn.style.setProperty("color", "#fff", "important");
+    if (targetTabKey === 'cancelled' && cancelledBtn) cancelledBtn.style.setProperty("background", "var(--purple-primary)", "important"), cancelledBtn.style.setProperty("color", "#fff", "important");
     
     renderSegregatedAdminOrders();
 }
@@ -2538,13 +2594,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =========================================================================
-// ANGEL JEWELLERY — RESPONSIVE ADMINISTRATIVE CONSOLE LAYOUT (UPDATED)
+// ANGEL JEWELLERY — THREE-TAB RESPONSIVE ADMINISTRATIVE CONSOLE LAYOUT
 // =========================================================================
 function renderSegregatedAdminOrders() {
     const statusMsg = document.getElementById('adminConsoleStatus');
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     const pendingCountSpan = document.getElementById('adminPendingCount');
     const shippedCountSpan = document.getElementById('adminShippedCount');
+    const cancelledCountSpan = document.getElementById('adminCancelledCount'); // Ensure this ID is added in index.html to your third tab badge
     
     const pendingValueHeading = document.getElementById('analyticsPendingValue');
     const shippedValueHeading = document.getElementById('analyticsShippedValue');
@@ -2558,59 +2615,48 @@ function renderSegregatedAdminOrders() {
     let accumulatedShippedSum = 0;
 
     adminOrdersCache.forEach(order => {
-        const rawTotalPaidString = String(order.total_amount || order['Total Amount'] || '0');
+        const rawTotalPaidString = String(order.total_amount || '0');
         const numericValue = parseFloat(rawTotalPaidString.replace(/[^0-9.]/g, '')) || 0;
-        const statusStr = String(order.status || order['Status'] || '').trim().toLowerCase();
+        const statusStr = String(order.status || '').trim().toLowerCase();
         
         if (statusStr === 'shipped') {
             accumulatedShippedSum += numericValue;
-        } else {
+        } else if (statusStr !== 'cancelled' && statusStr !== 'refunded') {
             accumulatedPendingSum += numericValue;
         }
     });
 
-    // Calculate total transactional volume velocity across both states
     const combinedTotalSum = accumulatedPendingSum + accumulatedShippedSum;
 
     if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
     if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
-    // ➔ Render the combined luxury portfolio scale value text
     if (combinedValueHeading) combinedValueHeading.innerText = formatCurrency(combinedTotalSum);
 
-    const pendingOrdersList = adminOrdersCache.filter(order => String(order.status || order['Status'] || '').trim().toLowerCase() !== 'shipped');
-    const shippedOrdersList = adminOrdersCache.filter(order => String(order.status || order['Status'] || '').trim().toLowerCase() === 'shipped');
+    // Segregate cache matrices into 3 groups
+    const pendingOrdersList = adminOrdersCache.filter(order => {
+        const s = String(order.status || '').trim().toLowerCase();
+        return s !== 'shipped' && s !== 'cancelled' && s !== 'refunded';
+    });
+    const shippedOrdersList = adminOrdersCache.filter(order => String(order.status || '').trim().toLowerCase() === 'shipped');
+    const cancelledOrdersList = adminOrdersCache.filter(order => {
+        const s = String(order.status || '').trim().toLowerCase();
+        return s === 'cancelled' || s === 'refunded';
+    });
 
     if (pendingCountSpan) pendingCountSpan.innerText = pendingOrdersList.length;
     if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
+    if (cancelledCountSpan) cancelledCountSpan.innerText = cancelledOrdersList.length;
 
-    let targetDisplayDataset = (currentAdminActiveTab === 'pending') ? pendingOrdersList : shippedOrdersList;
-    const aggregateRevenue = targetDisplayDataset.reduce((sum, item) => sum + (parseFloat(item.total_amount) || 0), 0);
-    const pendingShipmentsCount = targetDisplayDataset.filter(item => String(item.status).toLowerCase() !== 'shipped').length;
-
-    const summaryWidgetHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; font-family:'Montserrat';">
-            <div style="background: #fafafa; border: 1px solid #e8e8ef; padding: 14px; border-radius: 6px; text-align: left;">
-                <span style="font-size: 0.65rem; color: #777; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block;">Tabular Net Volume</span>
-                <strong style="font-size: 1.25rem; color: #202c55; font-weight: 700; margin-top: 4px; display: block;">${formatCurrency(aggregateRevenue)}</strong>
-            </div>
-            <div style="background: #fafafa; border: 1px solid #e8e8ef; padding: 14px; border-radius: 6px; text-align: left;">
-                <span style="font-size: 0.65rem; color: #777; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block;">Awaiting Dispatch</span>
-                <strong style="font-size: 1.25rem; color: #ff1493; font-weight: 700; margin-top: 4px; display: block;">${pendingShipmentsCount} Rows</strong>
-            </div>
-        </div>
-    `;
+    let targetDisplayDataset = pendingOrdersList;
+    if (currentAdminActiveTab === 'shipped') targetDisplayDataset = shippedOrdersList;
+    if (currentAdminActiveTab === 'cancelled') targetDisplayDataset = cancelledOrdersList;
 
     if (adminConsoleSearchQueryString) {
         targetDisplayDataset = targetDisplayDataset.filter(order => {
-            const clientName = String(order['Client Name'] || order.customer_name || '').toLowerCase();
-            const phoneNum = String(order['Phone'] || order.phone || '').toLowerCase();
-            const paymentId = String(order['Payment ID'] || order.payment_id || '').toLowerCase();
-            const destination = String(order['Address'] || order.address || '').toLowerCase();
-            
-            return clientName.includes(adminConsoleSearchQueryString) || 
-                   phoneNum.includes(adminConsoleSearchQueryString) || 
-                   paymentId.includes(adminConsoleSearchQueryString) ||
-                   destination.includes(adminConsoleSearchQueryString);
+            const clientName = String(order.customer_name || '').toLowerCase();
+            const phoneNum = String(order.phone || '').toLowerCase();
+            const paymentId = String(order.payment_id || '').toLowerCase();
+            return clientName.includes(adminConsoleSearchQueryString) || phoneNum.includes(adminConsoleSearchQueryString) || paymentId.includes(adminConsoleSearchQueryString);
         });
     }
 
@@ -2626,77 +2672,75 @@ function renderSegregatedAdminOrders() {
         return;
     }
 
-    if (!document.getElementById('adminResponsiveStylesTag')) {
-        const styleSheetNode = document.createElement("style");
-        styleSheetNode.id = "adminResponsiveStylesTag";
-        styleSheetNode.innerHTML = `
-            .admin-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px; }
-            .admin-header-left { flex: 1; text-align: left; }
-            .admin-header-right { text-align: right; display: flex; gap: 12px; align-items: center; }
-            .admin-shipping-bar { display: flex; flex-direction: column; background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #e8e8ef; gap: 15px; }
-            .admin-shipping-info-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; width: 100%; }
-            .admin-actions-flex-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
-            .admin-actions-flex-wrapper .btn-admin-action-unit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; transition: all 0.2s; white-space: nowrap; font-family: 'Montserrat', sans-serif; cursor: pointer; text-decoration: none; height: 35px; box-sizing: border-box; flex: 1; }
-            
-            .courier-allocation-panel { background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 16px; display: none; width: 100%; box-sizing: border-box; animation: fadeInForm 0.3s ease; }
-            @keyframes fadeInForm { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-            
-            @media (max-width: 768px) {
-                #adminAnalyticsStrip { grid-template-columns: 1fr !important; gap: 10px; }
-                .admin-card-header { flex-direction: column; gap: 12px; align-items: stretch; }
-                .admin-header-right { text-align: left; justify-content: space-between; border-top: 1px solid #f1f1f5; padding-top: 10px; width: 100%; }
-                .admin-shipping-info-row { flex-direction: column; align-items: stretch; gap: 12px; }
-                .admin-actions-flex-wrapper { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; }
-                .admin-actions-flex-wrapper .btn-admin-action-unit { width: 100%; display: flex; justify-content: center; font-size: 0.68rem; padding: 8px 6px; }
-            }
-        `;
-        document.head.appendChild(styleSheetNode);
-    }
+    const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
 
-     const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
-    if (currentAdminLayoutViewMode === "table") {
+    if (currentAdminLayoutViewMode === "table" && typeof renderTabularSpreadsheetAdminOrders === 'function') {
         renderTabularSpreadsheetAdminOrders(chronologicallyReversedStack);
     } else {
         ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
-            const ordStatus = String(order.status || order['Status'] || '').trim();
-            const ordPaymentId = order['Payment ID'] || order.payment_id || 'N/A';
-            const ordClientName = order['Client Name'] || order.customer_name || 'Anonymous';
-            const ordPhone = String(order['Phone'] || order.phone || '');
-            const ordAddress = order['Address'] || order.address || '';
-            const ordDate = order['Date'] || (order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A');
-            const ordTotalAmount = order['Total Paid'] || (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) || '₹0';
+            const ordStatus = String(order.status || 'Paid').trim();
+            const ordPaymentId = order.payment_id || 'N/A';
+            const ordClientName = order.customer_name || 'Anonymous';
+            const ordPhone = String(order.phone || '').replace(/[^0-9]/g, '');
+            const ordAddress = order.address || '';
+            const ordDate = order.Date || 'N/A';
+            const ordTotalAmount = typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount;
 
             const isShipped = ordStatus.toLowerCase() === 'shipped';
-            const displayStatus = isShipped ? "Shipped" : "Order Placed";
-            const badgeStyle = isShipped 
-                ? "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);" 
-                : "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+            const isCancelled = ordStatus.toLowerCase() === 'cancelled';
+            const isRefunded = ordStatus.toLowerCase() === 'refunded';
 
-            const cleanPhone = ordPhone.replace(/[^0-9]/g, '');
-            const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status has been updated to: *${displayStatus}*! ✨\n\nThank you for choosing luxury.`;
-            const whatsappUpdateLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(clientMessage)}`;
+            const safeName = ordClientName.replace(/'/g, "\\'");
+            const safePhone = ordPhone.trim();
+            const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
 
-            let shippedActionButtonHTML = "";
-            let logisticsMetadataHTML = ""; 
-            
-            if (!isShipped) {
-                shippedActionButtonHTML = `
-                    <button class="btn-admin-action-unit" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary); color: #ffffff; border: 1px solid var(--purple-primary);">
+            let badgeStyle = "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
+            if (isShipped) badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);";
+            if (isCancelled) badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;";
+            if (isRefunded) badgeStyle = "background: rgba(42, 123, 106, 0.1); color: #2a7b6a;";
+
+            const clientMessage = `Hello ${ordClientName},\n\nRegarding your Angel Jewellery cancelled order request...`;
+            const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
+            const sharedActionStyle = "display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; height: 36px !important; padding: 0 14px !important; font-size: 0.72rem !important; font-weight: 700 !important; text-transform: uppercase !important; font-family: 'Montserrat', sans-serif !important; letter-spacing: 0.5px !important; border-radius: 4px !important; cursor: pointer !important; text-decoration: none !important; box-sizing: border-box !important; transition: all 0.2s ease !important; white-space: nowrap !important; margin: 0 !important; line-height: 1 !important;";
+            const chatButtonHTML = `
+                <a href="${whatsappUpdateLink}" target="_blank" style="${sharedActionStyle} background: #ffffff !important; color: #25d366 !important; border: 1px solid #25d366 !important;" onmouseover="this.style.background='#25d366' !important; this.style.color='#fff' !important;" onmouseout="this.style.background='#fff' !important; this.style.color='#25d366' !important;">
+                    <i class="fab fa-whatsapp" style="font-size: 0.9rem;"></i> Chat
+                </a>
+            `;
+
+            let contextButtonsHTML = chatButtonHTML;
+
+            if (!isShipped && !isCancelled && !isRefunded) {
+                // Pending Tab: Ship + Chat
+                contextButtonsHTML = `
+                    <button onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="${sharedActionStyle} background: var(--purple-primary, #202c55) !important; color: #ffffff !important; border: none !important;">
                         <i class="fas fa-shipping-fast"></i> Ship
                     </button>
+                    ${chatButtonHTML}
                 `;
-            } else {
-                const partner = order['Courier'] || order.courier || 'Standard Logistics';
-                const trackingNum = order['Tracking Number'] || order.tracking_number || 'N/A';
-                logisticsMetadataHTML = `
-                    <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; text-align: center">
-                        <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
+            } else if (isCancelled) {
+                // Cancelled Tab: Processed Refund + Chat
+                contextButtonsHTML = `
+                    <button onclick="executeAdminOrderRefundPipeline(event, ${order.id})" style="${sharedActionStyle} background: #2a7b6a !important; color: #ffffff !important; border: none !important;">
+                        <i class="fas fa-hand-holding-usd"></i> Processed Refund
+                    </button>
+                    ${chatButtonHTML}
+                `;
+            }
+
+            // Dynamic block layout displaying custom cancel reason and PhonePe details if populated
+            let cancelDetailsBlockHTML = "";
+            if (isCancelled || isRefunded) {
+                cancelDetailsBlockHTML = `
+                    <div style="background: #fffdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; margin-top: 10px; font-size: 0.8rem; font-family:'Montserrat'; text-align: left; width: 100%; box-sizing: border-box;">
+                        <div style="margin-bottom: 6px;"><strong style="color:#d9383a;">Cancellation Reason:</strong> ${order.cancel_reason || 'Not Specified'}</div>
+                        <div><strong style="color:var(--purple-primary, #202c55);">PhonePe Refund Number:</strong> <span style="font-weight:700;">+91 ${order.refund_phonepe || 'N/A'}</span></div>
                     </div>
                 `;
             }
-            
-            const itemNamesArray = (order['Order Items'] || order.order_items || '').split(',').map(str => str.trim());
-            const itemImagesArray = (order['Order Images'] || order.order_images || '').split(',').map(str => str.trim());
+
+            const itemNamesArray = (order.order_items || '').split(',').map(str => str.trim());
+            const itemImagesArray = (order.order_images || '').split(',').map(str => str.trim());
 
             const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
                 if (!itemString) return '';
@@ -2712,103 +2756,88 @@ function renderSegregatedAdminOrders() {
                 return `
                     <tr style="border-bottom: 1px solid #f1f1f5;">
                         <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
+                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff;">
                                 <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                             </div>
                         </td>
-                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
-                            ${parsedTitle}
-                        </td>
-                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
-                            ${parsedQuantity}
-                        </td>
+                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116;">${parsedTitle}</td>
+                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center;">${parsedQuantity}</td>
                     </tr>
                 `;
             }).join('');
 
-            const safeName = ordClientName.replace(/'/g, "\\'");
-            const safePhone = ordPhone.replace(/'/g, "\\'");
-            const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
-
             return `
-            <div style="background: #ffffff; border: 1px solid var(--purple-primary); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left;">
+            <div style="background: #ffffff; border: 1px solid var(--purple-primary, #202c55); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); font-family: 'Montserrat', sans-serif;">
                 
-                <div class="admin-card-header">
-                    <div class="admin-header-left">
-                        <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                            Transaction ID: <strong style="color: var(--purple-primary);">${ordPaymentId}</strong>
+                <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
+                    <div class="admin-header-left" style="text-align: left; flex: 1;">
+                        <span style="font-size: 0.68rem; color: var(--text-muted, #777); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
+                            Transaction ID: <strong style="color: var(--purple-primary, #202c55);">${ordPaymentId}</strong>
                         </span>
-                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
+                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary, #202c55); font-family: 'Montserrat', sans-serif;">
                             ${ordClientName}
                         </h4>
                     </div>
-                    <div class="admin-header-right">
+                    <div class="admin-header-right" style="text-align: right; display: flex; gap: 12px; align-items: center;">
                         <div style="line-height: 1.3;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">${ordDate}</span>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block;">${ordTotalAmount}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted, #777); display: block; font-weight: 600;">${ordDate}</span>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary, #202c55); display: block;">${ordTotalAmount}</span>
                         </div>
-                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                            <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
-                                ${displayStatus}
-                            </span>
-                            ${logisticsMetadataHTML}
-                        </div>
+                        <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
+                            ${order.status || 'Paid'}
+                        </span>
                     </div>
                 </div>
 
                 <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
                     <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
-                        <thead>
-                            <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
-                                <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
-                                <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece</th>
-                                <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Qty</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             ${inventoryRowsHTML}
                         </tbody>
                     </table>
                 </div>
 
-                <div class="admin-shipping-bar">
-                    <div class="admin-shipping-info-row">
-                        <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
+                <!-- ➔ LOGISTICS BAR CONTAINER OVERRIDE -->
+                <div style="display: flex; background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #e8e8ef; flex-direction: column; gap: 15px; width: 100%; box-sizing: border-box;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
+                        <!-- Destination Layout Block -->
+                        <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4; text-align: left; flex: 1; min-width: 200px;">
                             <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
-                            <span style="color: var(--text-muted); font-weight: 600;">Ship To:</span> ${ordAddress}
+                            <span style="color: var(--text-muted, #777); font-weight: 600;">Ship To:</span> ${ordAddress}
                         </div>
                         
-                        <div class="admin-actions-flex-wrapper">
-                            <button class="btn-admin-action-unit" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background: transparent; color: var(--text-dark-primary); border: 1px solid var(--border-subtle, #e8e8ef);" title="Copy Address Tag">
+                        <!-- Fixed, Clean Horizontal Button Row Layout -->
+                        <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: nowrap;">
+                            <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="${sharedActionStyle} background: transparent !important; color: var(--text-dark-primary, #111116) !important; border: 1px solid #e8e8ef !important;" title="Copy Address Tag">
                                 <i class="far fa-copy"></i> Label
                             </button>
-                            <a href="tel:${cleanPhone}" class="btn-admin-action-unit" style="background: #ffffff; color: var(--purple-primary); border: 1px solid var(--purple-primary);" title="Call Client">
-                                <i class="fas fa-phone-alt"></i> ${cleanPhone}
+                            
+                            <a href="tel:${ordPhone}" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;" title="Call Client">
+                                <i class="fas fa-phone-alt"></i> Call
                             </a>
-                            <div id="shipped-action-slot-${ordPaymentId}" style="display: contents;">${shippedActionButtonHTML}</div>
-                            <a href="${whatsappUpdateLink}" target="_blank" class="btn-admin-action-unit" style="background: #ffffff; color: #25d366; border: 1px solid #25d366;" title="WhatsApp Alert">
-                                <i class="fab fa-whatsapp"></i> Chat
-                            </a>
+                            
+                            <!-- Dynamic Tabs Action Slot Insertion Point -->
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;">
+                                ${contextButtonsHTML}
+                            </div>
                         </div>
                     </div>
 
-                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel">
-                        <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
+                    ${cancelDetailsBlockHTML}
+
+                    <!-- Hidden Courier Assign Element Form Slider -->
+                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel" style="display: none; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 16px; width: 100%; box-sizing: border-box; margin-top: 5px;">
+                        <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary, #202c55); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
                         <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                                <input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary);"> DTDC
-                            </label>
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                                <input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary);"> Delhivery
-                            </label>
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                                <input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary);"> Blue Dart
-                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary, #202c55);"> DTDC</label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary, #202c55);"> Delhivery</label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary, #202c55);"> Blue Dart</label>
                         </div>
-                        <div class="tracking-form" style="display: flex; gap: 8px;">
+                        <div style="display: flex; gap: 8px;">
                             <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
                             <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
-                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
+                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted, #777); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
                         </div>
                     </div>
 
@@ -2816,8 +2845,8 @@ function renderSegregatedAdminOrders() {
 
             </div>
             `;
+           
         }).join('');
-
     }
 }
 
@@ -3899,3 +3928,179 @@ window.addEventListener('click', (e) => {
         closeStylePortfolioModal();
     }
 });
+
+// =========================================================================
+// SUPABASE API CHANNEL — SECURE ONLINE TRANSACTION CANCELLATION ENGINE
+// =========================================================================
+async function executeClientOrderCancellationPipeline(event, id, paymentId) {
+    if (event) event.preventDefault();
+    
+    const userConfirmation = confirm(`⚠️ Cancel Order Confirmation:\nAre you sure you want to cancel your order #${id}?\n\nThis action will freeze shipping routing files instantly.`);
+    if (!userConfirmation) return;
+
+    const targetButton = event.currentTarget;
+    const originalButtonHTML = targetButton.innerHTML;
+    
+    targetButton.disabled = true;
+    targetButton.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Cancellation...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${id}`;
+
+    try {
+        const response = await fetch(patchTargetUrl, {
+            method: 'PATCH',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                status: 'Cancelled'
+            })
+        });
+
+        if (!response.ok) throw new Error(`Supabase operational rejection status: ${response.status}`);
+        
+        alert("✨ Your order has been successfully cancelled. Our team will reach out to handle your payment gateway reverse token updates.");
+        
+        // Auto-refresh tracker view context instantly to re-draw state elements
+        await executeLiveOrderTrackingSearch();
+
+    } catch (error) {
+        console.error("Cancellation stream execution broken:", error);
+        alert("Sync Error: Unable to modify tracking matrix at this time. Please contact support.");
+        targetButton.disabled = false;
+        targetButton.innerHTML = originalButtonHTML;
+    }
+}
+
+// =========================================================================
+// ➔ INLINE VIEW TOGGLER FOR CANCELLATION METRICS PANEL
+// =========================================================================
+function toggleCancellationFormView(orderId) {
+    const triggerBtn = document.getElementById(`cancelTriggerBtn_${orderId}`);
+    const formPanel = document.getElementById(`cancelFormBlock_${orderId}`);
+    if (!triggerBtn || !formPanel) return;
+
+    if (formPanel.style.display === "none") {
+        formPanel.style.display = "block";
+        triggerBtn.style.display = "none";
+    } else {
+        formPanel.style.display = "none";
+        triggerBtn.style.display = "flex";
+    }
+}
+
+// =========================================================================
+// SUPABASE API CHANNEL — SUBMIT CANCEL DETAILS TO INDEPENDENT COLUMNS
+// =========================================================================
+async function submitClientCancellationForm(event, id, paymentId) {
+    if (event) event.preventDefault();
+
+    const reasonInput = document.getElementById(`cancelReason_${id}`).value.trim();
+    const phonePeInput = document.getElementById(`cancelPhonePe_${id}`).value.trim();
+    const indiaPhoneRegex = /^[6-9]\d{9}$/;
+
+    if (!reasonInput) {
+        alert("Please specify a reason for your order cancellation request.");
+        document.getElementById(`cancelReason_${id}`).focus();
+        return;
+    }
+
+    if (!phonePeInput || phonePeInput.length !== 10 || !indiaPhoneRegex.test(phonePeInput)) {
+        alert("Please provide a valid 10-digit PhonePe number for processing your instant refund.");
+        document.getElementById(`cancelPhonePe_${id}`).focus();
+        return;
+    }
+
+    const finalUserVerify = confirm("Are you completely sure you want to cancel this transaction? This action is permanent.");
+    if (!finalUserVerify) return;
+
+    const confirmBtn = event.currentTarget;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${id}`;
+
+    try {
+        const response = await fetch(patchTargetUrl, {
+            method: 'PATCH',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                status: 'Cancelled',
+                cancel_reason: reasonInput,      // Maps cleanly to your custom column
+                refund_phonepe: phonePeInput     // Maps cleanly to your custom column
+            })
+        });
+
+        if (!response.ok) throw new Error(`Supabase operational rejection status: ${response.status}`);
+        
+        alert("✨ Order Cancelled successfully! Your refund transaction note has been submitted to our accounting desk.");
+        
+        // Re-run search query string lookup to update interface states instantly
+        await executeLiveOrderTrackingSearch();
+
+    } catch (error) {
+        console.error("Cancellation payload submission dropped:", error);
+        alert("Sync Interrupted: Unable to update server files. Please try again.");
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = "Confirm Cancel";
+    }
+}
+// =========================================================================
+// SUPABASE SECURE CHANNEL — TRANSITION CANCELLED ROW STATUS TO REFUNDED
+// =========================================================================
+async function executeAdminOrderRefundPipeline(event, databaseRowId) {
+    if (event) event.preventDefault();
+
+    const doubleCheck = confirm("Mark Refund Completed?\nThis updates status metrics into your final tracking profiles.");
+    if (!doubleCheck) return;
+
+    const actionBtn = event.currentTarget;
+    actionBtn.disabled = true;
+    actionBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${databaseRowId}`;
+
+    try {
+        const response = await fetch(patchTargetUrl, {
+            method: 'PATCH',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                status: 'Refunded' // Updates the transaction value to your clean completion state
+            })
+        });
+
+        if (!response.ok) throw new Error(`Database rejected status transition code: ${response.status}`);
+        
+        alert("✨ Status set successfully! Transaction row marked as Refunded.");
+        
+        // Refresh local cache matrices and redraw panel cards view row grids instantly
+        if (typeof openAdminMasterConsole === 'function') {
+            await openAdminMasterConsole();
+        }
+
+    } catch (err) {
+        console.error("Fulfillment adjustment trace error:", err);
+        alert("Sync interrupted: Unable to modify server rows.");
+        actionBtn.disabled = false;
+        actionBtn.innerHTML = `<i class="fas fa-hand-holding-usd"></i> Processed Refund`;
+    }
+}
