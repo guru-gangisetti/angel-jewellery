@@ -711,6 +711,11 @@ function updateCartUI() {
         activeDiscount = { code: "", type: "", value: 0 };
         if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
         if (document.getElementById('couponStatusMessage')) document.getElementById('couponStatusMessage').style.display = "none";
+        
+        // Hide shipping block if empty
+        if (document.getElementById('checkoutShippingCalcBlock')) {
+            document.getElementById('checkoutShippingCalcBlock').style.display = "none";
+        }
         return;
     }
 
@@ -733,11 +738,7 @@ function updateCartUI() {
 
         if (isThisItemOversold) {
             isOversellingDetected = true;
-            
-            // ➔ THE HIGHLIGHT: Soft red background tint with a crisp crimson border outline
             itemRowStyles += " background: #fffdfd; border: 1px solid #d9383a; border-radius: 6px; margin: 5px 0;";
-            
-            // ➔ THE REVELATION: Show exactly how many pieces are left in the vault
             stockWarningLayout = `
                 <div style="color: #d9383a; font-size: 0.72rem; font-weight: 700; margin-top: 5px; background: rgba(217, 56, 58, 0.06); padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-family: 'Montserrat';">
                     <i class="fas fa-exclamation-triangle" style="font-size: 0.65rem;"></i> Max Available: ${trueAvailableStock} Piece${trueAvailableStock !== 1 ? 's' : ''}
@@ -782,8 +783,6 @@ function updateCartUI() {
     
     // Calculate shipping progress triggers
     const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
-    const FLAT_SHIPPING_CHARGE_RATE = ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
-
     const progressBarFill = document.getElementById('shippingBarFill');
     const progressText = document.getElementById('shippingProgressText');
     
@@ -807,18 +806,25 @@ function updateCartUI() {
     }
     let netTotalBeforeShipping = grandSubtotal - discountAmount;
 
-    let shippingChargeAmount = (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) ? FLAT_SHIPPING_CHARGE_RATE : 0;
-    let finalPayableTotal = netTotalBeforeShipping + shippingChargeAmount;
+    // ➔ THE ELIGIBILITY CHECK: Runs cleanly using the calculated net total
+    if (typeof evaluateShippingEligibilityState === 'function') {
+        evaluateShippingEligibilityState(netTotalBeforeShipping);
+    }
+
+    let finalPayableTotal = netTotalBeforeShipping + currentCalculatedShippingFeeValue;
 
     let summaryHTML = `<div class="totals-row"><span>Items Subtotal:</span><span>${formatCurrency(grandSubtotal)}</span></div>`;
     if (discountAmount > 0) {
         summaryHTML += `<div class="totals-row discount-applied"><span>Discount (${activeDiscount.code}):</span><span>-${formatCurrency(discountAmount)}</span></div>`;
     }
     
-    if (shippingChargeAmount === 0 && netTotalBeforeShipping >= SHIPPING_THRESHOLD_LIMIT) {
+    // Dynamically print delivery fees based on calculation status
+    if (grandSubtotal >= SHIPPING_THRESHOLD_LIMIT) {
         summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span style="color:#25d366; font-weight:700; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.5px;">🎉 Free</span></div>`;
+    } else if (currentCalculatedShippingFeeValue > 0) {
+        summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span style="color:#2a7b6a; font-weight:700;">${formatCurrency(currentCalculatedShippingFeeValue)}</span></div>`;
     } else {
-        summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span>${formatCurrency(shippingChargeAmount)}</span></div>`;
+        summaryHTML += `<div class="totals-row"><span>Shipping Charges:</span><span style="color:#ff1493; font-weight:600; font-size:0.75rem;">Calculation Pending</span></div>`;
     }
 
     summaryHTML += `<div class="totals-row grand-payable"><span>Final Payable:</span><span>${formatCurrency(finalPayableTotal)}</span></div>`;
@@ -826,13 +832,17 @@ function updateCartUI() {
     
     finalTotalCost = finalPayableTotal; 
 
-    // Handle action checkout button updates
+    // Handle checkout button configurations
     const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
     if (primaryCheckoutButtonElement) {
         if (isOversellingDetected) {
             primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-ban"></i> Adjust Quantities to Unlock`;
             primaryCheckoutButtonElement.disabled = true;
             primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: #e1e1e6 !important; color: #8e8e9f !important; cursor: not-allowed; box-shadow: none !important;";
+        } else if (grandSubtotal < SHIPPING_THRESHOLD_LIMIT && !userShippingZipCodeVerified) {
+            primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> Calculate Shipping Above`;
+            primaryCheckoutButtonElement.disabled = true;
+            primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: #f4f4f7 !important; color: #a1a1b5 !important; cursor: not-allowed;";
         } else {
             primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-lock"></i> Secure Checkout Panel`;
             primaryCheckoutButtonElement.disabled = false;
@@ -4251,5 +4261,86 @@ async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
         alert("Sync Error: Unable to re-route tracking metrics. Check your network link.");
         reverseBtn.disabled = false;
         reverseBtn.innerHTML = `<i class="fas fa-undo-alt"></i> Move Back to Ordered`;
+    }
+}
+
+// =========================================================================
+// ANGEL JEWELLERY GLOBAL SHIPPING METRICS CONFIGURATION ENGINE
+// =========================================================================
+let currentCalculatedShippingFeeValue = 0;
+let userShippingZipCodeVerified = false;
+
+// =========================================================================
+// ANGEL JEWELLERY GLOBAL SHIPPING METRICS CONFIGURATION ENGINE
+// =========================================================================
+function evaluateShippingEligibilityState(currentCartSubtotalAmount) {
+    const shippingBlock = document.getElementById('checkoutShippingCalcBlock');
+    if (!shippingBlock) return;
+
+    if (currentCartSubtotalAmount > 0 && currentCartSubtotalAmount < 1000) {
+        shippingBlock.style.display = "block";
+    } else {
+        shippingBlock.style.display = "none";
+        currentCalculatedShippingFeeValue = 0;
+        userShippingZipCodeVerified = false;
+        const msgNode = document.getElementById('checkoutShippingStatusMessage');
+        if (msgNode) msgNode.style.display = "none";
+    }
+}
+
+/**
+ * Distance Calculation Engine mapping Indian Postal Codes from Hyderabad
+ */
+function executeCheckoutShippingCalculationPipeline() {
+    const zipInput = document.getElementById('checkoutShippingZipInput').value.trim();
+    const msgNode = document.getElementById('checkoutShippingStatusMessage');
+    const indiaZipRegex = /^[1-9][0-9]{5}$/;
+
+    if (!zipInput || !indiaZipRegex.test(zipInput)) {
+        alert("Please enter a valid 6-digit Indian Postal PIN code.");
+        document.getElementById('checkoutShippingZipInput').focus();
+        return;
+    }
+
+    msgNode.style.display = "block";
+    msgNode.style.color = "#202c55";
+    msgNode.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Calculating distance variables...`;
+
+    // Extract PIN prefix indicators
+    const zipPrefixThree = parseInt(zipInput.substring(0, 3));
+    let calculatedDistanceInKilometers = 999; 
+
+    // DISTANCE ESTIMATION ALGORITHM MATRIX RELATIVE TO HYDERABAD MAIN HUB
+    if (zipPrefixThree === 500) {
+        calculatedDistanceInKilometers = 15; 
+    } else if (zipPrefixThree >= 501 && zipPrefixThree <= 509) {
+        calculatedDistanceInKilometers = 120;
+    } else if (zipPrefixThree >= 515 && zipPrefixThree <= 535) {
+        calculatedDistanceInKilometers = 380;
+    } else if (zipPrefixThree >= 560 && zipPrefixThree <= 591) {
+        calculatedDistanceInKilometers = 490;
+    }
+
+    // TARIFF COST EVALUATION RANGE ENGINE
+    if (calculatedDistanceInKilometers <= 200) {
+        currentCalculatedShippingFeeValue = 50;
+        msgNode.style.color = "#2a7b6a";
+        msgNode.innerHTML = `✅ Distance: ~${calculatedDistanceInKilometers} km | Shipping Fee: <strong>₹50</strong> applied.`;
+        userShippingZipCodeVerified = true;
+    } else if (calculatedDistanceInKilometers > 200 && calculatedDistanceInKilometers <= 500) {
+        currentCalculatedShippingFeeValue = 100;
+        msgNode.style.color = "#2a7b6a";
+        msgNode.innerHTML = `✅ Distance: ~${calculatedDistanceInKilometers} km | Shipping Fee: <strong>₹100</strong> applied.`;
+        userShippingZipCodeVerified = true;
+    } else {
+        currentCalculatedShippingFeeValue = 150;
+        msgNode.style.color = "#202c55";
+        msgNode.innerHTML = `✈️ Long Distance Delivery | Shipping Fee: <strong>₹150</strong> applied.`;
+        userShippingZipCodeVerified = true;
+    }
+
+    // ➔ REFRESH CART PANEL INSTEAD OF BROKEN METHOD
+    if (typeof updateCartUI === 'function') {
+        updateCartUI();
     }
 }
