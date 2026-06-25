@@ -41,7 +41,7 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
             #productGrid {
                 display: grid !important;
                 grid-template-columns: repeat(2, 1fr) !important;
-                gap: 12px !important;
+                gap: 5px !important;
                 width: 100% !important;
                 padding: 0 4px !important;
                 box-sizing: border-box !important;
