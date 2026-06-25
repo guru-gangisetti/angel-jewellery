@@ -1311,6 +1311,19 @@ function openQuickViewShield(id) {
     document.getElementById('qvImage').src = product.image;
     document.getElementById('qvTitle').innerText = product.title;
     document.getElementById('qvCategory').innerText = product.category.toUpperCase();
+
+    const descContainer = document.getElementById('qvDescription');
+    if (descContainer) {
+        // Fallback placeholder text if the piece does not have an active description in Supabase
+        descContainer.innerText = product.description ? product.description.trim() : "Handcrafted with premium materials. This elegant curation reflects unparalleled luxury and design precision.";
+    }
+
+    const specPlating = document.getElementById('qvSpecPlating');
+    if (specPlating) {
+        if (product.style === 'cz') specPlating.innerText = "Silver / Rhodium Polish";
+        else if (product.style === 'antique') specPlating.innerText = "Antique Temple Gold Tone";
+        else specPlating.innerText = "Premium Gold Polish";
+    }
     
     const priceContainer = document.getElementById('qvPrice');
     if (priceContainer) {
@@ -1324,44 +1337,30 @@ function openQuickViewShield(id) {
         }
     }
 
-    // =========================================================================
-    // ➔ NEW LOGIC: VAULT SCARCITY REAL-TIME EVALUATOR
-    // =========================================================================
     const scarcityIndicator = document.getElementById('qvVaultScarcityIndicator');
     if (scarcityIndicator) {
         const itemBadgeLower = String(product.badge || '').trim().toLowerCase();
         
-        // 1. Determine stock level gracefully (checks properties, drops back to helper configurations)
-        let simulatedStock = typeof product.stock === 'number' ? product.stock : 12;
-        if (itemBadgeLower === 'sold out') simulatedStock = 0;
-        else if (itemBadgeLower === 'limited' || itemBadgeLower.includes('exclusive')) simulatedStock = 2;
-        else if (itemBadgeLower === 'hot' || itemBadgeLower === 'trending') simulatedStock = 4;
+        // ➔ THE CRITICAL LOOK-UP FIX: Pull live data accurately from your Master Cache instead of product.stock
+        const liveInventoryCacheData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        let dynamicStockCount = liveInventoryCacheData ? parseInt(liveInventoryCacheData.stock) : 5;
+        
+        // If your badge text reads sold out, override stock count to 0 safety check
+        if (itemBadgeLower === 'sold out' || itemBadgeLower.includes('sold')) {
+            dynamicStockCount = 0;
+        }
 
-        // 2. Render targeted premium copy based on current allocation thresholds
-        if (simulatedStock === 0) {
-            scarcityIndicator.style.display = "inline-block";
-            scarcityIndicator.style.background = "rgba(108, 117, 125, 0.1)";
-            scarcityIndicator.style.color = "#6c757d";
-            scarcityIndicator.innerHTML = `<i class="fas fa-lock"></i> Stock Closed`;
-        } 
-        else if (simulatedStock <= 2) {
-            scarcityIndicator.style.display = "inline-block";
-            scarcityIndicator.style.background = "rgba(217, 56, 58, 0.1)";
-            scarcityIndicator.style.color = "#d9383a";
-            scarcityIndicator.innerHTML = `<i class="fas fa-hourglass-half fa-spin-slow" style="margin-right: 4px;"></i> Only few Left In Stock`;
-        } 
-        else if (simulatedStock <= 5) {
-            scarcityIndicator.style.display = "inline-block";
-            scarcityIndicator.style.background = "rgba(204, 164, 59, 0.1)";
-            scarcityIndicator.style.color = "#cca43b";
-            scarcityIndicator.innerHTML = `<i class="fas fa-fire" style="margin-right: 4px;"></i> High Demand Item`;
-        } 
-        else {
-            // Reassuring luxury message for stable pieces
-            scarcityIndicator.style.display = "inline-block";
-            scarcityIndicator.style.background = "rgba(42, 123, 106, 0.1)";
-            scarcityIndicator.style.color = "#2a7b6a";
-            scarcityIndicator.innerHTML = `<i class="fas fa-shield-alt" style="margin-right: 4px;"></i> Stock Guaranteed`;
+        if (dynamicStockCount <= 0) {
+            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(108,117,125,0.1); color:#6c757d; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px;";
+            scarcityIndicator.innerHTML = `<i class="fas fa-lock"></i> Restocking soon !`;
+        } else if (dynamicStockCount <= 2) {
+            // ➔ High Urgency State triggers immediately if inventory hits 1 or 2 left!
+            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(255,20,147,0.1); color:#ff1493; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px; font-weight:700;";
+            scarcityIndicator.innerHTML = `<i class="fas fa-fire" style="color:#ff1493;"></i> Only  ${dynamicStockCount} Left!`;
+        } else {
+            // Standard guarantee flag
+            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(42,123,106,0.1); color:#2a7b6a; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px;";
+            scarcityIndicator.innerHTML = `<i class="fas fa-shield-alt" style="margin-right:4px;"></i> Hand stock Available`;
         }
     }
     

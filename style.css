@@ -266,6 +266,49 @@ header.scrolled .logo img { height: 45px; }
         color: var(--pink-accent, #ff1493) !important;
     }
 @media (max-width: 768px) {
+    #quickviewModalShield {
+        padding: 0 !important;
+        align-items: flex-start !important; /* Starts content cleanly from the very top */
+    }
+
+    /* Target the inner modal card structure container wrapper */
+    #quickviewModalShield > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100vh !important; /* Forces it to span the entire screen height */
+        margin: 0 !important;
+        border-radius: 0 !important; /* Removes rounded corners for a seamless full-screen app feel */
+        display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Expand the main image wrapper container box to maximize screen width edge-to-edge */
+    #quickviewModalShield .product-img-wrapper,
+    #quickviewModalShield .product-image-container {
+        border-radius: 0 !important; /* Edge-to-edge look for the image box */
+        margin-left: -16px !important; /* Pulls image flush past modal padding margins */
+        margin-right: -16px !important;
+        width: calc(100% + 32px) !important; 
+        aspect-ratio: 1 / 1 !important;
+    }
+
+    /* Ensure close button sits prominently over the image area */
+    #quickviewModalShield button[onclick="closeQuickViewShield()"] {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(4px) !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        z-index: 99 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    }
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
     }
