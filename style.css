@@ -266,48 +266,58 @@ header.scrolled .logo img { height: 45px; }
         color: var(--pink-accent, #ff1493) !important;
     }
 @media (max-width: 768px) {
+    /* 1. Force the main modal wrapper to take up absolute full width */
     #quickviewModalShield {
         padding: 0 !important;
-        align-items: flex-start !important; /* Starts content cleanly from the very top */
+        align-items: flex-start !important;
     }
 
-    /* Target the inner modal card structure container wrapper */
+    /* 2. Overhaul the inner card body to eliminate side margins */
     #quickviewModalShield > div {
         width: 100% !important;
         max-width: 100% !important;
-        min-height: 100vh !important; /* Forces it to span the entire screen height */
+        min-height: 100vh !important;
         margin: 0 !important;
-        border-radius: 0 !important; /* Removes rounded corners for a seamless full-screen app feel */
+        border-radius: 0 !important;
+        padding: 16px !important; /* Balanced structural padding for mobile */
+        box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
+    }
+
+    /* 3. CRITICAL: Overwrite any desktop split columns (Flex or Grid columns) */
+    #quickviewModalShield .modal-content,
+    #quickviewModalShield .modal-body,
+    #quickviewModalShield > div > div {
+        display: flex !important;
+        flex-direction: column !important; /* Force vertical stacking */
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 
-    /* Expand the main image wrapper container box to maximize screen width edge-to-edge */
-    #quickviewModalShield .product-img-wrapper,
-    #quickviewModalShield .product-image-container {
-        border-radius: 0 !important; /* Edge-to-edge look for the image box */
-        margin-left: -16px !important; /* Pulls image flush past modal padding margins */
-        margin-right: -16px !important;
-        width: calc(100% + 32px) !important; 
-        aspect-ratio: 1 / 1 !important;
+    /* 4. Ensure details container spans 100% width and completely eliminates the right space */
+    #quickviewModalShield .product-details-content,
+    #quickviewModalShield .qv-details-side,
+    #quickviewModalShield div[style*="flex"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important; /* Break desktop flex-basis proportions */
+        box-sizing: border-box !important;
     }
 
-    /* Ensure close button sits prominently over the image area */
-    #quickviewModalShield button[onclick="closeQuickViewShield()"] {
-        position: absolute !important;
-        top: 12px !important;
-        right: 12px !important;
-        background: rgba(255, 255, 255, 0.85) !important;
-        backdrop-filter: blur(4px) !important;
-        width: 36px !important;
-        height: 36px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        z-index: 99 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    /* 5. Force the image to break past margins and stretch cleanly edge-to-edge */
+    #quickviewModalShield img#qvImage {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 70vh !important;
+        object-fit: cover !important;
+        border-radius: 0 !important;
+        margin-left: -16px !important; /* Pulls image completely flush with mobile screen edge */
+        margin-right: -16px !important;
+        width: calc(100% + 32px) !important;
     }
     .brand-manifesto-banner-container {
         padding: 20px 0 !important; /* Drops the spacing slightly on mobile so users hit products faster */
