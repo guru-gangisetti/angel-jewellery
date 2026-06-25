@@ -84,6 +84,7 @@ let activeDiscount = { code: "", type: "", value: 0 };
 let adminConsoleSearchQueryString = "";
 let currentSelectedFilterCategoryKey = "all"; 
 let MASTER_LIVE_INVENTORY_CACHE = {};
+let carouselRegistryCache = []
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
 
@@ -177,7 +178,12 @@ function challengeAdminIdentityGateway(event) {
     const accessAttempt = prompt("🔒 Administrative Clearance Verification Required.\nPlease enter your Master Access Key:");
     
     if (accessAttempt === null) return;
-    
+
+    const carouselLinkNode = document.getElementById('adminCarouselMasterFooterLink');
+        if (carouselLinkNode) {
+            carouselLinkNode.style.display = 'flex'; 
+        }
+
     if (accessAttempt.trim() === masterAdminPasskey) {
         INTEGRATED_ADMIN_AUTH_STATE = true;
         
@@ -4519,6 +4525,9 @@ function executeCheckoutShippingCalculationPipeline() {
 // =========================================================================
 // 🔄 CLIENT-SIDE HIGH-PERFORMANCE IMAGE COMPRESSION & WEBP CONVERSION ENGINE
 // =========================================================================
+// =========================================================================
+// 🔄 DYNAMIC HIGH-FIDELITY COMPRESSION & RETINA-READY WEBP CONVERSION ENGINE
+// =========================================================================
 function convertImageFileToWebP(fileObject) {
     return new Promise((resolve, reject) => {
         if (fileObject.type === 'image/webp') {
@@ -4536,8 +4545,7 @@ function convertImageFileToWebP(fileObject) {
                 const offScreenCanvas = document.createElement('canvas');
                 const canvasContext = offScreenCanvas.getContext('2d');
                 
-                // ➔ THE RESIZING MATRIX: Set high-end e-commerce bounds
-                const MAX_IMAGE_DIMENSION_LIMIT = 1000; // Perfect sizing for zoom clarity
+                const MAX_IMAGE_DIMENSION_LIMIT = 1920; 
                 let targetWidth = tempImgNode.width;
                 let targetHeight = tempImgNode.height;
 
@@ -4554,13 +4562,13 @@ function convertImageFileToWebP(fileObject) {
                 offScreenCanvas.width = targetWidth;
                 offScreenCanvas.height = targetHeight;
                 
-                // Smooth out pixels during downsizing scale adjustments
+                // Enforce sharp pixel mapping over vector resizes
                 canvasContext.imageSmoothingEnabled = true;
                 canvasContext.imageSmoothingQuality = 'high';
                 
                 canvasContext.drawImage(tempImgNode, 0, 0, targetWidth, targetHeight);
                 
-                // ➔ BALANCED COMPRESSION: 0.75 quality is the industry sweet spot for e-commerce WebP
+                // ➔ LUXURY PREMIUM COMPRESSION: Bumped to 0.90 to preserve fine texture details and text sharp edges
                 offScreenCanvas.toBlob((webpBlobBinary) => {
                     if (!webpBlobBinary) {
                         return reject(new Error("Image graphic compression pipeline failed."));
@@ -4572,9 +4580,9 @@ function convertImageFileToWebP(fileObject) {
                         lastModified: Date.now()
                     });
                     
-                    console.log(`⚡ Optimized! Original: ${(fileObject.size / 1024).toFixed(1)}KB -> WebP: ${(compressedWebPFile.size / 1024).toFixed(1)}KB`);
+                    console.log(`💎 High-Fi Optimization! Original: ${(fileObject.size / 1024).toFixed(1)}KB -> WebP: ${(compressedWebPFile.size / 1024).toFixed(1)}KB`);
                     resolve(compressedWebPFile);
-                }, 'image/webp', 0.75); // Lowered from 0.82 to 0.75 for massive size drops without losing quality
+                }, 'image/webp', 0.90); 
             };
             
             tempImgNode.onerror = (err) => reject(err);
@@ -4628,3 +4636,199 @@ async function uploadProductImageToSupabaseStorage(fileObject) {
     // Return the clean public entry channel link URL
     return `${sbUrl}/storage/v1/object/public/product-images/${encodedSignature}`;
 }
+
+// =========================================================================
+// SUPABASE INTERACTION LAYER — DYNAMIC LUXURY HERO CAROUSEL ENGINE
+// =========================================================================
+async function loadLiveCarouselDatabaseEngine() {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const targetUrl = `${sbUrl}/rest/v1/Carousel?select=*&order=display_order.asc`;
+    const track = document.getElementById('carouselSliderTrack');
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
+        
+        carouselRegistryCache = await response.json();
+        
+        if (!track) return;
+        
+        if (carouselRegistryCache.length === 0) {
+            // Fallback default slide asset track layout if nothing is minted in database lines yet
+            track.innerHTML = `
+                <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; border-radius:8px; overflow:hidden;">
+                    <img src="assets/carousel/slide-1.png" style="width:100%; height:100%; object-fit:cover; display:block;">
+                </div>`;
+            return;
+        }
+
+        // Hydrate slider track window element nodes dynamically!
+        track.innerHTML = carouselRegistryCache.map(slide => `
+            <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
+                <img src="${slide.image_url}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title}">
+            </div>
+        `).join('');
+
+        // Re-initialize boundaries and active indicator dots pagination arrays cleanly
+        if (typeof initializeLuxuryBannerCarousel === 'function') {
+            window.currentCarouselActiveIndex = 0;
+            initializeLuxuryBannerCarousel();
+        }
+
+    } catch (err) {
+        console.error("❌ Failed to synchronize active carousel registry layers:", err);
+    }
+}
+
+// =========================================================================
+// 🎥 ADMIN CAROUSEL WRITE PIPELINE — CONVERT TO WEBP & SUBMIT TO DATABASE
+// =========================================================================
+async function handleAdminCarouselFormSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('carouselFormSubmitBtn');
+    if (!submitBtn) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const filePicker = document.getElementById('newCarouselFilePicker');
+        if (!filePicker || filePicker.files.length === 0) {
+            alert("Please select a campaign banner photo file asset.");
+            submitBtn.disabled = false; 
+            submitBtn.innerText = originalText;
+            return;
+        }
+
+        submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Processing & Compressing...`;
+        const chosenFile = filePicker.files[0];
+        
+        // ➔ THE WEBP CAPTURE TRIGGER: Routes directly through the browser canvas compressor
+        const finalWebpUrl = await uploadProductImageToSupabaseStorage(chosenFile);
+
+        const newSlidePayload = {
+            title: document.getElementById('newCarouselTitleInput').value.trim(),
+            display_order: parseInt(document.getElementById('newCarouselOrderInput').value) || 1,
+            image_url: finalWebpUrl // Inserts the clean, light .webp CDN link into the table row data
+        };
+
+        submitBtn.innerHTML = `<i class="fas fa-database fa-spin"></i> Saving Slide...`;
+        const response = await fetch(`${sbUrl}/rest/v1/Carousel`, {
+            method: 'POST',
+            headers: { 
+                'apikey': sbKey, 
+                'Authorization': `Bearer ${sbKey}`, 
+                'Content-Type': 'application/json', 
+                'Prefer': 'return=minimal' 
+            },
+            body: JSON.stringify(newSlidePayload)
+        });
+
+        if (!response.ok) throw new Error("Supabase rejected payload object validation matrix parameters.");
+
+        alert(`✨ Campaign slide successfully posted as WebP: ${newSlidePayload.title}`);
+        document.getElementById('adminCarouselCreatorForm').reset();
+        
+        await loadLiveCarouselDatabaseEngine(); // Reload storefront track frame visuals instantly
+        renderAdminCarouselConsoleGrid();       // Refresh active overlay lists data template
+        
+    } catch (err) {
+        console.error(err);
+        alert("Pipeline Sync Interrupted: Verify your data transmission links.");
+    } finally {
+        submitBtn.disabled = false; 
+        submitBtn.innerText = originalText;
+    }
+}
+// 3. ADMIN GRID COMPILER: Re-draw card rows inside management drawer overlay
+function renderAdminCarouselConsoleGrid() {
+    const container = document.getElementById('adminCarouselListTableContainer');
+    if (!container) return;
+
+    if (carouselRegistryCache.length === 0) {
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No carousel slide tracks minted yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+            <thead>
+                <tr style="background:#f4f4f7; color:#777; font-weight:700; border-bottom:1px solid #e8e8ef;">
+                    <th style="padding:10px; width:60px;">Preview</th>
+                    <th style="padding:10px;">Campaign Title</th>
+                    <th style="padding:10px; width:60px; text-align:center;">Seq</th>
+                    <th style="padding:10px; text-align:center; width:60px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${carouselRegistryCache.map(slide => `
+                    <tr style="border-bottom:1px solid #f1f1f5;">
+                        <td style="padding:10px; text-align:center; vertical-align:middle;">
+                            <img src="${slide.image_url}" style="width:40px; height:25px; object-fit:cover; border-radius:2px; border:1px solid #e8e8ef;">
+                        </td>
+                        <td style="padding:10px; font-weight:600; color:#202c55; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${slide.title}</td>
+                        <td style="padding:10px; text-align:center; font-weight:700; color:#ff1493;">${slide.display_order}</td>
+                        <td style="padding:10px; text-align:center; vertical-align:middle;">
+                            <button onclick="executeAdminCarouselPurgePipeline(event, ${slide.id}, '${slide.title}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; padding:4px;" title="Delete Campaign Slide">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// 5. DELETE CHANNEL: Remove campaign graphics instantly via trash can triggers
+async function executeAdminCarouselPurgePipeline(event, slideId, slideTitle) {
+    if (event) event.stopPropagation();
+    const verify = confirm(`Are you absolutely sure you want to permanently delete campaign banner: "${slideTitle}"?`);
+    if (!verify) return;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Carousel?id=eq.${slideId}`, {
+            method: 'DELETE',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error("Deletion execution tracking drop.");
+
+        await loadLiveCarouselDatabaseEngine();
+        renderAdminCarouselConsoleGrid();
+        
+    } catch (err) {
+        console.error(err);
+        alert("Unable to delete slide element entry row.");
+    }
+}
+
+// Overlay Toggle Methods
+function openAdminCarouselConsoleOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('adminCarouselConsoleOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        renderAdminCarouselConsoleGrid();
+    }
+}
+
+function closeAdminCarouselConsoleOverlay() {
+    const overlay = document.getElementById('adminCarouselConsoleOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// Trigger database load right along with database initialization loops
+document.addEventListener("DOMContentLoaded", () => {
+    loadLiveCarouselDatabaseEngine();
+});
