@@ -1444,24 +1444,24 @@ if (qvBtn) {
 
             const displayLimitStack = structuralPairingMatches.slice(0, 4);
 
-            carouselTrack.innerHTML = displayLimitStack.map(pairingItem => {
+            carouselTrack.innerHTML = structuralPairingMatches.slice(0, 4).map(pairingItem => {
                 const itemPriceRaw = typeof pairingItem.price === 'number' ? pairingItem.price : parseFloat(pairingItem.price) || 0;
+                const formattedPrice = itemPriceRaw > 0 ? `₹${itemPriceRaw.toLocaleString('en-IN')}` : 'Price on Request';
                 
                 return `
                     <div class="pairing-carousel-card" 
-                         onclick="openQuickViewShield(${pairingItem.id})"
-                         style="flex: 0 0 calc(50% - 7px); min-width: 140px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 4px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); box-sizing: border-box;">
+                         onclick="openQuickViewShield(${pairingItem.id})" 
+                         style="flex: 0 0 calc(75% - 10px); min-width: 220px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-sizing: border-box; transition: box-shadow 0.2s;">
                         
-                        <div style="width: 48px; height: 48px; min-width: 48px; aspect-ratio: 1/1; overflow: hidden; border-radius: 2px; background: #fafafa;">
-                            <img src="${pairingItem.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
+                        <!-- High-visibility larger image container layout -->
+                        <div style="width: 60px; height: 60px; min-width: 60px; overflow: hidden; border-radius: 4px; background: #fafafa; border: 1px solid #f4f4f7;">
+                            <img src="${pairingItem.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                         </div>
                         
-                        <div style="overflow: hidden; flex-grow: 1; text-align: left;">
-                            <h5 style="margin: 0 0 3px 0; font-size: 0.72rem; font-weight: 600; color: var(--text-dark-primary, #111116); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat', sans-serif;">${pairingItem.title}</h5>
-                            <p style="margin: 0; font-size: 0.75rem; font-weight: 700; color: var(--purple-primary, #202c55); font-family: 'Montserrat', sans-serif;">₹${itemPriceRaw.toLocaleString('en-IN')}</p>
+                        <div style="overflow: hidden; flex-grow: 1; text-align: left; display: flex; flex-direction: column; gap: 2px;">
+                            <h5 style="margin: 0; font-size: 0.8rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${pairingItem.title}</h5>
+                            <p style="margin: 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formattedPrice}</p>
                         </div>
-                        
-                        <i class="fas fa-chevron-right" style="font-size: 0.65rem; color: #ccc; margin-left: auto; padding-right: 2px;"></i>
                     </div>
                 `;
             }).join('');
