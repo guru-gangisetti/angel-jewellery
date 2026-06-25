@@ -1145,7 +1145,7 @@
                     <input type="number" id="formProductId" placeholder="e.g. 25" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif;">
                 </div>
                 <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Collection Category</label>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Category</label>
                     <select id="formProductCategory" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; background: #ffffff;">
                         <option value="Necklaces">Necklaces</option>
                         <option value="Chokers">Chokers</option>
@@ -1158,30 +1158,28 @@
                     </select>
                 </div>
             </div>
-
             <div>
-                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Masterpiece Title Name</label>
+                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Title</label>
                 <input type="text" id="formProductTitle" placeholder="e.g. The Royal Kundan Haar" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
             </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Price (INR raw number)</label>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Price</label>
                     <input type="number" id="formProductPrice" placeholder="18500" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
                 </div>
                 <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Stock Count Limit</label>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Stock</label>
                     <input type="number" id="formProductStock" placeholder="5" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Visual Display Badge</label>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Badge</label>
                     <input type="text" id="formProductBadge" placeholder="e.g. New, Sale, Trending, or blank" style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
                 </div>
                 <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Signature Mosaic Style</label>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Style</label>
                     <select id="formProductStyle" style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; background: #ffffff; font-weight: 500; color: #333;">
                         <option value="">None / Standard</option>
                         <option value="cz">CZ & Silver Polish</option>
@@ -1190,14 +1188,27 @@
                         <option value="navratna">Navratna & Beads</option>
                     </select>
                 </div>
-                <div>
+                <!-- <div>
                     <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Image Asset Path File URL</label>
                     <input type="text" id="formProductImage" placeholder="assets/p1.jpg" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                </div> -->
+                <div class="form-group" style="margin-bottom: 15px; text-align: left; font-family: 'Montserrat', sans-serif;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #202c55; text-transform: uppercase; margin-bottom: 6px;">
+                        <i class="fas fa-camera"></i>Image
+                    </label>
+                    
+                    <input type="file" id="formProductImageFilePicker" accept="image/*" style="width: 100%; padding: 8px; border: 1px dashed #cca43b; border-radius: 4px; font-size: 0.8rem; outline: none; box-sizing: border-box; background: #fff;">
+                    
+                    <input type="hidden" id="formProductImage" value="">
+                    
+                    <div id="adminFormImagePreviewFrame" style="display: none; margin-top: 10px; width: 60px; height: 60px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden;">
+                        <img id="adminFormImagePreviewVisual" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
                 </div>
             </div>
 
             <div>
-                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Editorial Description Content</label>
+                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Description</label>
                 <textarea id="formProductDesc" rows="3" placeholder="Describe the gold weights, gemstones, or heritage patterns..." style="width: 100%; padding: 10px 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif; resize: vertical; box-sizing: border-box;"></textarea>
             </div>
 

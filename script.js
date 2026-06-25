@@ -276,6 +276,7 @@ function closeAdminFormVaultModal() {
 // 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
 document.addEventListener("DOMContentLoaded", () => {
     const adminFormNode = document.getElementById('masterJewelryAdminForm');
+    // 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
     if (adminFormNode) {
         adminFormNode.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -283,33 +284,47 @@ document.addEventListener("DOMContentLoaded", () => {
             const submitBtn = document.getElementById('formSubmitActionBtn');
             const originalButtonText = submitBtn.innerText;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Adding to Database...`;
-
-            const editingTargetRowId = document.getElementById('formActionProductId').value;
-            const isEditOperationMode = editingTargetRowId !== "";
-            
-            const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-            const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-
-            const formStockVal = parseInt(document.getElementById('formProductStock').value) || 0;
-            const computedStatusFlag = formStockVal <= 0 ? "sold" : "available";
-
-            // Structured object mapping to match your Supabase columns exactly
-            const itemPayloadObject = {
-                id: parseInt(document.getElementById('formProductId').value),
-                title: document.getElementById('formProductTitle').value.trim(),
-                category: document.getElementById('formProductCategory').value,
-                price: parseFloat(document.getElementById('formProductPrice').value) || 0,
-                stock: formStockVal,
-                badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
-                status: computedStatusFlag,
-                image: document.getElementById('formProductImage').value.trim(),
-                description: document.getElementById('formProductDesc').value.trim(),
-                style: document.getElementById('formProductStyle').value
-            };
+            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Assets...`;
 
             try {
-                let requestUrl = `${sbUrl}/rest/v1/Products`;
+                const filePicker = document.getElementById('formProductImageFilePicker');
+                let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
+
+                // ➔ TRIGGER CLOUD STORAGE UPLOAD IF A NEW FILE IS SELECTED
+                if (filePicker && filePicker.files.length > 0) {
+                    submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image...`;
+                    const uploadedFile = filePicker.files[0];
+                    finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
+                    document.getElementById('formProductImage').value = finalCalculatedImageUrl;
+                }
+
+                if (!finalCalculatedImageUrl) {
+                    alert("Please select and upload a product photo first.");
+                    submitBtn.disabled = false; 
+                    submitBtn.innerText = originalButtonText;
+                    return;
+                }
+
+                const editingTargetRowId = document.getElementById('formActionProductId').value;
+                const isEditOperationMode = editingTargetRowId !== "";
+                const formStockVal = parseInt(document.getElementById('formProductStock').value) || 0;
+                const computedStatusFlag = formStockVal <= 0 ? "sold" : "available";
+
+                const itemPayloadObject = {
+                    id: parseInt(document.getElementById('formProductId').value),
+                    title: document.getElementById('formProductTitle').value.trim(),
+                    category: document.getElementById('formProductCategory').value,
+                    price: parseFloat(document.getElementById('formProductPrice').value) || 0,
+                    stock: formStockVal,
+                    badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
+                    status: computedStatusFlag,
+                    image: finalCalculatedImageUrl,
+                    description: document.getElementById('formProductDesc').value.trim(),
+                    style: document.getElementById('formProductStyle').value
+                };
+
+                let requestUrl = `${ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL}/rest/v1/Products`;
+                const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
                 let customHeaders = {
                     'apikey': sbKey,
                     'Authorization': `Bearer ${sbKey}`,
@@ -320,7 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 let fetchOptions = {};
 
                 if (isEditOperationMode) {
-                    // Update exact record by filtering for the row ID
                     requestUrl += `?id=eq.${editingTargetRowId}`;
                     fetchOptions = {
                         method: 'PATCH',
@@ -328,7 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         body: JSON.stringify(itemPayloadObject)
                     };
                 } else {
-                    // Insert brand new product row
                     fetchOptions = {
                         method: 'POST',
                         headers: customHeaders,
@@ -338,8 +351,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const response = await fetch(requestUrl, fetchOptions);
                 if (!response.ok) throw new Error("Supabase cloud workspace rejected writing parameters.");
+                
                 closeAdminFormVaultModal();
                 await loadProductDatabaseEngine();
+                
                 if (typeof filterCatalog === "function") filterCatalog(); 
                 if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
                 if (typeof renderVaultSaleSection === "function") renderVaultSaleSection();
@@ -347,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (error) {
                 console.error("Supabase write pipeline execution breakdown caught:", error);
-                alert("Database Update Interrupted: Double-check your column naming configurations or column data types.");
+                alert("Database Update Interrupted.");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalButtonText;
@@ -4064,7 +4079,7 @@ function selectStyleClusterFilter(clusterKeyword) {
             const safeTitleString = product.title.replace(/'/g, "\\'");
 
             return `
-                <div class="mosaic-tile" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box; width: 100%;">
+                <div class="mosaic-modal-tile" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.01); text-align: center; box-sizing: border-box; width: 100%;">
                     
                     <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" 
                          style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative; cursor: pointer;">
@@ -4485,4 +4500,37 @@ function executeCheckoutShippingCalculationPipeline() {
     if (typeof updateCartUI === 'function') {
         updateCartUI();
     }
+}
+
+// =========================================================================
+// SUPABASE STORAGE COMPONENT — SECURE CLOUD FILE UPLOADER PIPELINE
+// =========================================================================
+async function uploadProductImageToSupabaseStorage(fileObject) {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    
+    // Clean spaces and special characters from the filename to prevent 400 errors
+    const safeBaseName = fileObject.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    const uniqueFileSignature = `${Date.now()}_${safeBaseName}`;
+    
+    // Explicitly URI encode the path parameters
+    const encodedSignature = encodeURIComponent(uniqueFileSignature);
+    const storageTargetBucketUrl = `${sbUrl}/storage/v1/object/product-images/${encodedSignature}`;
+
+    const uploadResponse = await fetch(storageTargetBucketUrl, {
+        method: 'POST',
+        headers: {
+            'apikey': sbKey,
+            'Authorization': `Bearer ${sbKey}`,
+            'Content-Type': fileObject.type
+        },
+        body: fileObject
+    });
+
+    if (!uploadResponse.ok) {
+        throw new Error(`Storage upload rejected by server nodes: ${uploadResponse.status}`);
+    }
+
+    // Return the clean public URL string channel cleanly
+    return `${sbUrl}/storage/v1/object/public/product-images/${encodedSignature}`;
 }
