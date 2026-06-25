@@ -233,22 +233,28 @@ function challengeAdminIdentityGateway(event) {
 // ANGEL JEWELLERY — DYNAMIC INLINE CRUD WRITE OPERATIONS METHODS
 // =========================================================================
 function openAdminFormModalForCreation(event) {
-    if (event) event.preventDefault(); // Blocks link hashes from jumping page levels
+    if (event) event.preventDefault(); 
     document.getElementById('masterJewelryAdminForm').reset();
     document.getElementById('formActionProductId').value = "";
     document.getElementById('formProductId').disabled = false;
+    
+    const previewFrame = document.getElementById('adminFormImagePreviewFrame');
+    if (previewFrame) previewFrame.style.display = "none";
+    
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Add New Item`;
     document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
 }
 
 function openAdminFormModalForEditing(event, id) {
-    if (event) event.stopPropagation(); // Block card QuickView trigger clicks from bubbling
+    if (event) event.stopPropagation();
     
     const product = productDatabase.find(p => p.id === parseInt(id));
     if (!product) return;
 
-    const stockInfo = MASTER_LIVE_INVENTORY_CACHE[id] || { stock: 5, status: 'available' };
+    // Reset file picker input selection row cleanly
+    const filePicker = document.getElementById('formProductImageFilePicker');
+    if (filePicker) filePicker.value = "";
 
     document.getElementById('formActionProductId').value = product.id;
     document.getElementById('formProductId').value = product.id;
@@ -256,6 +262,7 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('formProductTitle').value = product.title;
     document.getElementById('formProductCategory').value = product.category;
     document.getElementById('formProductPrice').value = product.price;
+    
     const liveCacheData = MASTER_LIVE_INVENTORY_CACHE[product.id];
     const trueCurrentStock = liveCacheData ? liveCacheData.stock : product.stock;
     document.getElementById('formProductStock').value = trueCurrentStock;
@@ -263,6 +270,13 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('formProductStyle').value = product.style ? String(product.style).trim().toLowerCase() : "";
     document.getElementById('formProductImage').value = product.image;
     document.getElementById('formProductDesc').value = product.description;
+
+    const previewFrame = document.getElementById('adminFormImagePreviewFrame');
+    const previewVisual = document.getElementById('adminFormImagePreviewVisual');
+    if (previewFrame && previewVisual && product.image) {
+        previewVisual.src = product.image;
+        previewFrame.style.display = "block"; // Turn on asset visibility layout
+    }
 
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
     document.getElementById('formSubmitActionBtn').innerText = "Update";
@@ -4503,34 +4517,114 @@ function executeCheckoutShippingCalculationPipeline() {
 }
 
 // =========================================================================
-// SUPABASE STORAGE COMPONENT — SECURE CLOUD FILE UPLOADER PIPELINE
+// 🔄 CLIENT-SIDE HIGH-PERFORMANCE IMAGE COMPRESSION & WEBP CONVERSION ENGINE
+// =========================================================================
+function convertImageFileToWebP(fileObject) {
+    return new Promise((resolve, reject) => {
+        if (fileObject.type === 'image/webp') {
+            return resolve(fileObject);
+        }
+
+        const imageFileReader = new FileReader();
+        imageFileReader.readAsDataURL(fileObject);
+        
+        imageFileReader.onload = (event) => {
+            const tempImgNode = new Image();
+            tempImgNode.src = event.target.result;
+            
+            tempImgNode.onload = () => {
+                const offScreenCanvas = document.createElement('canvas');
+                const canvasContext = offScreenCanvas.getContext('2d');
+                
+                // ➔ THE RESIZING MATRIX: Set high-end e-commerce bounds
+                const MAX_IMAGE_DIMENSION_LIMIT = 1000; // Perfect sizing for zoom clarity
+                let targetWidth = tempImgNode.width;
+                let targetHeight = tempImgNode.height;
+
+                if (targetWidth > MAX_IMAGE_DIMENSION_LIMIT || targetHeight > MAX_IMAGE_DIMENSION_LIMIT) {
+                    if (targetWidth > targetHeight) {
+                        targetHeight = Math.round((targetHeight * MAX_IMAGE_DIMENSION_LIMIT) / targetWidth);
+                        targetWidth = MAX_IMAGE_DIMENSION_LIMIT;
+                    } else {
+                        targetWidth = Math.round((targetWidth * MAX_IMAGE_DIMENSION_LIMIT) / targetHeight);
+                        targetHeight = MAX_IMAGE_DIMENSION_LIMIT;
+                    }
+                }
+                
+                offScreenCanvas.width = targetWidth;
+                offScreenCanvas.height = targetHeight;
+                
+                // Smooth out pixels during downsizing scale adjustments
+                canvasContext.imageSmoothingEnabled = true;
+                canvasContext.imageSmoothingQuality = 'high';
+                
+                canvasContext.drawImage(tempImgNode, 0, 0, targetWidth, targetHeight);
+                
+                // ➔ BALANCED COMPRESSION: 0.75 quality is the industry sweet spot for e-commerce WebP
+                offScreenCanvas.toBlob((webpBlobBinary) => {
+                    if (!webpBlobBinary) {
+                        return reject(new Error("Image graphic compression pipeline failed."));
+                    }
+                    
+                    const cleanFileName = fileObject.name.substring(0, fileObject.name.lastIndexOf('.')) || 'product_asset';
+                    const compressedWebPFile = new File([webpBlobBinary], `${cleanFileName}.webp`, {
+                        type: 'image/webp',
+                        lastModified: Date.now()
+                    });
+                    
+                    console.log(`⚡ Optimized! Original: ${(fileObject.size / 1024).toFixed(1)}KB -> WebP: ${(compressedWebPFile.size / 1024).toFixed(1)}KB`);
+                    resolve(compressedWebPFile);
+                }, 'image/webp', 0.75); // Lowered from 0.82 to 0.75 for massive size drops without losing quality
+            };
+            
+            tempImgNode.onerror = (err) => reject(err);
+        };
+        imageFileReader.onerror = (err) => reject(err);
+    });
+}
+
+// =========================================================================
+// SUPABASE STORAGE COMPONENT — SECURE CLOUD FILE UPLOADER PIPELINE (WEBP PATCHED)
 // =========================================================================
 async function uploadProductImageToSupabaseStorage(fileObject) {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
     
-    // Clean spaces and special characters from the filename to prevent 400 errors
-    const safeBaseName = fileObject.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    // ➔ INTERCEPT PIPELINE: Convert image file binary properties cleanly to webp format on-the-fly
+    let processedFileAsset = fileObject;
+    try {
+        processedFileAsset = await convertImageFileToWebP(fileObject);
+    } catch (compressionError) {
+        console.warn("⚠️ Canvas compression failed, falling back to original source asset layout formatting:", compressionError);
+    }
+
+    // Clean spaces and special characters from the filename to prevent URL parsing errors
+    const safeBaseName = processedFileAsset.name.replace(/[^a-zA-Z0-9.]/g, '_');
     const uniqueFileSignature = `${Date.now()}_${safeBaseName}`;
     
-    // Explicitly URI encode the path parameters
+    // Encode the path accurately
     const encodedSignature = encodeURIComponent(uniqueFileSignature);
     const storageTargetBucketUrl = `${sbUrl}/storage/v1/object/product-images/${encodedSignature}`;
+
+    console.log(`📤 Initializing direct upload to bucket for: ${uniqueFileSignature}`);
 
     const uploadResponse = await fetch(storageTargetBucketUrl, {
         method: 'POST',
         headers: {
             'apikey': sbKey,
             'Authorization': `Bearer ${sbKey}`,
-            'Content-Type': fileObject.type
+            'Content-Type': processedFileAsset.type,
+            'x-upsert': 'true'
         },
-        body: fileObject
+        body: processedFileAsset
     });
 
     if (!uploadResponse.ok) {
-        throw new Error(`Storage upload rejected by server nodes: ${uploadResponse.status}`);
+        const errorText = await uploadResponse.text();
+        console.error("❌ Supabase Storage Error Payload:", errorText);
+        throw new Error(`Storage upload rejected by server nodes: ${uploadResponse.status} - ${errorText}`);
     }
 
-    // Return the clean public URL string channel cleanly
+    // Return the clean public entry channel link URL
     return `${sbUrl}/storage/v1/object/public/product-images/${encodedSignature}`;
 }
