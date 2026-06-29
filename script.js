@@ -5,8 +5,6 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
     const mobileOverridesStyleNode = document.createElement("style");
     mobileOverridesStyleNode.id = "angelJewelryGlobalMobileCardOverrides";
     mobileOverridesStyleNode.innerHTML = `
-        /* ... keeping your existing product-card styles intact ... */
-
         /* ➔ UNIFORM SYSTEM OVERRIDES FOR THE COLLECTION/MOSAIC MODAL CONTAINER */
         #stylePortfolioModalShield, 
         .mosaic-modal-window {
@@ -39,7 +37,44 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
         }
 
         @media (max-width: 768px) {
-            /* ... keeping your existing #productGrid media query rules intact ... */
+            
+            /* 📱 INVOICE CHECKOUT MODAL: MOBILE VIEWPORT RE-ARCHITECTURE */
+            #invoiceOverlayScreen {
+                padding: 0 !important;
+                align-items: flex-start !important;
+                background: #ffffff !important; /* Seamless layout background color blend */
+            }
+
+            /* Transform floating white panel card to span absolute full screen edge-to-edge */
+            #invoiceOverlayScreen > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: 100vh !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                padding: 16px !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow-y: auto !important; /* Safe fluid scrolling track for items list profiles */
+                box-shadow: none !important;
+            }
+
+            /* Prevent elements from slipping out of bounding margins */
+            #invoiceItemsContainer,
+            #invoicePricingSummary,
+            #invoiceOverlayScreen form {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Fix pricing totals layout alignment rows */
+            #invoicePricingSummary > div {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
 
             /* 📱 MOSAIC MODAL: FORCING TRUE EDGE-TO-EDGE ABSOLUTE FULL SCREEN */
             #stylePortfolioModalShield {
@@ -917,6 +952,7 @@ function removeFromCart(id) {
 // ANGEL JEWELLERY — SHOPPING BAG ENGINE WITH VISUAL INLINE HIGHLIGHTS
 // =========================================================================
 function updateCartUI() {
+    localStorage.setItem('shoppingCart', JSON.stringify(shoppingCart));
     const cartItemsList = document.getElementById('cartItemsList');
     const cartCountBadge = document.getElementById('cartCountBadge');
     const cartTotalQty = document.getElementById('cartTotalQty');
@@ -1088,11 +1124,8 @@ function toggleWishlistEngine(event, id, targetButton) {
     const isAdding = matchIndex === -1;
 
     if (!isAdding) {
-        // Remove from wishlist memory pool
         wishlistMemory.splice(matchIndex, 1);
         if (targetButton) {
-            targetButton.classList.remove('active');
-            // ➔ THE CRITICAL INSTANT FIX: Force inner icon back to empty outline format
             const heartIcon = targetButton.querySelector('i');
             if (heartIcon) {
                 heartIcon.className = "far fa-heart";
@@ -1100,11 +1133,8 @@ function toggleWishlistEngine(event, id, targetButton) {
             }
         }
     } else {
-        // Add into wishlist memory pool
         wishlistMemory.push(id);
         if (targetButton) {
-            targetButton.classList.add('active');
-            // ➔ THE CRITICAL INSTANT FIX: Force inner icon to solid filled format
             const heartIcon = targetButton.querySelector('i');
             if (heartIcon) {
                 heartIcon.className = "fas fa-heart";
@@ -1113,13 +1143,14 @@ function toggleWishlistEngine(event, id, targetButton) {
         }
     }
     
-    // Synchronize both drawer and background gallery catalog grids instantly
     if (typeof updateWishlistUI === 'function') updateWishlistUI();
     if (typeof filterCatalog === 'function') {
-        // Pass the active input text query to keep current search filtering active
         const searchInput = document.getElementById('searchInput');
         filterCatalog(searchInput ? searchInput.value : undefined);
     } 
+
+    // ➔ WISHLIST PERSISTENCE STORAGE INJECTION
+    localStorage.setItem('wishlistMemory', JSON.stringify(wishlistMemory));
 }
 // =========================================================================
 // ANGEL JEWELLERY — WISHLIST UI CARDS RENDERING LOGIC
@@ -1648,7 +1679,29 @@ window.addEventListener('scroll', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-    // ➔ THE CRITICAL FIX: Trigger product sheet load engine immediately on app startup!
+    const storedCartPayload = localStorage.getItem('shoppingCart');
+    if (storedCartPayload) {
+        try {
+            shoppingCart = JSON.parse(storedCartPayload);
+            setTimeout(updateCartUI, 300); 
+        } catch (storageError) {
+            console.error("Failed to parse saved cart cache items matrix:", storageError);
+            shoppingCart = [];
+        }
+    }
+    const storedWishlistPayload = localStorage.getItem('wishlistMemory');
+    if (storedWishlistPayload) {
+        try {
+            wishlistMemory = JSON.parse(storedWishlistPayload);
+            // Re-trigger the Wishlist UI panel so it populates right away
+            setTimeout(() => {
+                if (typeof updateWishlistUI === 'function') updateWishlistUI();
+            }, 350);
+        } catch (wishlistStorageError) {
+            console.error("Failed to parse saved wishlist cache items:", wishlistStorageError);
+            wishlistMemory = [];
+        }
+    }
     loadProductDatabaseEngine();
     loadLiveCouponDatabaseEngine();
     initializeLuxuryBannerCarousel();
@@ -1932,15 +1985,15 @@ function openInvoiceScreen() {
     document.getElementById('invClientPhone').value = localStorage.getItem('angel_customer_phone') || "";
 
     itemsContainer.innerHTML = shoppingCart.map(item => `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #e8e8ef;">
-            <div style="display:flex; align-items:center; gap:15px; text-align:left;">
-                <img src="${item.image}" style="width:45px; height:45px; object-fit:cover; border-radius:4px; border:1px solid #e8e8ef;">
-                <div>
-                    <h4 style="margin:0; font-size:0.9rem; font-weight:600; color:var(--text-dark-primary);">${item.title}</h4>
-                    <p style="margin:2px 0 0 0; font-size:0.75rem; color:var(--text-muted); font-weight:500;">Category: ${item.category} • Qty: ${item.quantity}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e8e8ef; width: 100%; box-sizing: border-box; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; text-align: left; overflow: hidden; flex: 1;">
+                <img src="${item.image}" style="width: 45px; height: 45px; min-width: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef;">
+                <div style="overflow: hidden;">
+                    <h4 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-dark-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${item.title}</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 0.72rem; color: var(--text-muted); font-weight: 500; font-family: 'Montserrat';">Category: ${item.category} • Qty: ${item.quantity}</p>
                 </div>
             </div>
-            <span style="font-weight:600; font-size:0.9rem; color:var(--purple-primary);">${formatCurrency(item.price * item.quantity)}</span>
+            <span style="font-weight: 600; font-size: 0.88rem; color: var(--purple-primary); white-space: nowrap; font-family: 'Montserrat';">${formatCurrency(item.price * item.quantity)}</span>
         </div>
     `).join('');
 
