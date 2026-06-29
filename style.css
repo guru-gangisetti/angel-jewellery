@@ -862,7 +862,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 #productGrid {
    border: 1px solid #cca43b;
     border-radius: 12px;
-    padding: 30px 24px; /* Generous internal padding for the layout cards */
+    padding: 0px;
     margin-top: 40px;   /* ➔ THE FIX: Creates clean space separating the grid from your title */
     transition: border-color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.4s ease;
     box-sizing: border-box;

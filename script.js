@@ -548,8 +548,7 @@ function filterCatalog(passedSearchQuery) {
                 productGrid.innerHTML = `
                     <!-- THE FIX: grid-column: 1 / -1 ensures the title spans the whole top row smoothly -->
                     <div class="in-box-collection-header" style="grid-column: 1 / -1; text-align: left; padding: 10px 15px; border-bottom: 1px solid #cca43b; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
-                        <span style="color: #cca43b; font-size: 0.62rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 4px;">Now Presenting</span>
-                        <h2 style="color: #202c55; font-size: 1.35rem; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat';">${activeTabTracker}</h2>
+                        <h2 style="color: #202c55; text-align:center; font-size: 1.35rem; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat';">${activeTabTracker}</h2>
                     </div>
                     
                     <!-- We drop back into your pristine product mapping array grid elements directly -->
@@ -1429,21 +1428,17 @@ if (qvBtn) {
     const recommendationSection = document.getElementById('qvPairingRecommendationSection');
     const carouselTrack = document.getElementById('qvPairingCarouselTrack');
 
-    if (carouselTrack && productDatabase && productDatabase.length > 0) {
+    if (carouselTrack && productDatabase) {
         carouselTrack.innerHTML = ""; 
-
         const currentCategory = String(product.category || '').trim().toLowerCase();
-        const structuralPairingMatches = productDatabase.filter(item => {
-            return item && item.id !== product.id && String(item.category || '').trim().toLowerCase() === currentCategory;
-        });
+        const structuralPairingMatches = productDatabase.filter(item => item && item.id !== product.id && String(item.category || '').trim().toLowerCase() === currentCategory);
 
         if (structuralPairingMatches.length === 0) {
             if (recommendationSection) recommendationSection.style.display = "none";
         } else {
             if (recommendationSection) recommendationSection.style.display = "block";
-
-            const displayLimitStack = structuralPairingMatches.slice(0, 4);
-
+            
+            // ➔ THE CAROUSEL HINT FIX: Reduced width from 140px to 115px and height to match proportions perfectly
             carouselTrack.innerHTML = structuralPairingMatches.slice(0, 4).map(pairingItem => {
                 const itemPriceRaw = typeof pairingItem.price === 'number' ? pairingItem.price : parseFloat(pairingItem.price) || 0;
                 const formattedPrice = itemPriceRaw > 0 ? `₹${itemPriceRaw.toLocaleString('en-IN')}` : 'Price on Request';
@@ -1451,16 +1446,21 @@ if (qvBtn) {
                 return `
                     <div class="pairing-carousel-card" 
                          onclick="openQuickViewShield(${pairingItem.id})" 
-                         style="flex: 0 0 calc(75% - 10px); min-width: 220px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-sizing: border-box; transition: box-shadow 0.2s;">
+                         style="width: 60% !important; flex: 0 0 115px; min-width: 115px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; box-sizing: border-box; transition: transform 0.2s; text-align: left;">
                         
-                        <!-- High-visibility larger image container layout -->
-                        <div style="width: 60px; height: 60px; min-width: 60px; overflow: hidden; border-radius: 4px; background: #fafafa; border: 1px solid #f4f4f7;">
+                        <!-- Proportionate portrait image container box -->
+                        <div style="width: 100%; height: 115px; min-height: 115px; overflow: hidden; border-radius: 6px; background: #fafafa; border: 1px solid #f4f4f7; box-sizing: border-box;">
                             <img src="${pairingItem.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                         </div>
                         
-                        <div style="overflow: hidden; flex-grow: 1; text-align: left; display: flex; flex-direction: column; gap: 2px;">
-                            <h5 style="margin: 0; font-size: 0.8rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${pairingItem.title}</h5>
-                            <p style="margin: 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formattedPrice}</p>
+                        <!-- Styled typography detail nodes -->
+                        <div style="display: flex; flex-direction: column; gap: 1px; width: 100%; overflow: hidden;">
+                            <h5 style="margin: 0; font-size: 0.72rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat', sans-serif;">
+                                ${pairingItem.title}
+                            </h5>
+                            <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #202c55; font-family: 'Montserrat', sans-serif;">
+                                ${formattedPrice}
+                            </p>
                         </div>
                     </div>
                 `;
