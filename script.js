@@ -1,4 +1,3 @@
-
 // =========================================================================
 // 💎 ANGEL JEWELLERY — GLOBAL MULTI-GRID METADATA DECK LAYOUT OVERRIDES
 // =========================================================================
@@ -24,6 +23,19 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
             padding: 4px 0 !important;
             box-sizing: border-box !important;
             overflow-x: hidden !important; 
+        }
+
+        /* Default row layout configurations for Desktop Trust Badges */
+        .modal-trust-badges-container {
+            display: flex !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            flex-direction: row !important;
+        }
+        .trust-badge-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
         }
 
         @media (max-width: 768px) {
@@ -63,6 +75,101 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
             /* Clean structural modifications for inner tiles to prevent squeezed dimensions */
             .mosaic-modal-tile {
                 padding: 8px !important; /* Optimized card body footprint padding */
+            }
+
+            /* 📱 MOBILE VIEW CORRECTION FOR TRUST GUARANTEES (ONE BY ONE ROW) */
+            .modal-trust-badges-container {
+                flex-direction: column !important; /* Stacks trust badges vertically */
+                align-items: flex-start !important; /* Left-align items */
+                gap: 10px !important; /* Spacing between rows */
+                padding-left: 4px !important;
+            }
+            
+            .trust-badge-item {
+                font-size: 0.78rem !important; /* Accessible text size scaling */
+                width: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+
+            /* 📱 HERO CAROUSEL ADMIN DRAWER MODAL OVERRIDES (FIXED FOR image_a1e15e.png) */
+            #adminCarouselConsoleOverlay {
+                padding: 0 !important;
+                align-items: flex-start !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+            }
+
+            /* Overwrite floating window bounds to fit absolute fullscreen device viewports */
+            #adminCarouselConsoleOverlay > div:first-of-type {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: 100vh !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                border-radius: 0 !important; 
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 16px !important;
+                box-sizing: border-box !important;
+                overflow-y: auto !important; 
+                background: #ffffff !important;
+                box-shadow: none !important;
+                position: relative !important; /* Required anchor link context for absolute child tracking */
+            }
+
+            /* ➔ THE OVERWRITE FORCE: Snaps flex blocks into vertical rows[cite: 1] */
+            #adminCarouselConsoleOverlay > div:first-of-type > div,
+            #adminCarouselConsoleOverlay div[style*="display: flex"],
+            #adminCarouselConsoleOverlay div[style*="display:flex"] {
+                flex-direction: column !important;
+                display: flex !important;
+                gap: 24px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* ➔ FIX FOR CLOSE MODAL OVERLAY POSITIONING (Addresses image_a233f2.png) */
+            #adminCarouselConsoleOverlay button[onclick="closeAdminCarouselConsoleOverlay()"],
+            #adminCarouselConsoleOverlay .close, 
+            #adminCarouselConsoleOverlay span[onclick*="close"] {
+                position: absolute !important;
+                top: 20px !important;
+                right: 20px !important;
+                margin: 0 !important;
+                z-index: 9999 !important;
+                align-self: flex-end !important;
+                transform: none !important;
+                background: #ffffff !important;
+                padding: 5px !important;
+            }
+
+            /* Separate table container layout and form elements completely[cite: 1] */
+            #adminCarouselListTableContainer {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: auto !important; 
+                box-sizing: border-box !important;
+                margin: 0 0 10px 0 !important;
+                flex: none !important;
+            }
+
+            /* Prevent the tabular element columns from shrinking away[cite: 1] */
+            #adminCarouselListTableContainer table {
+                width: 100% !important;
+                min-width: 280px !important;
+            }
+
+            /* Force standard admin upload input forms out of the squashed side grid alignment[cite: 1] */
+            #adminCarouselConsoleOverlay form,
+            #adminCarouselCreatorForm {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                margin: 10px 0 0 0 !important;
+                flex: none !important;
             }
         }
     `;
