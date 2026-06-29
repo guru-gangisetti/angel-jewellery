@@ -265,6 +265,17 @@ header.scrolled .logo img { height: 45px; }
     .interactive-prop-card:hover h4 {
         color: var(--pink-accent, #ff1493) !important;
     }
+    .modal-trust-badges-container {
+        display: flex !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        flex-direction: row !important;
+    }
+    .trust-badge-item {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
 @media (max-width: 768px) {
     /* 1. Force the main modal wrapper to take up absolute full width */
     #quickviewModalShield {
@@ -347,6 +358,20 @@ header.scrolled .logo img { height: 45px; }
             flex: 0 0 75% !important; /* Comfortably shows 1 card + sneaks a preview of the next one */
             scroll-snap-align: start;
             padding: 20px 16px !important;
+        }
+        .modal-trust-badges-container {
+            flex-direction: column !important; /* Stacks rows one by one vertically */
+            align-items: flex-start !important; /* Aligns items cleanly to the left edge */
+            gap: 10px !important; /* Adds professional padding between rows */
+            padding-left: 4px !important;
+        }
+        
+        .trust-badge-item {
+            font-size: 0.78rem !important; /* Makes text slightly bigger and easy to read on mobile */
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
         }
 }
 
