@@ -1974,7 +1974,7 @@ function initiateRazorpayPaymentProcess(event) {
         "currency": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.CURRENCY_CODE,
         "name": ANGEL_STORE_CONFIG.PAYMENT_GATEWAY.MERCHANT_NAME,
         "description": "Angel Jewellery Checkout Window",
-        "image": "angel-logo.png", 
+        "image": "angel-logo-new.webp", 
         "handler": function (transactionResponse) {
             // ➔ THE CRITICAL FLASH FIX: Immediately mask the screen
             const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
