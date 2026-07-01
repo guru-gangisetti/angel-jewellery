@@ -746,54 +746,62 @@ function filterCatalog(passedSearchQuery) {
                 ` : '';
 
                 const defaultVariantId = cardVariants.length > 0 ? cardVariants[0].id : '';
-
-                return `
-                    <div class="product-card" 
-                         id="catalog-card-${product.id}"
-                         data-active-variant-id="${defaultVariantId}"
-                         onclick="openQuickViewShield(${product.id})" 
-                         style="background: #ffffff; border: 1px solid var(--purple-primary, #e8e8ef); border-radius: 8px; padding: 0px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
+                    return `<div class="product-card" 
+                        id="catalog-card-${product.id}"
+                        data-active-variant-id="${defaultVariantId}"
+                        onclick="openQuickViewShield(${product.id})" 
+                        style="background: #ffffff; border: 1px solid #f0f0f4; border-radius: 12px; padding: 10px 4px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.015); cursor: pointer; overflow: hidden; height: 100%;">
                         
                         ${adminEditInlineControlMarkup}
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
-                            <div style="flex-grow: 1; text-align: left;">
-                                ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 26px; margin-bottom: 10px; box-sizing: border-box; padding: 0 2px;">
+                            <div style="display: flex; align-items: center;">
+                                ${product.badge ? `<span class="product-badge" style="font-size: 0.58rem; padding: 3px 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; border-radius: 4px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
                             </div>
+
                             <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
                                     onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
                                     aria-label="Add to wishlist"
-                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
-                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'}; transition: color 0.2s ease;"></i>
+                                    style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fdfdfd; border: 1px solid #edf0f5; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.03); cursor: pointer; outline: none; margin: 0; padding: 0; transition: all 0.2s ease;">
+                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
                             </button>
                         </div>
 
-                       <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 6px; margin-bottom: 14px; z-index:1; display: block; height: auto; min-height: 200px;">
-                            <img id="catalog-card-img-${product.id}" src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onerror="this.src='assets/placeholder.png'">
+                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 8px; margin-bottom: 10px; z-index: 1;">
+                            <img id="catalog-card-img-${product.id}" 
+                                src="${product.image || 'assets/placeholder.png'}" 
+                                style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease;" 
+                                onerror="this.src='assets/placeholder.png'">
                         </div>
                         
-                        <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 600; margin: 0 0 4px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat', sans-serif; text-align: center;">
+                        <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div style="width: 100%;">
+                                <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 700; margin: 0 0 4px 0; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Montserrat', sans-serif;">
                                     ${displayCategory}
                                 </p>
                                 
-                                ${colorDotsHTML}
+                                <div class="card-swatch-row" style="margin-bottom: 2px; display: block;">
+                                    ${colorDotsHTML}
+                                </div>
 
-                                <h3 style="font-size: 0.88rem; font-weight: 600; margin: 8px 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif; text-align: center;">${product.title}</h3>
-                                <p id="catalog-card-price-${product.id}" style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
+                                <h3 style="font-size: 0.82rem; font-weight: 600; margin: 4px 0; color: #111116; line-height: 1.35; font-family: 'Montserrat', sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 1.5em;">
+                                    ${product.title}
+                                </h3>
+                                
+                                <p id="catalog-card-price-${product.id}" style="font-size: 0.92rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 4px 0 10px 0;">
+                                    ${displayPrice}
+                                </p>
                             </div>
                             
                             <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
                                     onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
                                     ${isSoldOut ? 'disabled' : ''} 
-                                    style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'}; box-shadow: ${isSoldOut ? 'none !important' : ''};">
-                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7 accessible;"></i> 
-                                ${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}
+                                    style="width: 100%; padding: 10px 0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: auto; font-family: 'Montserrat', sans-serif; transition: all 0.2s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'}; box-shadow: ${isSoldOut ? 'none' : '0 2px 6px rgba(32,44,85,0.1)'};">
+                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.72rem;"></i> 
+                                <span>${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}</span>
                             </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
             
             // C. ➔ THE IN-BOX TITLE CONDITION SEQUENCE (FIXED FOR GRID ALIGNMENT)

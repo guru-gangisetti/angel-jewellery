@@ -1262,6 +1262,18 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         padding: 16px !important;
         box-sizing: border-box !important;
     }
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(32,44,85,0.07) !important;
+        border-color: #dcdce6 !important;
+    }
+    .product-card:hover .product-image-container img {
+        transform: scale(1.04);
+    }
+    .wishlist-heart-btn:hover {
+        background: #ffffff !important;
+        transform: scale(1.08);
+    }
 }
 .catalog-controls {
     opacity: 1;
