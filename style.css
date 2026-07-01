@@ -885,16 +885,16 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 
 /* Luxury framing border for the product catalog container */
 #productGrid {
-   border: 1px solid #cca43b;
+   /* border: 1px solid #cca43b; */
     border-radius: 12px;
     padding: 0px;
-    margin-top: 40px;   /* ➔ THE FIX: Creates clean space separating the grid from your title */
+    margin-top: 0px;   /* ➔ THE FIX: Creates clean space separating the grid from your title */
     transition: border-color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.4s ease;
     box-sizing: border-box;
     background-color: #fafafa !important;
     display: flex !important; /* Temporarily turns container into column flow to stack title safely */
     flex-direction: column !important;
-    gap: 25px;
+    gap: 5px;
 }
 
 /* =========================================================================
@@ -989,6 +989,43 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 
 @media (max-width: 640px) {
     .review-master-card { flex: 0 0 100% !important; } /* 1 column mobile scrolling */
+
+    #adminFormDynamicVariantsContainer {
+        max-height: 350px !important; /* Grant more scroll height to view stacked rows */
+    }
+    
+    .admin-variant-input-row {
+        grid-template-columns: 1fr !important; /* Break horizontal rows down into a vertical block stack */
+        gap: 8px !important;
+        padding: 12px !important;
+        background: #fdfdfd !important;
+        border: 1px solid #cca43b !important; /* Clear gold boundary per option block */
+        margin-bottom: 5px !important;
+        position: relative !important;
+    }
+    
+    /* Give each input full responsive field layout widths */
+    .admin-variant-input-row input {
+        height: 38px !important;
+        font-size: 0.82rem !important;
+        padding: 8px 12px !important;
+    }
+    
+    .admin-variant-input-row .v-hex {
+        height: 38px !important;
+        padding: 0 !important;
+    }
+    
+    /* Style the remove button as a full bar at the bottom of the individual variant block */
+    .admin-variant-input-row button {
+        width: 100% !important;
+        height: 34px !important;
+        background: rgba(217, 56, 58, 0.05) !important;
+        border: 1px solid #d9383a !important;
+        border-radius: 4px !important;
+        margin-top: 4px !important;
+    }
+        
 }
 
 /* =========================================================================

@@ -256,8 +256,8 @@ async function loadProductDatabaseEngine() {
         const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
         const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
         
-        // Query ordered by ID so your collection stays neatly sequenced
-        const cleanFetchTargetUrl = `${sbUrl}/rest/v1/Products?select=*&order=id.asc`;
+        // Pull relational entries natively
+        const cleanFetchTargetUrl = `${sbUrl}/rest/v1/products?select=*,product_variants(*)&order=id.asc`;
 
         const databaseResponse = await fetch(cleanFetchTargetUrl, {
             method: 'GET',
@@ -271,31 +271,42 @@ async function loadProductDatabaseEngine() {
         if (!databaseResponse.ok) throw new Error(`Supabase returned status code: ${databaseResponse.status}`);
         const databasePayload = await databaseResponse.json();
 
-        // Map fields explicitly from your database columns
+        // Map fields explicitly from your new database columns
         productDatabase = databasePayload.map(item => {
             const parsedUniqueId = parseInt(item.id);
-            const verifiedPrice = parseFloat(item.price) || 0;
-            const liveStockLevel = parseInt(item.stock) ?? 0;
+            const variations = item.product_variants || [];
+            
+            // ➔ THE CORRECTION: Extract default values from the first variant row if available!
+            const defaultVariant = variations.length > 0 ? variations[0] : null;
+            
+            // Fallbacks if parent fields are null
+            const verifiedPrice = defaultVariant ? parseFloat(defaultVariant.price) : (parseFloat(item.price) || 0);
+            const verifiedImage = defaultVariant ? (defaultVariant.image_url || defaultVariant.image) : (item.image || 'assets/placeholder.png');
+            
+            const liveStockLevel = defaultVariant ? parseInt(defaultVariant.stock) : (parseInt(item.stock) ?? 0);
             const updatedStatus = liveStockLevel <= 0 ? "sold" : String(item.status || 'available').trim().toLowerCase();
 
+            // Populate Master Cache safely
             MASTER_LIVE_INVENTORY_CACHE[parsedUniqueId] = {
                 stock: liveStockLevel,
-                status: updatedStatus
+                status: updatedStatus,
+                variants: variations
             };
 
-           return {
+            return {
                 id: parsedUniqueId,
                 title: item.title,
-                price: verifiedPrice,
+                price: verifiedPrice, // Safely assigned to show the variant price on grid cards!
                 category: item.category || 'Luxury Collection',
-                image: item.image || 'assets/placeholder.png',
+                image: verifiedImage, // Safely assigned to show the variant image on grid cards!
                 badge: updatedStatus === "sold" ? "Sold Out" : (item.badge || ''),
                 description: item.description || '',
-                style: item.style ? String(item.style).trim().toLowerCase() : ''
+                style: item.style ? String(item.style).trim().toLowerCase() : '',
+                product_variants: variations
             };
         });
 
-        console.log(`✨ Success! Loaded ${productDatabase.length} items from Supabase.`);
+        console.log(`✨ Success! Relational database maps aligned. Loaded ${productDatabase.length} items.`);
 
         if (typeof generateDynamicCatalogFilters === 'function') {
             generateDynamicCatalogFilters();
@@ -305,7 +316,6 @@ async function loadProductDatabaseEngine() {
         console.error('Critical Supabase catalog extraction breakdown caught:', error);
     }
 }
-
 // =========================================================================
 // ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (LOCK AUTO-HIDE)
 // =========================================================================
@@ -385,6 +395,12 @@ function openAdminFormModalForCreation(event) {
     const previewFrame = document.getElementById('adminFormImagePreviewFrame');
     if (previewFrame) previewFrame.style.display = "none";
     
+    // Empty out any leftover fields from previous edit sessions
+    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
+    if (variantRowsContainer) {
+        variantRowsContainer.innerHTML = ""; 
+    }
+
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Add New Item`;
     document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
@@ -425,6 +441,18 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
     document.getElementById('formSubmitActionBtn').innerText = "Update";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
+    // ➔ INSERT THIS LINE INSIDE openAdminFormModalForEditing RIGHT BELOW THE OTHER DATA ELEMENT HYDRATIONS:
+    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
+    if (variantRowsContainer) {
+        variantRowsContainer.innerHTML = ""; // Clean layout slate fields
+        if (product.product_variants && product.product_variants.length > 0) {
+            product.product_variants.forEach(variant => {
+                appendNewVariantRowToAdminForm(variant); // Hydrate structural row indices into view fields
+            });
+        } else {
+            appendNewVariantRowToAdminForm(); // Append empty base container row if none exist
+        }
+    }
 }
 
 function closeAdminFormVaultModal() {
@@ -433,100 +461,159 @@ function closeAdminFormVaultModal() {
 
 // 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
 document.addEventListener("DOMContentLoaded", () => {
-    const adminFormNode = document.getElementById('masterJewelryAdminForm');
-    // 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
-    if (adminFormNode) {
-        adminFormNode.addEventListener("submit", async (e) => {
-            e.preventDefault();
+    // ➔ FINAL BULLETPROOF FORM SUBMISSION ROUTINE (With Integrated File Upload Tracking)
+const adminFormNode = document.getElementById('masterJewelryAdminForm');
+if (adminFormNode) {
+    adminFormNode.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('formSubmitActionBtn');
+        const originalButtonText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Assets...`;
+
+        const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+        const customHeaders = {
+            'apikey': sbKey,
+            'Authorization': `Bearer ${sbKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        try {
+            const editingTargetRowId = document.getElementById('formActionProductId').value;
+            const isEditOperationMode = editingTargetRowId !== "";
+            const assignedProductId = isEditOperationMode ? parseInt(editingTargetRowId) : parseInt(document.getElementById('formProductId').value);
+
+            // ➔ 1. HANDLE FILE PICKER STORAGE UPLOAD FIRST
+            const filePicker = document.getElementById('formProductImageFilePicker');
+            let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
+
+            if (filePicker && filePicker.files.length > 0) {
+                submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image Asset...`;
+                const uploadedFile = filePicker.files[0];
+                // Process, compress to WebP, and upload straight to your storage bucket
+                finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
+                document.getElementById('formProductImage').value = finalCalculatedImageUrl;
+            }
+
+            // Fallback to placeholder identity if absolutely no image asset is available anywhere
+            if (!finalCalculatedImageUrl) {
+                finalCalculatedImageUrl = 'assets/placeholder.png';
+            }
+
+            // Gather values from form input elements
+            const variantRows = document.querySelectorAll('.admin-variant-input-row');
+            let baseCatalogPrice = parseFloat(document.getElementById('formProductPrice').value) || 0;
+            let baseCatalogStock = parseInt(document.getElementById('formProductStock').value) || 0;
+
+            // If explicit variant rows exist, synchronize baseline metrics from the top row item
+            if (variantRows.length > 0) {
+                baseCatalogPrice = parseFloat(variantRows[0].querySelector('.v-price').value) || baseCatalogPrice;
+                baseCatalogStock = parseInt(variantRows[0].querySelector('.v-stock').value) || baseCatalogStock;
+                finalCalculatedImageUrl = variantRows[0].querySelector('.v-img').value.trim() || finalCalculatedImageUrl;
+            }
+
+            const computedStatusFlag = baseCatalogStock <= 0 ? "sold" : "available";
+
+            // --- ENGINE PART A: UPSERT PARENT MASTER PRODUCT ENTRY ---
+            const parentProductPayload = {
+                id: assignedProductId,
+                title: document.getElementById('formProductTitle').value.trim(),
+                category: document.getElementById('formProductCategory').value,
+                badge: baseCatalogStock <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
+                status: computedStatusFlag,
+                description: document.getElementById('formProductDesc').value.trim(),
+                style: document.getElementById('formProductStyle').value
+            };
+
+            let parentRequestUrl = `${sbUrl}/rest/v1/products`;
+            let parentMethod = 'POST';
+
+            if (isEditOperationMode) {
+                parentRequestUrl += `?id=eq.${editingTargetRowId}`;
+                parentMethod = 'PATCH';
+            }
+
+            const parentResponse = await fetch(parentRequestUrl, {
+                method: parentMethod,
+                headers: customHeaders,
+                body: JSON.stringify(parentProductPayload)
+            });
+
+            if (!parentResponse.ok) throw new Error("Supabase master product row registration rejected.");
             
-            const submitBtn = document.getElementById('formSubmitActionBtn');
-            const originalButtonText = submitBtn.innerText;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Assets...`;
+            // --- ENGINE PART B: PROCESS AND UPDATE RELATIONAL PRODUCT VARIANTS ---
+            if (isEditOperationMode) {
+                // Clear old relation rows to maintain clean indexes
+                await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
+                });
+            }
 
-            try {
-                const filePicker = document.getElementById('formProductImageFilePicker');
-                let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
+            submitBtn.innerHTML = `<i class="fas fa-layer-group fa-spin"></i> Committing Variant Matrix...`;
+            const variationsBatchPayloadArray = [];
 
-                // ➔ TRIGGER CLOUD STORAGE UPLOAD IF A NEW FILE IS SELECTED
-                if (filePicker && filePicker.files.length > 0) {
-                    submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image...`;
-                    const uploadedFile = filePicker.files[0];
-                    finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
-                    document.getElementById('formProductImage').value = finalCalculatedImageUrl;
-                }
+            if (variantRows.length > 0) {
+                // Case A: User explicitly provided dynamic variant options in the row builder list
+                variantRows.forEach(row => {
+                    variationsBatchPayloadArray.push({
+                        product_id: assignedProductId,
+                        color_name: row.querySelector('.v-name').value.trim(),
+                        color_hex: row.querySelector('.v-hex').value,
+                        sku: row.querySelector('.v-sku').value.trim().toUpperCase(),
+                        price: parseFloat(row.querySelector('.v-price').value) || 0,
+                        stock: parseInt(row.querySelector('.v-stock').value) || 0,
+                        image_url: row.querySelector('.v-img').value.trim() || finalCalculatedImageUrl,
+                        status: parseInt(row.querySelector('.v-stock').value) <= 0 ? 'sold' : 'active'
+                    });
+                });
+            } else {
+                // Case B: Standalone Fallback. Generate a single standard row linking your uploaded image and price!
+                variationsBatchPayloadArray.push({
+                    product_id: assignedProductId,
+                    color_name: 'Standard',
+                    color_hex: '#202c55',
+                    sku: `SKU-${assignedProductId}-STD`,
+                    price: baseCatalogPrice,
+                    stock: baseCatalogStock,
+                    image_url: finalCalculatedImageUrl, // Safely links your newly uploaded file picker image!
+                    status: baseCatalogStock <= 0 ? 'sold' : 'active'
+                });
+            }
 
-                if (!finalCalculatedImageUrl) {
-                    alert("Please select and upload a product photo first.");
-                    submitBtn.disabled = false; 
-                    submitBtn.innerText = originalButtonText;
-                    return;
-                }
-
-                const editingTargetRowId = document.getElementById('formActionProductId').value;
-                const isEditOperationMode = editingTargetRowId !== "";
-                const formStockVal = parseInt(document.getElementById('formProductStock').value) || 0;
-                const computedStatusFlag = formStockVal <= 0 ? "sold" : "available";
-
-                const itemPayloadObject = {
-                    id: parseInt(document.getElementById('formProductId').value),
-                    title: document.getElementById('formProductTitle').value.trim(),
-                    category: document.getElementById('formProductCategory').value,
-                    price: parseFloat(document.getElementById('formProductPrice').value) || 0,
-                    stock: formStockVal,
-                    badge: formStockVal <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
-                    status: computedStatusFlag,
-                    image: finalCalculatedImageUrl,
-                    description: document.getElementById('formProductDesc').value.trim(),
-                    style: document.getElementById('formProductStyle').value
-                };
-
-                let requestUrl = `${ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL}/rest/v1/Products`;
-                const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-                let customHeaders = {
+            const variantResponse = await fetch(`${sbUrl}/rest/v1/product_variants`, {
+                method: 'POST',
+                headers: {
                     'apikey': sbKey,
                     'Authorization': `Bearer ${sbKey}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                };
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(variationsBatchPayloadArray)
+            });
 
-                let fetchOptions = {};
+            if (!variantResponse.ok) throw new Error("Variant rows population execution failed.");
 
-                if (isEditOperationMode) {
-                    requestUrl += `?id=eq.${editingTargetRowId}`;
-                    fetchOptions = {
-                        method: 'PATCH',
-                        headers: customHeaders,
-                        body: JSON.stringify(itemPayloadObject)
-                    };
-                } else {
-                    fetchOptions = {
-                        method: 'POST',
-                        headers: customHeaders,
-                        body: JSON.stringify(itemPayloadObject)
-                    };
-                }
+            alert(`✨ Success! Database sync complete for item reference #${assignedProductId}`);
+            closeAdminFormVaultModal();
+            
+            // Reload local memory array caches and refresh client viewing layers smoothly
+            await loadProductDatabaseEngine();
+            if (typeof filterCatalog === "function") filterCatalog();
+            if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
 
-                const response = await fetch(requestUrl, fetchOptions);
-                if (!response.ok) throw new Error("Supabase cloud workspace rejected writing parameters.");
-                
-                closeAdminFormVaultModal();
-                await loadProductDatabaseEngine();
-                
-                if (typeof filterCatalog === "function") filterCatalog(); 
-                if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
-                if (typeof renderVaultSaleSection === "function") renderVaultSaleSection();
-                if (typeof renderTrendingSection === "function") renderTrendingSection();
+        } catch (error) {
+            console.error("Administrative multi-tier write pipeline failure:", error);
+            alert("Database write transaction was interrupted.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalButtonText;
+        }
+    });
+}
 
-            } catch (error) {
-                console.error("Supabase write pipeline execution breakdown caught:", error);
-                alert("Database Update Interrupted.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalButtonText;
-            }
-        });
-    }
 });
 
 
@@ -610,7 +697,9 @@ function filterCatalog(passedSearchQuery) {
             // B. Compile all individual product card layouts cleanly
             const compiledProductCardsHTML = filteredResults.map(product => {
                 const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-                const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
+                //const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
+                // const firstColorName = cardVariants.length > 0 ? cardVariants[0].color_name : 'Standard';
+                // const isFavorited = wishlistMemory.includes(`${product.id}|${firstColorName}`);
                 
                 const badgeHTML = product.badge 
                     ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>`
@@ -620,6 +709,26 @@ function filterCatalog(passedSearchQuery) {
                 const displayPrice = rawPriceValue > 0 ? `₹${rawPriceValue.toLocaleString('en-IN')}` : 'Price on Request';
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
                 const displayCategory = product.category || product.type || 'Luxury Collection';
+
+                const cardVariants = product.product_variants || product.Product_Variants || product.variants || [];
+                const firstColorName = cardVariants.length > 0 ? cardVariants[0].color_name : 'Standard';
+                const isFavorited = wishlistMemory.includes(`${product.id}|${firstColorName}`);
+                let colorDotsHTML = "";
+
+                if (cardVariants.length > 0 && cardVariants[0].color_name !== 'Standard') {
+                    colorDotsHTML = `
+                        <div class="card-color-swatches" style="display: flex; gap: 8px; justify-content: center; align-items: center; margin: 10px 0; width: 100%; position: relative; z-index: 5;">
+                            ${cardVariants.map((v, vIdx) => `
+                                <span title="${v.color_name || 'Option'}" 
+                                    onclick="event.stopPropagation(); handleCatalogCardDotClick(event, ${product.id}, ${v.id}, ${vIdx})"
+                                    class="catalog-variant-dot-${product.id}"
+                                    data-variant-idx="${vIdx}"
+                                    style="width: 14px; height: 14px; border-radius: 50%; background: ${v.color_hex || '#ccc'}; display: inline-block; border: ${vIdx === 0 ? '2px solid #202c55' : '1px solid rgba(0,0,0,0.15)'}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; transform: ${vIdx === 0 ? 'scale(1.1)' : 'scale(1)'};">
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                }
 
                 const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
                     <button type="button" class="admin-action-inline-trigger" 
@@ -636,14 +745,18 @@ function filterCatalog(passedSearchQuery) {
                 </button>
                 ` : '';
 
+                const defaultVariantId = cardVariants.length > 0 ? cardVariants[0].id : '';
+
                 return `
                     <div class="product-card" 
+                         id="catalog-card-${product.id}"
+                         data-active-variant-id="${defaultVariantId}"
                          onclick="openQuickViewShield(${product.id})" 
-                         style="background: #ffffff; border: 1px solid var(--purple-primary, #e8e8ef); border-radius: 8px; padding: 16px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
+                         style="background: #ffffff; border: 1px solid var(--purple-primary, #e8e8ef); border-radius: 8px; padding: 0px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer;">
                         
                         ${adminEditInlineControlMarkup}
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
                             <div style="flex-grow: 1; text-align: left;">
                                 ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
                             </div>
@@ -655,8 +768,8 @@ function filterCatalog(passedSearchQuery) {
                             </button>
                         </div>
 
-                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 6px; margin-bottom: 14px; z-index:1;">
-                            <img src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
+                       <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 6px; margin-bottom: 14px; z-index:1; display: block; height: auto; min-height: 200px;">
+                            <img id="catalog-card-img-${product.id}" src="${product.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);" onerror="this.src='assets/placeholder.png'">
                         </div>
                         
                         <div style="text-align: left; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
@@ -664,15 +777,18 @@ function filterCatalog(passedSearchQuery) {
                                 <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 600; margin: 0 0 4px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat', sans-serif; text-align: center;">
                                     ${displayCategory}
                                 </p>
+                                
+                                ${colorDotsHTML}
+
                                 <h3 style="font-size: 0.88rem; font-weight: 600; margin: 8px 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif; text-align: center;">${product.title}</h3>
-                                <p style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
+                                <p id="catalog-card-price-${product.id}" style="font-size: 0.98rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 0 0 14px 0; text-align: center;">${displayPrice}</p>
                             </div>
                             
                             <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
-                                    onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
+                                    onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
                                     ${isSoldOut ? 'disabled' : ''} 
                                     style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'}; box-shadow: ${isSoldOut ? 'none !important' : ''};">
-                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7 accessible;"></i> 
                                 ${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}
                             </button>
                         </div>
@@ -685,7 +801,7 @@ function filterCatalog(passedSearchQuery) {
                 productGrid.classList.add('filtered-collection-frame');
                 productGrid.innerHTML = `
                     <!-- THE FIX: grid-column: 1 / -1 ensures the title spans the whole top row smoothly -->
-                    <div class="in-box-collection-header" style="grid-column: 1 / -1; text-align: left; padding: 10px 15px; border-bottom: 1px solid #cca43b; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+                    <div class="in-box-collection-header" style="grid-column: 1 / -1; text-align: left; padding: 5px 0 0 0; border-bottom: 1px solid #cca43b; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
                         <h2 style="color: #202c55; text-align:center; font-size: 1.35rem; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Montserrat';">${activeTabTracker}</h2>
                     </div>
                     
@@ -811,13 +927,13 @@ function renderVaultSaleSection() {
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Jewellery'} • Special Offer</p>
                 <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
                 <div style="text-align: center; margin-bottom: 14px;">${pricingLayoutHTML}</div>
-                <button class="btn-order-wa" 
-                        onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
-                        ${isSoldOut ? 'disabled' : ''} 
-                        style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
-                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
-                    ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
-                </button>
+              <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
+                    onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
+                    ${isSoldOut ? 'disabled' : ''} 
+                    style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};">
+                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
+            </button>
             </div>
         `;
         saleGrid.appendChild(saleCard);
@@ -906,10 +1022,10 @@ function renderTrendingSection() {
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
                 ${pricingLayoutHTML}
-                <button class="btn-order-wa" 
-                        onclick="event.stopPropagation(); ${isSoldOut ? '' : `addToCartEngine(${product.id}); triggerCartNotification('${safeTitleString}');`}"
+                <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
+                        onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
                         ${isSoldOut ? 'disabled' : ''} 
-                        style="width: 100%; background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px;">
+                        style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};">
                     <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
                     ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
                 </button>
@@ -919,17 +1035,88 @@ function renderTrendingSection() {
     });
 }
 
-function addToCartEngine(id) {
-    const targetItem = productDatabase.find(p => p.id === id);
-    if (!targetItem) return;
+function addToCartEngine(productId) {
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === productId);
+    if (!product) return;
 
-    const existingSelection = shoppingCart.find(item => item.id === id);
+    let targetLineKey = `prod-${productId}`;
+    let displayTitle = product.title;
+    let finalPrice = product.price;
+    let finalImage = product.image;
+    let maxAllowedStock = parseInt(product.stock) || 0;
+    let displayColor = "";
+
+    // ➔ THE CORRECTION: Smart variant detection for both Main Page grid and Modal popups
+    if (product.product_variants && product.product_variants.length > 0) {
+        let chosenVariant = null;
+        const cardEl = document.getElementById(`catalog-card-${productId}`);
+        const isModalOpen = document.getElementById('quickviewModalShield') && document.getElementById('quickviewModalShield').style.display !== 'none';
+
+        if (isModalOpen && window.activeVariantSelection) {
+            // Case A: User is adding from the Quick View modal popup
+            chosenVariant = window.activeVariantSelection;
+        } else if (cardEl) {
+            // Case B: User is adding directly from the main page card grid using active color dots
+            const activeVariantId = cardEl.getAttribute('data-active-variant-id');
+            if (activeVariantId) {
+                chosenVariant = product.product_variants.find(v => v.id === parseInt(activeVariantId));
+            }
+        }
+
+        // Fallback: If no variant was actively selected yet, default safely to the first row option (Index 0)
+        if (!chosenVariant) {
+            chosenVariant = product.product_variants[0];
+        }
+
+        targetLineKey = `variant-${chosenVariant.id}`;
+        displayTitle = product.title;
+        displayColor = chosenVariant.color_name;
+        finalPrice = chosenVariant.price;
+        finalImage = chosenVariant.image_url || product.image;
+        maxAllowedStock = parseInt(chosenVariant.stock) || 0;
+    }
+
+    const existingSelection = shoppingCart.find(item => item.cartLineId === targetLineKey);
+    const currentQtyInCart = existingSelection ? existingSelection.quantity : 0;
+
+    if (maxAllowedStock <= 0) {
+        alert(`We are sorry! This curation style is currently out of stock.`);
+        return;
+    }
+
+    if (currentQtyInCart + 1 > maxAllowedStock) {
+        alert(`Showroom Capacity Reached! Only ${maxAllowedStock} piece(s) are available, and you already have ${currentQtyInCart} inside your shopping bag.`);
+        return;
+    }
+
     if (existingSelection) {
         existingSelection.quantity += 1;
     } else {
-        shoppingCart.push({ ...targetItem, quantity: 1 });
+        shoppingCart.push({
+            cartLineId: targetLineKey,
+            id: productId,
+            title: displayTitle,
+            color: displayColor,
+            price: finalPrice,
+            image: finalImage,
+            quantity: 1,
+            category: product.category || 'Luxury Collection'
+        });
     }
+
     updateCartUI();
+    
+    if (typeof triggerCartNotification === 'function') {
+        triggerCartNotification(displayColor ? `${displayTitle} (${displayColor})` : displayTitle);
+    }
+    
+    // Close modal views safely if it was open, otherwise leave the storefront intact
+    const modalShield = document.getElementById('quickviewModalShield');
+    if (modalShield && modalShield.style.display !== 'none') {
+        modalShield.style.display = "none";
+    }
+    window.activeVariantSelection = null; 
 }
 
 function changeQty(id, delta) {
@@ -990,9 +1177,21 @@ function updateCartUI() {
         totalItemsCount += item.quantity;
         grandSubtotal += (item.price * item.quantity);
 
-        // Cross-reference live database limits
-        const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id];
-        let trueAvailableStock = liveCache ? (parseInt(liveCache.stock) || 0) : 5;
+        // ➔ THE CRITICAL FIX: Extract true available stock for this SPECIFIC variant row
+        let trueAvailableStock = 0;
+        const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+        const parentProduct = currentDb.find(p => p.id === item.id);
+
+        if (parentProduct && parentProduct.product_variants && parentProduct.product_variants.length > 0) {
+            // If it's a variant line, find the exact row matching the color name
+            const exactVariant = parentProduct.product_variants.find(v => v.color_name === item.color);
+            trueAvailableStock = exactVariant ? parseInt(exactVariant.stock) : 0;
+        } else {
+            // Fallback for standard items without variants
+            const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id];
+            trueAvailableStock = liveCache ? (parseInt(liveCache.stock) || 0) : 0;
+        }
+
         const isThisItemOversold = item.quantity > trueAvailableStock;
 
         let stockWarningLayout = "";
@@ -1013,17 +1212,17 @@ function updateCartUI() {
         itemRow.innerHTML = `
             <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef;">
             <div style="flex-grow:1; text-align: left;">
-                <h4 class="cart-item-title" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title}</h4>
+                <h4 class="cart-item-title" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title} ${item.color ? `<span style="color:var(--pink-accent); font-size:0.75rem;">(${item.color})</span>` : ''}</h4>
                 <p class="cart-item-meta" style="margin: 2px 0; font-size: 0.72rem; color: #777; font-family: 'Montserrat';">${item.category}</p>
                 <p class="cart-item-price" style="margin: 2px 0 6px 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(item.price)}</p>
                 <div class="cart-item-controls" style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
-                    <i class="fas fa-minus" onclick="changeQty(${item.id}, -1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
+                    <i class="fas fa-minus" onclick="changeQtyExplicit('${item.cartLineId}', -1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
                     <span style="font-size: 0.85rem; font-weight: 700; min-width: 15px; text-align: center; font-family: 'Montserrat'; color: ${isThisItemOversold ? '#d9383a' : '#111116'}">${item.quantity}</span>
-                    <i class="fas fa-plus" onclick="changeQty(${item.id}, 1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
+                    <i class="fas fa-plus" onclick="changeQtyExplicit('${item.cartLineId}', 1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
                 </div>
                 ${stockWarningLayout}
             </div>
-            <i class="fas fa-trash" onclick="removeFromCart(${item.id})" style="cursor: pointer; color: #aaa; font-size: 0.9rem; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
+            <i class="fas fa-trash" onclick="removeFromCartExplicit('${item.cartLineId}')" style="cursor: pointer; color: #aaa; font-size: 0.9rem; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
         `;
         cartItemsList.appendChild(itemRow);
     });
@@ -1117,40 +1316,48 @@ function updateCartUI() {
 // =========================================================================
 // ANGEL JEWELLERY — INSTANT WISHLIST TOGGLE ENGINE (OUTLINE TO SOLID FILL)
 // =========================================================================
-function toggleWishlistEngine(event, id, targetButton) {
-    if (event) event.stopPropagation();
-    
-    const matchIndex = wishlistMemory.indexOf(id);
-    const isAdding = matchIndex === -1;
+function toggleWishlistEngine(event, productId, buttonElement) {
+    if (event) event.stopPropagation(); // Stops the Quick View modal from opening
 
-    if (!isAdding) {
-        wishlistMemory.splice(matchIndex, 1);
-        if (targetButton) {
-            const heartIcon = targetButton.querySelector('i');
-            if (heartIcon) {
-                heartIcon.className = "far fa-heart";
-                heartIcon.style.color = "#77778b";
-            }
-        }
-    } else {
-        wishlistMemory.push(id);
-        if (targetButton) {
-            const heartIcon = targetButton.querySelector('i');
-            if (heartIcon) {
-                heartIcon.className = "fas fa-heart";
-                heartIcon.style.color = "var(--pink-accent, #ff1493)";
-            }
+    // 1. Find what variant color is actively selected on the main grid card
+    const cardEl = document.getElementById(`catalog-card-${productId}`);
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === productId);
+    
+    let activeColorName = "Standard"; // Fallback for standalone items
+    if (cardEl && product && product.product_variants && product.product_variants.length > 0) {
+        const activeVariantId = cardEl.getAttribute('data-active-variant-id');
+        if (activeVariantId) {
+            const matched = product.product_variants.find(v => v.id === parseInt(activeVariantId));
+            if (matched) activeColorName = matched.color_name;
+        } else {
+            activeColorName = product.product_variants[0].color_name;
         }
     }
-    
-    if (typeof updateWishlistUI === 'function') updateWishlistUI();
-    if (typeof filterCatalog === 'function') {
-        const searchInput = document.getElementById('searchInput');
-        filterCatalog(searchInput ? searchInput.value : undefined);
-    } 
 
-    // ➔ WISHLIST PERSISTENCE STORAGE INJECTION
-    localStorage.setItem('wishlistMemory', JSON.stringify(wishlistMemory));
+    // Create a unique compound string key for this specific variation
+    const wishlistStorageKey = `${productId}|${activeColorName}`;
+
+    // 2. Add or remove this specific color from memory
+    if (wishlistMemory.includes(wishlistStorageKey)) {
+        wishlistMemory = wishlistMemory.filter(key => key !== wishlistStorageKey);
+        if (buttonElement) {
+            buttonElement.innerHTML = `<i class="far fa-heart" style="font-size: 0.85rem; color: #202c55; transition: color 0.2s ease;"></i>`;
+            buttonElement.classList.remove('active');
+        }
+    } else {
+        wishlistMemory.push(wishlistStorageKey);
+        if (buttonElement) {
+            buttonElement.innerHTML = `<i class="fas fa-heart" style="font-size: 0.85rem; color: var(--pink-accent, #ff1493); transition: color 0.2s ease;"></i>`;
+            buttonElement.classList.add('active');
+        }
+    }
+
+    // Save back to local storage cache
+    localStorage.setItem('angel_wishlist_cache', JSON.stringify(wishlistMemory));
+    
+    // Refresh the Side Drawer view panel instantly
+    updateWishlistUI();
 }
 // =========================================================================
 // ANGEL JEWELLERY — WISHLIST UI CARDS RENDERING LOGIC
@@ -1172,25 +1379,49 @@ function updateWishlistUI() {
         return;
     }
 
-    wishlistMemory.forEach(id => {
-        const item = productDatabase.find(p => p.id === id);
+    wishlistMemory.forEach(wishlistKey => {
+        // Parse out the components from the combined key
+        const parts = wishlistKey.split('|');
+        const id = parseInt(parts[0]);
+        const colorName = parts[1] || "Standard";
+
+        const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+        const item = currentDb.find(p => p.id === id);
         if (!item) return;
 
-        const isSoldOut = item.badge && item.badge.toLowerCase() === 'sold out';
+        const cardVariants = item.product_variants || item.Product_Variants || item.variants || [];
+        
+        let displayPrice = item.price;
+        let displayImage = item.image || 'assets/placeholder.png';
+        let displayColorTitle = colorName !== "Standard" ? ` <span style="color:var(--pink-accent, #ff1493); font-size:0.75rem; font-weight:600;">(${colorName})</span>` : ""; 
+        let trueStockLevel = 0;
 
-        // Cross-reference live inventory limits using the corrected item key parameter
-        const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id] || { stock: 5, status: 'available' };
+        // Find the exact variant match for the favorited color item row
+        const matchedVariant = cardVariants.find(v => v.color_name === colorName) || (cardVariants.length > 0 ? cardVariants[0] : null);
+
+        if (matchedVariant) {
+            displayPrice = matchedVariant.price;
+            displayImage = matchedVariant.image_url || displayImage;
+            trueStockLevel = parseInt(matchedVariant.stock) || 0;
+        } else {
+            const liveCache = MASTER_LIVE_INVENTORY_CACHE[item.id];
+            trueStockLevel = liveCache ? (parseInt(liveCache.stock) || 0) : (parseInt(item.stock) || 0);
+        }
+
+        const isSoldOut = trueStockLevel <= 0 || (item.badge && item.badge.toLowerCase() === 'sold out');
         let checkoutButtonMarkup = "";
         
-        if (liveCache.stock <= 0 || liveCache.status === "sold") {
+        if (isSoldOut) {
             checkoutButtonMarkup = `
                 <button type="button" disabled style="background: #e1e1e6 !important; color: #8e8e9f !important; border: 1px solid #dcdce0 !important; cursor: not-allowed; width: 100%; height: 38px; font-size: 0.7rem; font-weight: 600; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">
                     <i class="fas fa-lock" style="font-size:0.65rem; margin-right:4px;"></i> Vault Restocking
                 </button>
             `;
         } else {
+            const safeTitleString = (item.title || '').replace(/'/g, "\\'");
+            // We pass the exact variant color directly into the custom button configurations
             checkoutButtonMarkup = `
-                <button type="button" onclick="addToCartEngine(${item.id})" style="background: #202c55; color: #ffffff; border: none; border-radius: 4px; width: 100%; height: 38px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; font-family: 'Montserrat'; transition: background 0.2s;">
+                <button type="button" onclick="handleCatalogCardAddToCart(${item.id}, '${safeTitleString}')" style="background: #202c55; color: #ffffff; border: none; border-radius: 4px; width: 100%; height: 38px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; font-family: 'Montserrat'; transition: background 0.2s;">
                     ADD TO CART
                 </button>
             `;
@@ -1200,19 +1431,31 @@ function updateWishlistUI() {
         row.className = "cart-item-row";
         row.style.cssText = "display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid #e8e8ef; position: relative; box-sizing: border-box; align-items: center;";
         row.innerHTML = `
-            <img src="${item.image}" alt="${item.title}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef; opacity: ${isSoldOut ? '0.5' : '1'};">
+            <img src="${displayImage}" alt="${item.title}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef; opacity: ${isSoldOut ? '0.5' : '1'};">
             <div style="flex-grow:1; text-align: left; padding-right: 25px; box-sizing: border-box;">
-                <h4 class="cart-item-title" style="margin: 0; font-size: 0.82rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title}</h4>
-                <p class="cart-item-price" style="margin: 2px 0 8px 0; font-size: 0.82rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(item.price)}</p>
+                <h4 class="cart-item-title" style="margin: 0; font-size: 0.82rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title}${displayColorTitle}</h4>
+                <p class="cart-item-price" style="margin: 2px 0 8px 0; font-size: 0.82rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(displayPrice)}</p>
                 <div style="width: 100%; max-width: 140px;">
                     ${checkoutButtonMarkup}
                 </div>
             </div>
-            <i class="fas fa-trash" onclick="toggleWishlistEngine(null, ${item.id}, null)" style="cursor:pointer; color:#aaa; font-size:0.9rem; position:absolute; right:15px; top:50%; transform:translateY(-50%); transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
+            <!-- Trash can icon safely targets the combined string identifier to delete exactly that item option block -->
+            <i class="fas fa-trash" onclick="toggleWishlistEngineFromDrawer('${wishlistKey}')" style="cursor:pointer; color:#aaa; font-size:0.9rem; position:absolute; right:15px; top:50%; transform:translateY(-50%); transition: color 0.2s;" onmouseover="this.style.color='#d9383a'" onmouseout="this.style.color='#aaa'"></i>
         `;
         wishlistItemsList.appendChild(row);
     });
 }
+
+// ➔ Helper method added to seamlessly clear specific variant tokens directly from the drawer items list view
+function toggleWishlistEngineFromDrawer(wishlistKey) {
+    wishlistMemory = wishlistMemory.filter(k => k !== wishlistKey);
+    localStorage.setItem('angel_wishlist_cache', JSON.stringify(wishlistMemory));
+    updateWishlistUI();
+    
+    // Force the main layout blocks to re-evaluate heart graphics configurations
+    if (typeof filterCatalog === 'function') filterCatalog();
+}
+
 
 // =========================================================================
 // SUPABASE PRODUCTION CHANNEL — PROMO CODES & DISCOUNT LOGIC (CRUD & LIVE VALIDATION)
@@ -1430,188 +1673,200 @@ function triggerCartNotification(title) {
     setTimeout(() => { toast.remove(); }, 2400);
 }
 
-// =========================================================================
-// ANGEL JEWELLERY — STABLE QUICK VIEW ENGINE WITH VAULT SCARCITY MANAGER
-// =========================================================================
+
+// Global state memory tracker to lock down exactly which variant row is active
+if (typeof window.activeVariantSelection === 'undefined') {
+    window.activeVariantSelection = null;
+}
+
 function openQuickViewShield(id) {
-    const product = productDatabase.find(p => p.id === id);
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === id);
     if (!product) return;
 
-    const modalShield = document.getElementById('quickviewModalShield');
-    if (!modalShield) return;
+    const modalVariants = product.product_variants || product.Product_Variants || product.variants || [];
+    let initialPrice = product.price;
+    let initialImg = product.image;
 
-    // 1. Populate Primary Meta Elements
-    document.getElementById('qvImage').src = product.image;
-    document.getElementById('qvTitle').innerText = product.title;
-    document.getElementById('qvCategory').innerText = product.category.toUpperCase();
-
-    const descContainer = document.getElementById('qvDescription');
-    if (descContainer) {
-        // Fallback placeholder text if the piece does not have an active description in Supabase
-        descContainer.innerText = product.description ? product.description.trim() : "Handcrafted with premium materials. This elegant curation reflects unparalleled luxury and design precision.";
+    if (modalVariants.length > 0) {
+        const firstVariant = modalVariants[0];
+        initialPrice = firstVariant.price;
+        initialImg = firstVariant.image_url || firstVariant.imageUrl || initialImg;
     }
 
-    const specPlating = document.getElementById('qvSpecPlating');
-    if (specPlating) {
-        if (product.style === 'cz') specPlating.innerText = "Silver / Rhodium Polish";
-        else if (product.style === 'antique') specPlating.innerText = "Antique Temple Gold Tone";
-        else specPlating.innerText = "Premium Gold Polish";
-    }
-    
-    const priceContainer = document.getElementById('qvPrice');
-    if (priceContainer) {
-        if (product.originalPrice && product.originalPrice > product.price) {
-            priceContainer.innerHTML = `
-                <span style="color: var(--purple-primary); margin-right: 12px;">${formatCurrency(product.price)}</span>
-                <span style="color: var(--text-muted); font-size: 0.95rem; text-decoration: line-through; font-weight: 400;">${formatCurrency(product.originalPrice)}</span>
+    // 1. Clean up any previous dynamic blocks completely
+    const oldMobileBlock = document.getElementById('qvMobileVariantWrapperBlock');
+    if (oldMobileBlock) oldMobileBlock.remove();
+    const oldDesktopBlock = document.getElementById('qvDesktopVariantWrapperBlock');
+    if (oldDesktopBlock) oldDesktopBlock.remove();
+    const oldDynamicBlock = document.getElementById('qvDynamicVariantWrapperBlock');
+    if (oldDynamicBlock) oldDynamicBlock.remove();
+
+    if (modalVariants.length > 0) {
+        window.activeVariantSelection = modalVariants[0];
+
+        const generatePaletteHTML = (isMobileInstance) => {
+            const suffix = isMobileInstance ? '-mob' : '-desk';
+            return `
+                <p class="qv-variant-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #77778b; margin-bottom: 10px; padding:0; text-align: ${isMobileInstance ? 'center' : 'left'};">Select Color Profile:</p>
+                <div class="qv-variant-flex-row" style="display: flex !important; flex-wrap: wrap !important; gap: 10px !important; width: 100% !important; justify-content: ${isMobileInstance ? 'center' : 'flex-start'} !important;">
+                    ${modalVariants.map((variant, idx) => {
+                        const variantStock = variant.stock !== undefined ? variant.stock : (variant.stock_level || 0);
+                        const isSoldOut = parseInt(variantStock) <= 0;
+                        
+                        const colorHex = variant.color_hex || variant.colorHex || '#ccc';
+                        const colorName = variant.color_name || variant.colorName || 'Standard';
+
+                        const activeStyle = idx === 0 
+                            ? "background: #202c55 !important; color: #ffffff !important; border-color: #202c55 !important;" 
+                            : "background: #ffffff !important; color: #111116 !important; border-color: #e8e8ef !important;";
+                        const disabledStyle = isSoldOut ? "opacity: 0.4; cursor: not-allowed;" : "";
+
+                        return `
+                            <button type="button"
+                                    class="qv-new-variant-pill${suffix}" 
+                                    data-variant-id="${variant.id}"
+                                    style="display: inline-flex !important; align-items: center !important; gap: 8px !important; padding: 8px 14px !important; border: 1px solid !important; border-radius: 20px !important; cursor: pointer !important; font-size: 0.78rem !important; font-weight: 600 !important; font-family: 'Montserrat', sans-serif !important; transition: all 0.2s !important; ${activeStyle} ${disabledStyle}"
+                                    ${isSoldOut ? 'disabled' : ''}>
+                                <span style="width: 10px !important; height: 10px !important; border-radius: 50% !important; background: ${colorHex} !important; display: inline-block !important; border: 1px solid rgba(0,0,0,0.1) !important;"></span>
+                                <span>${colorName}</span>
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
             `;
-        } else {
-            priceContainer.innerText = formatCurrency(product.price);
-        }
-    }
-
-    const scarcityIndicator = document.getElementById('qvVaultScarcityIndicator');
-    if (scarcityIndicator) {
-        const itemBadgeLower = String(product.badge || '').trim().toLowerCase();
-        
-        // ➔ THE CRITICAL LOOK-UP FIX: Pull live data accurately from your Master Cache instead of product.stock
-        const liveInventoryCacheData = MASTER_LIVE_INVENTORY_CACHE[product.id];
-        let dynamicStockCount = liveInventoryCacheData ? parseInt(liveInventoryCacheData.stock) : 5;
-        
-        // If your badge text reads sold out, override stock count to 0 safety check
-        if (itemBadgeLower === 'sold out' || itemBadgeLower.includes('sold')) {
-            dynamicStockCount = 0;
-        }
-
-        if (dynamicStockCount <= 0) {
-            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(108,117,125,0.1); color:#6c757d; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px;";
-            scarcityIndicator.innerHTML = `<i class="fas fa-lock"></i> Restocking soon !`;
-        } else if (dynamicStockCount <= 2) {
-            // ➔ High Urgency State triggers immediately if inventory hits 1 or 2 left!
-            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(255,20,147,0.1); color:#ff1493; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px; font-weight:700;";
-            scarcityIndicator.innerHTML = `<i class="fas fa-fire" style="color:#ff1493;"></i> Only  ${dynamicStockCount} Left!`;
-        } else {
-            // Standard guarantee flag
-            scarcityIndicator.style.cssText = "display:inline-block; background:rgba(42,123,106,0.1); color:#2a7b6a; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; border-radius:2px;";
-            scarcityIndicator.innerHTML = `<i class="fas fa-shield-alt" style="margin-right:4px;"></i> Hand stock Available`;
-        }
-    }
-    
-    // =========================================================================
-    // ANGEL JEWELLERY — LUXURY ACTION BUTTON STATE MANAGER
-    // =========================================================================
-const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-const qvBtn = document.getElementById('qvAddToCartBtn');
-
-if (qvBtn) {
-    if (isSoldOut) {
-        qvBtn.innerHTML = `<i class="fas fa-lock" style="font-size: 0.65rem; padding-left: 5px; margin-right: 6px; opacity: 0.8;"></i> Restocking soon!`;
-        qvBtn.disabled = true;
-        qvBtn.onclick = null;
-
-        qvBtn.style.cssText = `
-            width: 100%; 
-            padding: 14px 0; 
-            font-size: 0.72rem; 
-            font-weight: 700; 
-            letter-spacing: 1.5px; 
-            text-transform: uppercase; 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #f4f4f7 !important; 
-            color: #8a8da0 !important; 
-            border: 1px solid #e2e4ed !important; 
-            border-radius: 4px; 
-            cursor: not-allowed; 
-            font-family: 'Montserrat', sans-serif;
-            box-shadow: none !important;
-            transition: all 0.3s ease;
-        `;
-    } else {
-        qvBtn.innerHTML = `Add To Cart`;
-        qvBtn.disabled = false;
-        qvBtn.onclick = () => {
-            addToCartEngine(product.id);
-            closeQuickViewShield();
-            triggerCartNotification(product.title);
         };
-        qvBtn.style.cssText = `
-            width: 100%; 
-            padding: 14px 0; 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            letter-spacing: 1.5px; 
-            text-transform: uppercase; 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
-            background: var(--purple-primary, #202c55); 
-            color: #ffffff !important; 
-            border: none !important; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-family: 'Montserrat', sans-serif;
-            transition: all 0.3s ease;
-        `;
+
+        // POSITION 1: Mobile Palette sits inside the Left column right after the Image
+        const imgElement = document.getElementById('qvImage');
+        if (imgElement) {
+            const mobileWrapper = document.createElement('div');
+            mobileWrapper.id = 'qvMobileVariantWrapperBlock';
+            mobileWrapper.className = 'qv-variant-mobile-only-container';
+            mobileWrapper.style.cssText = "margin-top: 15px; width: 100%; box-sizing: border-box; clear: both;";
+            mobileWrapper.innerHTML = generatePaletteHTML(true);
+            imgElement.parentNode.insertBefore(mobileWrapper, imgElement.nextSibling);
+        }
+
+        // POSITION 2: Desktop Palette sits in the Right column right above the Price field
+        const priceBlock = document.getElementById('qvPrice');
+        if (priceBlock) {
+            const desktopWrapper = document.createElement('div');
+            desktopWrapper.id = 'qvDesktopVariantWrapperBlock';
+            desktopWrapper.className = 'qv-variant-desktop-only-container';
+            desktopWrapper.style.cssText = "margin: 15px 0; width: 100%; box-sizing: border-box; clear: both;";
+            desktopWrapper.innerHTML = generatePaletteHTML(false);
+            priceBlock.parentNode.insertBefore(desktopWrapper, priceBlock);
+        }
+
+        // Synchronize Click Listeners across both element trees
+        const setupSyncListeners = (selectorClass) => {
+            document.querySelectorAll(selectorClass).forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const chosenVariantId = parseInt(this.getAttribute('data-variant-id'));
+                    const matchedVariant = modalVariants.find(v => v.id === chosenVariantId);
+                    
+                    if (!matchedVariant) return;
+                    window.activeVariantSelection = matchedVariant;
+
+                    document.querySelectorAll('.qv-new-variant-pill-mob, .qv-new-variant-pill-desk').forEach(b => {
+                        const bId = parseInt(b.getAttribute('data-variant-id'));
+                        if (bId === chosenVariantId) {
+                            b.style.background = "#202c55"; b.style.color = "#ffffff"; b.style.borderColor = "#202c55";
+                        } else {
+                            b.style.background = "#ffffff"; b.style.color = "#111116"; b.style.borderColor = "#e8e8ef";
+                        }
+                    });
+
+                    const variantImg = matchedVariant.image_url || matchedVariant.imageUrl;
+                    if (variantImg) document.getElementById('qvImage').src = variantImg;
+                    if (matchedVariant.price) document.getElementById('qvPrice').innerText = formatCurrency(matchedVariant.price);
+                    
+                    const variantStock = matchedVariant.stock !== undefined ? matchedVariant.stock : (matchedVariant.stock_level || 0);
+                    updateTopRightScarcityBadge(variantStock);
+                });
+            });
+        };
+
+        setupSyncListeners('.qv-new-variant-pill-mob');
+        setupSyncListeners('.qv-new-variant-pill-desk');
+
+    } else {
+        window.activeVariantSelection = null;
+    }
+
+    document.getElementById('qvImage').src = (window.activeVariantSelection && (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl)) ? (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl) : product.image; 
+    document.getElementById('qvTitle').innerText = product.title; 
+    document.getElementById('qvCategory').innerText = String(product.category || '').toUpperCase(); 
+    document.getElementById('qvPrice').innerText = formatCurrency(window.activeVariantSelection ? window.activeVariantSelection.price : product.price); 
+
+    const descContainer = document.getElementById('qvDescription'); 
+    if (descContainer) {
+        descContainer.innerText = product.description ? product.description.trim() : "Handcrafted with premium materials. This elegant curation reflects unparalleled luxury and design precision."; 
+    }
+
+    const fallbackStock = parseInt(product.stock) || 0; 
+    const currentStock = window.activeVariantSelection ? (window.activeVariantSelection.stock !== undefined ? window.activeVariantSelection.stock : window.activeVariantSelection.stock_level) : fallbackStock;
+    updateTopRightScarcityBadge(currentStock); 
+
+    const qvBtn = document.getElementById('qvAddToCartBtn'); 
+    if (qvBtn) {
+        qvBtn.innerHTML = `Add To Cart`; 
+        qvBtn.disabled = false; 
+        qvBtn.onclick = () => {
+            addToCartEngine(product.id); 
+        };
+    }
+    document.getElementById('quickviewModalShield').style.display = "flex"; 
+}
+
+function updateTopRightScarcityBadge(stockCount) {
+    const indicator = document.getElementById('qvVaultScarcityIndicator'); 
+    if (!indicator) return;
+
+    if (stockCount <= 0) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(108,117,125,0.1); color:#6c757d; border-radius:2px;"; 
+        indicator.innerHTML = `<i class="fas fa-times-circle"></i> Sold Out`; 
+    } else if (stockCount <= 2) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(255,20,147,0.08); color:#ff1493; border-radius:2px;"; 
+        indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`; 
+    } else {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;"; 
+        indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`; //[cite: 2]
     }
 }
 
-    // 2. GENERATE THE COMPLEMENTARY LOOK RECOMMENDATIONS
-    const recommendationSection = document.getElementById('qvPairingRecommendationSection');
-    const carouselTrack = document.getElementById('qvPairingCarouselTrack');
+// ➔ Helper: Keeps the scarcity badge updated[cite: 2]
+function updateTopRightScarcityBadge(stockCount) {
+    const indicator = document.getElementById('qvVaultScarcityIndicator'); //[cite: 2]
+    if (!indicator) return;
 
-    if (carouselTrack && productDatabase) {
-        carouselTrack.innerHTML = ""; 
-        const currentCategory = String(product.category || '').trim().toLowerCase();
-        const structuralPairingMatches = productDatabase.filter(item => item && item.id !== product.id && String(item.category || '').trim().toLowerCase() === currentCategory);
-
-        if (structuralPairingMatches.length === 0) {
-            if (recommendationSection) recommendationSection.style.display = "none";
-        } else {
-            if (recommendationSection) recommendationSection.style.display = "block";
-            
-            // ➔ THE CAROUSEL HINT FIX: Reduced width from 140px to 115px and height to match proportions perfectly
-            carouselTrack.innerHTML = structuralPairingMatches.slice(0, 4).map(pairingItem => {
-                const itemPriceRaw = typeof pairingItem.price === 'number' ? pairingItem.price : parseFloat(pairingItem.price) || 0;
-                const formattedPrice = itemPriceRaw > 0 ? `₹${itemPriceRaw.toLocaleString('en-IN')}` : 'Price on Request';
-                
-                return `
-                    <div class="pairing-carousel-card" 
-                         onclick="openQuickViewShield(${pairingItem.id})" 
-                         style="width: 60% !important; flex: 0 0 115px; min-width: 115px; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; box-sizing: border-box; transition: transform 0.2s; text-align: left;">
-                        
-                        <!-- Proportionate portrait image container box -->
-                        <div style="width: 100%; height: 115px; min-height: 115px; overflow: hidden; border-radius: 6px; background: #fafafa; border: 1px solid #f4f4f7; box-sizing: border-box;">
-                            <img src="${pairingItem.image || 'assets/placeholder.png'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                        </div>
-                        
-                        <!-- Styled typography detail nodes -->
-                        <div style="display: flex; flex-direction: column; gap: 1px; width: 100%; overflow: hidden;">
-                            <h5 style="margin: 0; font-size: 0.72rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat', sans-serif;">
-                                ${pairingItem.title}
-                            </h5>
-                            <p style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #202c55; font-family: 'Montserrat', sans-serif;">
-                                ${formattedPrice}
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+    if (stockCount <= 0) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(108,117,125,0.1); color:#6c757d; border-radius:2px;"; //[cite: 2]
+        indicator.innerHTML = `<i class="fas fa-times-circle"></i> Sold Out`; //[cite: 2]
+    } else if (stockCount <= 2) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(255,20,147,0.08); color:#ff1493; border-radius:2px;"; //[cite: 2]
+        indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`; //[cite: 2]
+    } else {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;"; //[cite: 2]
+        indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`; //[cite: 2]
     }
+}
 
-    modalShield.style.display = "flex";
+// ➔ Helper: Keeps the scarcity header completely responsive
+function updateTopRightScarcityBadge(stockCount) {
+    const indicator = document.getElementById('qvVaultScarcityIndicator');
+    if (!indicator) return;
 
-    try {
-        modalShield.scrollTo({ top: 0, behavior: 'smooth' });
-        const internalCardElement = modalShield.querySelector('.qv-modal-card');
-        if (internalCardElement && typeof internalCardElement.scrollTo === 'function') {
-            internalCardElement.scrollTo({ top: 0 });
-        }
-    } catch (scrollError) {
-        modalShield.scrollTop = 0;
+    if (stockCount <= 0) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(108,117,125,0.1); color:#6c757d; border-radius:2px;";
+        indicator.innerHTML = `<i class="fas fa-times-circle"></i> Sold Out`;
+    } else if (stockCount <= 2) {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(255,20,147,0.08); color:#ff1493; border-radius:2px;";
+        indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`;
+    } else {
+        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;";
+        indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`;
     }
 }
 
@@ -3379,7 +3634,7 @@ function generateDynamicCatalogFilters() {
         foldersGrid.style.setProperty("display", "flex", "important");
         foldersGrid.style.setProperty("flex-wrap", "wrap", "important");
         foldersGrid.style.setProperty("justify-content", "center", "important");
-        foldersGrid.style.setProperty("gap", "60px", "important");
+        foldersGrid.style.setProperty("gap", "45px", "important");
     }
 
     const categoryMap = {};
@@ -3544,8 +3799,10 @@ async function synchronizeLiveStorefrontInventory() {
     }
 
     try {
-        // Query the Products table explicitly using your authorized project headers
-        const response = await fetch(`${sbUrl}/rest/v1/Products?select=id,stock,status`, {
+        // ➔ THE CORRECTION: URL updated to 'products' (lowercase) and performs a clean relational join request
+        const queryUrl = `${sbUrl}/rest/v1/products?select=id,status,product_variants(id,sku,color_name,color_hex,price,stock,image_url,status)`;
+
+        const response = await fetch(queryUrl, {
             method: 'GET',
             headers: {
                 'apikey': sbKey,
@@ -3556,19 +3813,28 @@ async function synchronizeLiveStorefrontInventory() {
 
         if (!response.ok) throw new Error(`Supabase returned status code: ${response.status}`);
         
-        const inventoryRows = await response.json();
+        const productsWithVariants = await response.json();
         
-        inventoryRows.forEach(row => {
-            const cleanId = parseInt(row.id);
-            if (!isNaN(cleanId)) {
-                MASTER_LIVE_INVENTORY_CACHE[cleanId] = {
-                    stock: parseInt(row.stock) || 0,
-                    status: String(row.status || '').trim().toLowerCase()
+        // Clear or populate your master inventory cache map cleanly
+       productsWithVariants.forEach(product => {
+            const cleanProductId = parseInt(product.id);
+            if (!isNaN(cleanProductId)) {
+                // Map the parent item and attach its variations directly to the global master memory cache
+                MASTER_LIVE_INVENTORY_CACHE[cleanProductId] = {
+                    status: String(product.status || '').trim().toLowerCase(),
+                    stock: parseInt(product.stock) || 0,
+                    variants: product.product_variants || [] // Clean array of variations nested inside
                 };
+                
+                // Keep productDatabase instances strictly mirrored on background sync loops
+                const localMatch = productDatabase.find(p => p.id === cleanProductId);
+                if (localMatch) {
+                    localMatch.product_variants = product.product_variants || [];
+                }
             }
         });
         
-        console.log("💎 Live Inventory Vault Synchronized successfully from Supabase:", MASTER_LIVE_INVENTORY_CACHE);
+        console.log("💎 Live Inventory Vault Synchronized successfully from Relational Database:", MASTER_LIVE_INVENTORY_CACHE);
         
         if (!productDatabase || productDatabase.length === 0) {
             await loadProductDatabaseEngine();
@@ -3594,43 +3860,37 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
 
-    console.log("Processing precise inventory levels synchronization down to Supabase nodes...");
-
     for (const item of cartItemsArray) {
         try {
-            const currentProductId = parseInt(item.id);
-            const purchasedQuantity = parseInt(item.quantity) || 1; 
+            const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+            const product = currentDb.find(p => p.id === item.id);
+            if (!product || !product.product_variants) continue;
 
-            const currentCachedData = MASTER_LIVE_INVENTORY_CACHE[currentProductId];
-            if (!currentCachedData) continue;
+            // Find the exact variant row matching the purchased color
+            const exactVariant = product.product_variants.find(v => v.color_name === item.color || (item.color === '' && v.color_name === 'Standard'));
+            if (!exactVariant) continue;
 
-            const currentStockLevel = parseInt(currentCachedData.stock) || 0;
-            const absoluteNewStockLevel = Math.max(0, currentStockLevel - purchasedQuantity);
-            const computedStatusFlag = absoluteNewStockLevel <= 0 ? "sold" : "available";
+            const currentStockLevel = parseInt(exactVariant.stock) || 0;
+            const absoluteNewStockLevel = Math.max(0, currentStockLevel - parseInt(item.quantity));
 
-            const itemPatchUrl = `${sbUrl}/rest/v1/Products?id=eq.${currentProductId}`;
+            // ➔ THE CORRECTION: Point the endpoint request directly to lowercase product_variants table row
+            const variantPatchUrl = `${sbUrl}/rest/v1/product_variants?id=eq.${exactVariant.id}`;
             
-            const stockPayload = {
-                "stock": absoluteNewStockLevel,
-                "status": computedStatusFlag,
-                "badge": absoluteNewStockLevel <= 0 ? "Sold Out" : ""
-            };
-
-            // Post write update cleanly to your table row index
-            await fetch(itemPatchUrl, {
+            await fetch(variantPatchUrl, {
                 method: 'PATCH',
                 headers: {
                     'apikey': sbKey,
                     'Authorization': `Bearer ${sbKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(stockPayload)
+                body: JSON.stringify({
+                    "stock": absoluteNewStockLevel,
+                    "status": absoluteNewStockLevel <= 0 ? 'sold' : 'active'
+                })
             });
 
-            console.log(`✨ Product ID #${currentProductId}: Successfully deducted ${purchasedQuantity} piece(s). Balance left: ${absoluteNewStockLevel}`);
-
         } catch (err) {
-            console.error(`Inventory modification trace failed for item identification index:`, err);
+            console.error(`Inventory deduction sync failure catch trace:`, err);
         }
     }
 }
@@ -4240,7 +4500,7 @@ function selectStyleClusterFilter(clusterKeyword) {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #777; font-weight: 500; font-family:'Montserrat';">
                 <i class="fas fa-gem" style="font-size: 1.5rem; color: #e8e8ef; display: block; margin-bottom: 10px;"></i>
-                New masterpieces are currently being curated for this style segment.
+                No items in this style.
             </div>`;
     } else {
         grid.innerHTML = matchedStylePool.map(product => {
@@ -4991,4 +5251,158 @@ function closeAdminCarouselConsoleOverlay() {
 // Trigger database load right along with database initialization loops
 document.addEventListener("DOMContentLoaded", () => {
     loadLiveCarouselDatabaseEngine();
+});
+
+function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === productId);
+    if (!product || !product.product_variants) return;
+
+    const matchedVariant = product.product_variants.find(v => v.id === variantId);
+    if (!matchedVariant) return;
+
+    // 1. Update active variant tracker on card
+    const cardEl = document.getElementById(`catalog-card-${productId}`);
+    if (cardEl) {
+        cardEl.setAttribute('data-active-variant-id', variantId);
+    }
+
+    // 2. Smoothly cross-fade image asset
+    const imgEl = document.getElementById(`catalog-card-img-${productId}`);
+    if (imgEl && matchedVariant.image_url) {
+        imgEl.style.opacity = "0.3";
+        setTimeout(() => {
+            imgEl.src = matchedVariant.image_url;
+            imgEl.style.opacity = "1";
+        }, 120);
+    }
+
+    // 3. Swap the pricing string text
+    const priceEl = document.getElementById(`catalog-card-price-${productId}`);
+    if (priceEl && matchedVariant.price) {
+        priceEl.innerText = formatCurrency(parseFloat(matchedVariant.price));
+    }
+
+    // ➔ THE NEW EXTENSION: Dynamically swap the heart icon fill depending on this specific color's status
+    const wishlistCheckKey = `${productId}|${matchedVariant.color_name}`;
+    const heartBtn = cardEl ? cardEl.querySelector('.wishlist-heart-btn') : null;
+    
+    if (heartBtn) {
+        if (wishlistMemory.includes(wishlistCheckKey)) {
+            heartBtn.innerHTML = `<i class="fas fa-heart" style="font-size: 0.85rem; color: var(--pink-accent, #ff1493); transition: color 0.2s ease;"></i>`;
+            heartBtn.classList.add('active');
+        } else {
+            heartBtn.innerHTML = `<i class="far fa-heart" style="font-size: 0.85rem; color: #202c55; transition: color 0.2s ease;"></i>`;
+            heartBtn.classList.remove('active');
+        }
+    }
+
+    // 5. Highlight the active dot element
+    const dots = document.querySelectorAll(`.catalog-variant-dot-${productId}`);
+    dots.forEach((dot, idx) => {
+        if (idx === variantIdx) {
+            dot.style.border = "2px solid #202c55";
+            dot.style.transform = "scale(1.1)";
+        } else {
+            dot.style.border = "1px solid rgba(0,0,0,0.15)";
+            dot.style.transform = "scale(1)";
+        }
+    });
+}
+
+// ➔ Routes the main card "Add to Cart" button clicks through the active color state
+function handleCatalogCardAddToCart(productId, safeTitle) {
+    const cardEl = document.getElementById(`catalog-card-${productId}`);
+    if (!cardEl) {
+        addToCartEngine(productId);
+        return;
+    }
+
+    const activeVariantId = cardEl.getAttribute('data-active-variant-id');
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === productId);
+
+    if (product && product.product_variants && product.product_variants.length > 0 && activeVariantId) {
+        const matchedVariant = product.product_variants.find(v => v.id === parseInt(activeVariantId));
+        if (matchedVariant) {
+            // Locks the global checkout state to the selected main page dot color item
+            window.activeVariantSelection = matchedVariant;
+        }
+    }
+    
+    // Execute global cart addition flow mechanics
+    addToCartEngine(productId);
+}
+
+function changeQtyExplicit(cartLineId, delta) {
+    const targetItem = shoppingCart.find(item => item.cartLineId === cartLineId);
+    if (!targetItem) return;
+
+    targetItem.quantity += delta;
+    if (targetItem.quantity <= 0) {
+        shoppingCart = shoppingCart.filter(item => item.cartLineId !== cartLineId);
+    }
+    updateCartUI();
+}
+
+// ➔ Replace your old removeFromCart(id) function with this:
+function removeFromCartExplicit(cartLineId) {
+    shoppingCart = shoppingCart.filter(item => item.cartLineId !== cartLineId);
+    updateCartUI();
+}
+// ➔ FRESH, EXTRA-SAFE ROW BUILDER (Completely isolated to prevent loops)
+function appendNewVariantRowToAdminForm(existingData = null) {
+    const container = document.getElementById('adminFormDynamicVariantsContainer');
+    if (!container) return;
+
+    const uniqueRowId = 'var-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    const rowDiv = document.createElement('div');
+    rowDiv.id = uniqueRowId;
+    rowDiv.className = "admin-variant-input-row";
+    rowDiv.style.cssText = "display: grid; grid-template-columns: 1.2fr 45px 1.2fr 1fr 0.8fr 2fr 30px; gap: 6px; align-items: center; background: #fafafa; padding: 8px; border: 1px solid #e8e8ef; border-radius: 4px; box-sizing: border-box; width:100%;";
+
+    // Fallbacks for Edit mode hydration profiles
+    const colorName = existingData ? (existingData.color_name || '') : '';
+    const colorHex = existingData ? (existingData.color_hex || '#202c55') : '#202c55';
+    const sku = existingData ? (existingData.sku || '') : '';
+    const price = existingData ? (existingData.price || '') : '';
+    const stock = existingData ? (existingData.stock || '0') : '0';
+    const imgUrl = existingData ? (existingData.image_url || existingData.image || '') : '';
+    const variantDatabaseId = existingData ? (existingData.id || '') : ''; 
+
+    rowDiv.innerHTML = `
+        <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
+        <input type="text" class="v-name" value="${colorName}" placeholder="Color (e.g. Red)" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
+        <input type="color" class="v-hex" value="${colorHex}" title="Choose color swatch dot style" style="padding: 0; width: 100%; height: 28px; border: 1px solid #e8e8ef; border-radius: 4px; cursor: pointer; background:transparent;">
+        <input type="text" class="v-sku" value="${sku}" placeholder="SKU" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box; font-family:monospace;">
+        <input type="number" class="v-price" value="${price}" placeholder="Price" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
+        <input type="number" class="v-stock" value="${stock}" placeholder="Stock" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
+        <input type="text" class="v-img" value="${imgUrl}" placeholder="Image URL" style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
+        <button type="button" onclick="document.getElementById('${uniqueRowId}').remove()" style="background: transparent; border: none; color: #d9383a; cursor: pointer; font-size: 0.85rem; padding: 0; display:flex; align-items:center; justify-content:center;" title="Remove this variant option"><i class="fas fa-minus-circle"></i></button>
+    `;
+
+    container.appendChild(rowDiv);
+}
+// ➔ Controls for the Footer "Why Angel" Trust Modal Window
+function openWhyAngelModal(event) {
+    if (event) event.preventDefault();
+    const modal = document.getElementById('whyAngelTrustModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeWhyAngelModal() {
+    const modal = document.getElementById('whyAngelTrustModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Close the modal instantly if the user clicks anywhere outside the card frame box
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('whyAngelTrustModal');
+    if (e.target === modal) {
+        closeWhyAngelModal();
+    }
 });
