@@ -931,7 +931,7 @@ function renderVaultSaleSection() {
             <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
                 <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
             </div>
-            <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
+            <div class="product-info" style="background: #ffffff; text-align: center; padding: 12px 0 0 0;">
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Jewellery'} • Special Offer</p>
                 <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
                 <div style="text-align: center; margin-bottom: 14px;">${pricingLayoutHTML}</div>
@@ -1026,7 +1026,7 @@ function renderTrendingSection() {
             <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
                 <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
             </div>
-            <div class="product-info" style="background: #ffffff; text-align: left; padding: 12px 0 0 0;">
+            <div class="product-info" style="background: #ffffff; text-align: center; padding: 12px 0 0 0;">
                 <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
                 ${pricingLayoutHTML}
