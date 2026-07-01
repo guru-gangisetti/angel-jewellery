@@ -1692,17 +1692,31 @@ function openQuickViewShield(id) {
     const product = currentDb.find(p => p.id === id);
     if (!product) return;
 
-    const modalVariants = product.product_variants || product.Product_Variants || product.variants || [];
+    // Pull variants safely
+    const rawVariants = product.product_variants || product.Product_Variants || product.variants || [];
+    
+    // ➔ THE FILTER: Only treat it as a valid color variant list if there's more than 1 option
+    // and the first option isn't just a placeholder like "Standard" or "Default"
+    let modalVariants = [];
+    if (rawVariants.length > 1) {
+        modalVariants = rawVariants;
+    } else if (rawVariants.length === 1) {
+        const firstColorName = String(rawVariants[0].color_name || rawVariants[0].colorName || '').toLowerCase().trim();
+        if (firstColorName !== '' && firstColorName !== 'standard' && firstColorName !== 'default') {
+            modalVariants = rawVariants;
+        }
+    }
+
     let initialPrice = product.price;
     let initialImg = product.image;
 
-    if (modalVariants.length > 0) {
-        const firstVariant = modalVariants[0];
+    if (rawVariants.length > 0) {
+        const firstVariant = rawVariants[0];
         initialPrice = firstVariant.price;
         initialImg = firstVariant.image_url || firstVariant.imageUrl || initialImg;
     }
 
-    // 1. Clean up any previous dynamic blocks completely
+    // 1. Clean up any previous dynamic rows to prevent rendering duplicate blocks
     const oldMobileBlock = document.getElementById('qvMobileVariantWrapperBlock');
     if (oldMobileBlock) oldMobileBlock.remove();
     const oldDesktopBlock = document.getElementById('qvDesktopVariantWrapperBlock');
@@ -1710,6 +1724,7 @@ function openQuickViewShield(id) {
     const oldDynamicBlock = document.getElementById('qvDynamicVariantWrapperBlock');
     if (oldDynamicBlock) oldDynamicBlock.remove();
 
+    // ➔ 2. CONDITIONAL INJECTION: Only build the HTML if there are actual valid variants to show
     if (modalVariants.length > 0) {
         window.activeVariantSelection = modalVariants[0];
 
@@ -1800,9 +1815,11 @@ function openQuickViewShield(id) {
         setupSyncListeners('.qv-new-variant-pill-desk');
 
     } else {
-        window.activeVariantSelection = null;
+        // Safe reset if no color mapping profiles are found
+        window.activeVariantSelection = (rawVariants.length > 0) ? rawVariants[0] : null;
     }
 
+    // Core Text Node Assignments
     document.getElementById('qvImage').src = (window.activeVariantSelection && (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl)) ? (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl) : product.image; 
     document.getElementById('qvTitle').innerText = product.title; 
     document.getElementById('qvCategory').innerText = String(product.category || '').toUpperCase(); 
