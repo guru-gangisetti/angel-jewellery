@@ -552,22 +552,6 @@ header.scrolled ~ #catalog,
     border-color: var(--purple-primary);
     box-shadow: 0 16px 35px rgba(32, 44, 85, 0.06); 
 }
-.sale-section-wrapper .product-card { 
-    border: 1px solid var(--brick-red) !important;
-    border-radius: 8px !important; 
-}
-.sale-section-wrapper .product-img-wrapper img{
-    border-radius: 8px !important; 
-}
-
-.trending-section-wrapper .product-card { 
-    border: 1px solid var(--trend-green) !important;
-    border-radius: 8px !important; 
-}
-.trending-section-wrapper .product-img-wrapper img{
-    border-radius: 8px !important; 
-}
-
 .product-image-container, .product-img-wrapper { 
     position: relative; 
     overflow: hidden; 
@@ -675,7 +659,7 @@ header.scrolled ~ #catalog,
 .cart-header i { cursor: pointer; font-size: 1.2rem; color: var(--text-muted); transition: var(--transition); }
 .cart-header i:hover { color: var(--pink-accent); }
 
-#cartItemsContainer { 
+#cartItemsContainer, #wishlistItemsContainer { 
     flex: 1 1 auto; 
     padding: 10px 0; 
     background: #ffffff;
@@ -1157,7 +1141,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     #cartDrawer[style*="right: 0px"], #wishlistDrawer[style*="right: 0px"] { right: 0 !important; }
     .cart-item-row { padding-right: 40px !important; }
     .cart-item-row .fa-trash { right: 20px !important; }
-    #cartItemsContainer { max-height: calc(100vh - 420px); }
+    #cartItemsContainer, #wishlistItemsContainer { max-height: calc(100vh - 420px); }
 
     .tracking-form{
         display: inline-block !important;
@@ -1286,4 +1270,344 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     display: none;
     transform: translateY(-10px); 
     pointer-events: none;
+}
+/* =========================================================================
+   ANGEL JEWELLERY — TRUST & GUARANTEE STRIP
+   ========================================================================= */
+.trust-strip-section {
+    background: #ffffff;
+    padding: 28px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--font-body);
+}
+.trust-strip-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+.trust-strip-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    text-align: left;
+}
+.trust-strip-icon {
+    font-size: 1.3rem;
+    color: var(--pink-accent);
+    min-width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.trust-strip-text h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--purple-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 0 0 2px 0;
+}
+.trust-strip-text p {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 500;
+}
+@media (max-width: 768px) {
+    .trust-strip-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px 14px;
+    }
+    .trust-strip-item { justify-content: flex-start; }
+}
+@media (max-width: 420px) {
+    .trust-strip-text h4 { font-size: 0.68rem; }
+    .trust-strip-text p { font-size: 0.62rem; }
+    .trust-strip-icon { font-size: 1.1rem; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — AS SEEN ON INSTAGRAM (UGC SHOWCASE)
+   ========================================================================= */
+.ugc-showcase-section {
+    max-width: 1200px;
+    margin: 70px auto;
+    padding: 0 20px;
+    font-family: var(--font-body);
+    text-align: center;
+    box-sizing: border-box;
+}
+.ugc-showcase-header { margin-bottom: 40px; }
+.ugc-showcase-eyebrow {
+    color: #cca43b;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+}
+.ugc-showcase-title {
+    color: var(--purple-primary);
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-transform: uppercase;
+}
+.ugc-showcase-divider {
+    width: 30px;
+    height: 1.5px;
+    background: #cca43b;
+    margin: 20px auto;
+    opacity: 0.8;
+}
+.ugc-showcase-subtext {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+.ugc-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+}
+.ugc-showcase-tile {
+    position: relative;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fafafa;
+    border: 1px solid var(--border-subtle);
+    display: block;
+    text-decoration: none;
+}
+.ugc-showcase-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+.ugc-showcase-tile:hover img { transform: scale(1.06); }
+.ugc-showcase-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(32,44,85,0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+.ugc-showcase-tile:hover .ugc-showcase-overlay {
+    background: rgba(32,44,85,0.45);
+}
+.ugc-showcase-overlay i {
+    color: #ffffff;
+    font-size: 1.4rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.ugc-showcase-tile:hover .ugc-showcase-overlay i { opacity: 1; }
+.ugc-showcase-handle {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.ugc-showcase-tile:hover .ugc-showcase-handle { opacity: 1; }
+.ugc-showcase-cta { margin-top: 35px; }
+.ugc-showcase-follow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--purple-primary);
+    color: var(--purple-primary);
+    padding: 12px 28px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.ugc-showcase-follow-btn:hover { background: var(--purple-primary); color: #fff; }
+.ugc-showcase-follow-btn i { font-size: 1rem; color: #cca43b; }
+
+@media (max-width: 900px) {
+    .ugc-showcase-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+    .ugc-showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .ugc-showcase-title { font-size: 1.4rem; }
+    .ugc-showcase-section { margin: 45px auto; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — MODERN UNIFIED PRODUCT CARD SYSTEM
+   One shared card component for the All Collection grid, Sale, Trending,
+   and the ₹350 Flash Vault. Sections are told apart by a badge/accent,
+   not by a different card shape — this is what makes the whole site feel
+   like one considered product instead of four different experiments.
+   ========================================================================= */
+.angel-card {
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+    box-shadow: 0 1px 3px rgba(17,17,22,0.05);
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.35s cubic-bezier(0.16,1,0.3,1),
+                border-color 0.35s ease;
+}
+.angel-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 38px rgba(32,44,85,0.14);
+    border-color: rgba(32,44,85,0.14);
+}
+.angel-card.is-disabled { opacity: 0.6; }
+
+.angel-card-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    background: #f6f6f9;
+}
+.angel-card-media img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.angel-card:hover .angel-card-media img { transform: scale(1.07); }
+
+.angel-card-badge {
+    position: absolute; top: 12px; left: 12px; z-index: 3;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.6px;
+    text-transform: uppercase; padding: 5px 11px; border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.14);
+    font-family: var(--font-body);
+}
+
+.angel-card-wishlist {
+    position: absolute; top: 10px; right: 10px; z-index: 3;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.88); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    cursor: pointer; transition: all 0.25s ease; padding: 0; outline: none;
+}
+.angel-card-wishlist:hover { background: #ffffff; transform: scale(1.08); }
+
+.angel-card-soldout-scrim {
+    position: absolute; inset: 0; background: rgba(17,17,22,0.55);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; z-index: 2; text-align: center; padding: 0 10px;
+}
+
+.angel-card-body {
+    padding: 14px 15px 16px;
+    display: flex; flex-direction: column; gap: 3px; flex-grow: 1;
+}
+.angel-card-eyebrow {
+    color: #cca43b; font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; margin: 0 0 2px;
+}
+.angel-card-swatches { display: flex; gap: 6px; margin: 1px 0 3px; }
+
+.angel-card-title {
+    font-size: 0.85rem; font-weight: 600; color: #111116; line-height: 1.35;
+    margin: 2px 0 4px; display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden; min-height: 2.2em;
+    font-family: var(--font-body);
+}
+
+.angel-card-price-row {
+    display: flex; align-items: baseline; gap: 8px; margin: 2px 0 10px; flex-wrap: wrap;
+}
+.angel-card-price { font-size: 0.95rem; font-weight: 700; color: var(--purple-primary); }
+.angel-card-price-was {
+    font-size: 0.78rem; color: var(--text-muted); text-decoration: line-through; font-weight: 500;
+}
+.angel-card-discount-pill {
+    font-size: 0.6rem; font-weight: 700; color: #04693a;
+    background: rgba(4,105,58,0.09); padding: 2px 8px; border-radius: 20px;
+}
+
+.angel-card-cta {
+    margin-top: auto; width: 100%; padding: 11px 0; border: none; border-radius: 8px;
+    background: var(--purple-primary); color: #ffffff !important; font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center;
+    justify-content: center; gap: 6px; cursor: pointer; transition: all 0.25s ease;
+    font-family: var(--font-body);
+}
+.angel-card-cta:hover { background: #161f3d; box-shadow: 0 8px 18px rgba(32,44,85,0.25); }
+.angel-card-cta.is-sold-out {
+    background: #f0f0f4 !important; color: #9a9caa !important; cursor: not-allowed;
+    box-shadow: none;
+}
+.angel-card-cta.is-sold-out:hover { background: #f0f0f4 !important; box-shadow: none; }
+
+/* Flash Vault compact card variant — the ₹350 price tag is this site's one
+   distinctive "signature" touch: a die-cut ticket stub clipped to the
+   corner, tying into the Flash Vault's own "treasure hunt" framing. */
+.angel-card--flash { border-radius: 12px; }
+.angel-card--flash .angel-card-body { padding: 10px 11px 30px; gap: 2px; }
+.angel-card--flash .angel-card-title {
+    font-size: 0.76rem; min-height: 0; -webkit-line-clamp: 1; margin-bottom: 2px;
+}
+.angel-card--flash .angel-card-cta { padding: 8px 0; font-size: 0.62rem; border-radius: 6px; }
+.angel-card-price-tag {
+    position: absolute; top: 10px; right: -6px; z-index: 3;
+    background: var(--pink-accent); color: #ffffff; font-size: 0.72rem; font-weight: 800;
+    padding: 5px 12px; letter-spacing: 0.3px; font-family: var(--font-body);
+    box-shadow: 0 6px 12px rgba(255,20,147,0.35);
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 50%);
+}
+
+@media (max-width: 480px) {
+    .angel-card-body { padding: 11px 12px 13px; }
+    .angel-card-title { font-size: 0.78rem; }
+    .angel-card-price { font-size: 0.85rem; }
+    .angel-card-cta { padding: 9px 0; font-size: 0.64rem; }
+    .angel-card--flash .angel-card-body { padding: 9px 10px 24px; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — MOBILE SPACING CLEANUP
+   Several sections used fixed 80-100px vertical padding regardless of
+   screen size, which is what was creating the excess scroll/whitespace
+   feel on phones. Trimmed proportionally here, plus extending the
+   sale/trending compact-padding fix beyond the old 550px-only cutoff.
+   ========================================================================= */
+@media (max-width: 768px) {
+    .story-section-wrapper { padding: 48px 0 !important; }
+    .feedback-display-section { padding: 44px 20px !important; }
+    .style-clusters-section { margin: 32px auto !important; }
+    .ugc-showcase-section { margin: 36px auto !important; }
+    .ugc-showcase-header { margin-bottom: 24px !important; }
+    #catalog, #saleSection, #trendingSection { padding: 28px 0 !important; }
+    .sale-section-wrapper, .trending-section-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
+    #flashVaultSection { margin: 20px 8px !important; padding: 18px 14px !important; }
+}
+@media (max-width: 480px) {
+    .story-section-wrapper { padding: 36px 0 !important; }
+    .feedback-display-section { padding: 36px 16px !important; }
 }

@@ -6,13 +6,13 @@
     <title>Angel Jewellery | Luxury Catalog Collection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Razorpay checkout.js is no longer loaded here — it's fetched on demand right before checkout opens (see loadRazorpaySDK() in script.js). This removes a render-blocking third-party script from every page load. -->
 </head>
-<body style="display: none;">
+<body>
 
     <div id="preloader"><div class="spinner"></div></div>
 
@@ -132,6 +132,43 @@
             button[onclick*="directionStep(1)"] { right: 28px !important; left: auto !important; }
         }
     </style>
+
+    <!-- =========================================================================
+         ANGEL JEWELLERY — TRUST & GUARANTEE STRIP
+         ========================================================================= -->
+    <section class="trust-strip-section" aria-label="Why shop with Angel Jewellery">
+        <div class="trust-strip-container">
+            <div class="trust-strip-item">
+                <i class="fas fa-shield-alt trust-strip-icon"></i>
+                <div class="trust-strip-text">
+                    <h4>Anti-Tarnish Guarantee</h4>
+                    <p>Long-lasting shine, always</p>
+                </div>
+            </div>
+            <div class="trust-strip-item">
+                <i class="fas fa-truck trust-strip-icon"></i>
+                <div class="trust-strip-text">
+                    <h4>Free Pan-India Shipping</h4>
+                    <p>On all orders over ₹1,000</p>
+                </div>
+            </div>
+            <div class="trust-strip-item">
+                <i class="fas fa-undo-alt trust-strip-icon"></i>
+                <div class="trust-strip-text">
+                    <h4>Easy 7-Day Exchange</h4>
+                    <p>Hassle-free, no questions asked</p>
+                </div>
+            </div>
+            <div class="trust-strip-item">
+                <i class="fas fa-lock trust-strip-icon"></i>
+                <div class="trust-strip-text">
+                    <h4>Secure Checkout</h4>
+                    <p>Encrypted payments via Razorpay</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="catalog-controls" id="catalog" style="background: #fafafa; padding: 90px 0 70px 0; width: 100%; display: block !important; position: relative;">
         
         <!-- =========================================================================
@@ -156,12 +193,6 @@
         </div>
 
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; box-sizing: border-box;">
-            <div id="showroomNavigationHeader" style="display: none; justify-content: center; align-items: center; margin-bottom: 30px; animation: fadeIn 0.4s ease; width: 100%;">
-                <button type="button" onclick="returnToMainShowroomFolders()" style="background: #ffffff; border: 1px solid #202c55; color: #202c55; padding: 8px 18px; font-size: 0.7rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.02);" onmouseover="this.style.background='#202c55'; this.style.color='#fff';" onmouseout="this.style.background='#ffffff'; this.style.color='#202c55';">
-                    <i class="fas fa-arrow-left" style="font-size: 0.7rem;"></i> Back to All Collections
-                </button>
-            </div>
-
             <div id="jewelryCategoryFoldersGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 35px; width: 100%; box-sizing: border-box;">
                 </div>
         </div>
@@ -176,6 +207,28 @@
    <section class="products-section" style="padding: 0px 0 8px 0; display: none; background: #ffffff;">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0px;">
             <div class="product-grid filtered-collection-frame" id="productGrid"></div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         ANGEL JEWELLERY — AS SEEN ON INSTAGRAM (UGC SHOWCASE)
+         ========================================================================= -->
+    <section class="ugc-showcase-section">
+        <div class="ugc-showcase-header">
+            <span class="ugc-showcase-eyebrow">Real Angels, Real Style</span>
+            <h2 class="ugc-showcase-title">As Seen On Instagram</h2>
+            <div class="ugc-showcase-divider"></div>
+            <p class="ugc-showcase-subtext">Tag us <strong>@angeljewelleryofficial</strong> for a chance to be featured here</p>
+        </div>
+
+        <div id="ugcShowcaseGrid" class="ugc-showcase-grid">
+            <!-- Rendered dynamically by renderInstagramShowcaseGallery() in script.js -->
+        </div>
+
+        <div class="ugc-showcase-cta">
+            <a href="https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl" target="_blank" rel="noopener" class="ugc-showcase-follow-btn">
+                <i class="fab fa-instagram"></i> Follow @angeljewelleryofficial
+            </a>
         </div>
     </section>
 
@@ -199,7 +252,7 @@
             <!-- Tile 1: CZ & Pink Diamond Edit (mini-haram-14.jpeg) -->
             <div class="mosaic-tile tile-large" onclick="selectStyleClusterFilter('CZ')">
                 <div class="tile-image-wrapper">
-                    <img src="images/mini-haram-14.jpeg" alt="CZ & Silver Polish Sets">
+                    <img loading="lazy" decoding="async" src="images/mini-haram-14.jpeg" alt="CZ & Silver Polish Sets">
                     <div class="tile-overlay-mask"></div>
                 </div>
                 <div class="tile-content-box">
@@ -215,7 +268,7 @@
                 <!-- Tile 2: Antique Nakshi Guttapusalu (necklace-5292026-1225-3.jpg) -->
                 <div class="mosaic-tile tile-wide" onclick="selectStyleClusterFilter('antique')">
                     <div class="tile-image-wrapper">
-                        <img src="images/necklace-5292026-1225-3.jpeg" alt="Antique Temple Collection">
+                        <img loading="lazy" decoding="async" src="images/necklace-5292026-1225-3.jpeg" alt="Antique Temple Collection">
                         <div class="tile-overlay-mask"></div>
                     </div>
                     <div class="tile-content-box">
@@ -231,7 +284,7 @@
                     <!-- Tile 3: Radha Krishna Handcrafted Box (pendent-chains-4.jpeg) -->
                     <div class="mosaic-tile tile-split" onclick="selectStyleClusterFilter('Handcrafted')">
                         <div class="tile-image-wrapper">
-                            <img src="images/pendent-chains-4.jpeg" alt="Handcrafted Heritage Devotion">
+                            <img loading="lazy" decoding="async" src="images/pendent-chains-4.jpeg" alt="Handcrafted Heritage Devotion">
                             <div class="tile-overlay-mask"></div>
                         </div>
                         <div class="tile-content-box">
@@ -244,7 +297,7 @@
                     <!-- Tile 4: Navratna Multi-Stone String (mini-haram-2.jpeg) -->
                     <div class="mosaic-tile tile-split" onclick="selectStyleClusterFilter('Navratna')">
                         <div class="tile-image-wrapper">
-                            <img src="images/mini-haram-2.jpeg" alt="Navratna Multi-Stone Strings">
+                            <img loading="lazy" decoding="async" src="images/mini-haram-2.jpeg" alt="Navratna Multi-Stone Strings">
                             <div class="tile-overlay-mask"></div>
                         </div>
                         <div class="tile-content-box">
@@ -291,10 +344,9 @@
         <div class="container" style="margin-bottom: 0px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box;">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; width: 100%;">
                 <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #202c55; margin: 0;">
-                    Grab Offers
+                    Sale items
                 </h2>
-                <span style="color: #ff1493; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; font-family: 'Montserrat';">Limited time sale</span>
-                <div style="width: 30px; height: 1.5px; background: #ff1493; margin-top: 15px;"></div>
+                <div style="width: 100%; height: 1.5px; background: #ff1493; margin-top: 15px;"></div>
             </div>
         </div>
         
@@ -331,8 +383,8 @@
     .modern-trending-carousel-track::-webkit-scrollbar { display: none; }
     
     /* Desktop & Tablet slider card constraint proportions for BOTH tracks */
-    #trendingProductGrid .product-card,
-    #saleProductGrid .product-card {
+    #trendingProductGrid .angel-card,
+    #saleProductGrid .angel-card {
         flex: 0 0 calc(25% - 18px) !important;
         min-width: 250px !important;
         box-sizing: border-box;
@@ -340,15 +392,15 @@
 
     /* Mobile View constraints adjustment loops */
     @media (max-width: 900px) {
-        #trendingProductGrid .product-card,
-        #saleProductGrid .product-card { 
+        #trendingProductGrid .angel-card,
+        #saleProductGrid .angel-card { 
             flex: 0 0 calc(50% - 12px) !important; 
             min-width: 180px !important; 
         }
     }
     @media (max-width: 550px) {
-        #trendingProductGrid .product-card,
-        #saleProductGrid .product-card { 
+        #trendingProductGrid .angel-card,
+        #saleProductGrid .angel-card { 
             flex: 0 0 calc(70% - 10px) !important; 
             min-width: 160px !important; 
         }
@@ -452,7 +504,7 @@
             <h3>Your Wishlist</h3>
             <i class="fas fa-times" id="closeWishlistBtn"></i>
         </div>
-        <div id="cartItemsContainer" style="max-height: 100vh;">
+        <div id="wishlistItemsContainer" style="max-height: 100vh;">
             <div id="wishlistItemsList"></div>
         </div>
     </div>
@@ -518,7 +570,7 @@
     <section class="story-section-wrapper" id="story">
         <div class="container story-grid">
             <div class="story-image-pane">
-                <img src="assets/our-story.png" alt="Crafting Angel Jewellery">
+                <img loading="lazy" decoding="async" src="assets/our-story.png" alt="Crafting Angel Jewellery">
             </div>
             <div class="story-text-pane">
                 <span class="story-tagline">The Heritage of Elegance</span>
@@ -1107,10 +1159,6 @@
                         <option value="navratna">Navratna & Beads</option>
                     </select>
                 </div>
-                <!-- <div>
-                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Image Asset Path File URL</label>
-                    <input type="text" id="formProductImage" placeholder="assets/p1.jpg" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
-                </div> -->
                 <div class="form-group" style="margin-bottom: 15px; text-align: left; font-family: 'Montserrat', sans-serif;">
                     <label style="display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; margin-bottom: 6px;">
                         <i class="fas fa-camera"></i>Image
@@ -1676,10 +1724,18 @@
     border-radius: 10px !important;
 }
 
+/* Consistent card width for the horizontal-scroll deck at every screen size
+   (previously only the mobile case below had an explicit width, so desktop
+   cards had no defined size in this flex row). */
+#flashVaultGrid .angel-card {
+    flex: 0 0 190px;
+    width: 190px;
+}
+
 /* 📱 MOBILE CARD SCALING SAFE ZONE */
 @media (max-width: 768px) {
     /* Prevent the flexbox container from crushing card sizes down to fit the window viewport */
-    #flashVaultGrid .product-card {
+    #flashVaultGrid .angel-card {
         flex: 0 0 165px !important;
         width: 165px !important;
         max-width: 165px !important;
@@ -1691,4 +1747,4 @@
 }
 </style>
 </body>
-</html>
+</html>

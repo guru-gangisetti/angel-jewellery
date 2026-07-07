@@ -1,4 +1,37 @@
 // =========================================================================
+// ANGEL JEWELLERY — "AS SEEN ON INSTAGRAM" UGC SHOWCASE
+// Curated manually for now — a live Instagram feed needs a Meta Graph API
+// app + backend token, which is a bigger lift than this section warrants
+// today. To add a new photo: drop the image into assets/ugc/ and push a
+// new entry into the array below. Keep images square (1:1) for best fit.
+// =========================================================================
+const instagramShowcaseFeed = [
+    { image: 'assets/ugc/ugc-1.webp', handle: '@priya.wears.gold' },
+    { image: 'assets/ugc/ugc-2.webp', handle: '@meera.style' },
+    { image: 'assets/ugc/ugc-3.jpeg', handle: '@ananya.k' },
+    { image: 'assets/ugc/ugc-4.jpeg', handle: '@thejewelrydiaries' },
+    { image: 'assets/ugc/ugc-5.webp', handle: '@radhika.official' },
+    { image: 'assets/ugc/ugc-6.jpeg', handle: '@styledby.sn' }
+];
+const instagramProfileLink = 'https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl';
+
+function renderInstagramShowcaseGallery() {
+    const grid = document.getElementById('ugcShowcaseGrid');
+    if (!grid) return;
+
+    grid.innerHTML = instagramShowcaseFeed.map(post => `
+        <a href="${instagramProfileLink}" target="_blank" rel="noopener" class="ugc-showcase-tile" aria-label="View ${post.handle} on Instagram">
+            <img src="${post.image}" loading="lazy" decoding="async" alt="Customer wearing Angel Jewellery"
+                 onerror="this.closest('.ugc-showcase-tile').style.display='none'">
+            <div class="ugc-showcase-overlay"><i class="fab fa-instagram"></i></div>
+            <span class="ugc-showcase-handle">${post.handle}</span>
+        </a>
+    `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', renderInstagramShowcaseGallery);
+
+// =========================================================================
 // 💎 ANGEL JEWELLERY — GLOBAL MULTI-GRID METADATA DECK LAYOUT OVERRIDES
 // =========================================================================
 if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlobalMobileCardOverrides')) {
@@ -697,14 +730,7 @@ function filterCatalog(passedSearchQuery) {
             // B. Compile all individual product card layouts cleanly
             const compiledProductCardsHTML = filteredResults.map(product => {
                 const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
-                //const isFavorited = (typeof wishlistMemory !== 'undefined') ? wishlistMemory.includes(product.id) : false;
-                // const firstColorName = cardVariants.length > 0 ? cardVariants[0].color_name : 'Standard';
-                // const isFavorited = wishlistMemory.includes(`${product.id}|${firstColorName}`);
                 
-                const badgeHTML = product.badge 
-                    ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>`
-                    : '';
-                    
                 const rawPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
                 const displayPrice = rawPriceValue > 0 ? `₹${rawPriceValue.toLocaleString('en-IN')}` : 'Price on Request';
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
@@ -717,7 +743,7 @@ function filterCatalog(passedSearchQuery) {
 
                 if (cardVariants.length > 0 && cardVariants[0].color_name !== 'Standard') {
                     colorDotsHTML = `
-                        <div class="card-color-swatches" style="display: flex; gap: 8px; justify-content: center; align-items: center; margin: 10px 0; width: 100%; position: relative; z-index: 5;">
+                        <div class="card-color-swatches angel-card-swatches" style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; width: 100%; position: relative; z-index: 5;">
                             ${cardVariants.map((v, vIdx) => `
                                 <span title="${v.color_name || 'Option'}" 
                                     onclick="event.stopPropagation(); handleCatalogCardDotClick(event, ${product.id}, ${v.id}, ${vIdx})"
@@ -746,57 +772,42 @@ function filterCatalog(passedSearchQuery) {
                 ` : '';
 
                 const defaultVariantId = cardVariants.length > 0 ? cardVariants[0].id : '';
-                    return `<div class="product-card" 
+                    return `<div class="angel-card ${isSoldOut ? 'is-disabled' : ''}" 
                         id="catalog-card-${product.id}"
                         data-active-variant-id="${defaultVariantId}"
-                        onclick="openQuickViewShield(${product.id})" 
-                        style="background: #ffffff; border: 1px solid #f0f0f4; border-radius: 12px; padding: 10px 4px; position: relative; box-sizing: border-box; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.015); cursor: pointer; overflow: hidden; height: 100%;">
+                        onclick="openQuickViewShield(${product.id})">
                         
                         ${adminEditInlineControlMarkup}
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 26px; margin-bottom: 10px; box-sizing: border-box; padding: 0 2px;">
-                            <div style="display: flex; align-items: center;">
-                                ${product.badge ? `<span class="product-badge" style="font-size: 0.58rem; padding: 3px 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; border-radius: 4px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
-                            </div>
-
-                            <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
-                                    onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
-                                    aria-label="Add to wishlist"
-                                    style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fdfdfd; border: 1px solid #edf0f5; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.03); cursor: pointer; outline: none; margin: 0; padding: 0; transition: all 0.2s ease;">
-                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
-                            </button>
-                        </div>
-
-                        <div class="product-image-container" style="position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #fafafa; border-radius: 8px; margin-bottom: 10px; z-index: 1;">
+                        <div class="angel-card-media">
                             <img id="catalog-card-img-${product.id}" 
                                 src="${product.image || 'assets/placeholder.png'}" 
-                                style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease;" 
+                                loading="lazy" decoding="async"
+                                alt="${product.title || 'Angel Jewellery piece'}"
                                 onerror="this.src='assets/placeholder.png'">
+                            ${product.badge ? `<span class="angel-card-badge" style="${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                            <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                                    onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                                    aria-label="Add to wishlist">
+                                <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                            </button>
+                            ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
                         </div>
                         
-                        <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div style="width: 100%;">
-                                <p class="product-category" style="color: var(--pink-accent, #ff1493); font-weight: 700; margin: 0 0 4px 0; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Montserrat', sans-serif;">
-                                    ${displayCategory}
-                                </p>
-                                
-                                <div class="card-swatch-row" style="margin-bottom: 2px; display: block;">
-                                    ${colorDotsHTML}
-                                </div>
+                        <div class="angel-card-body">
+                            <p class="angel-card-eyebrow">${displayCategory}</p>
 
-                                <h3 style="font-size: 0.82rem; font-weight: 600; margin: 4px 0; color: #111116; line-height: 1.35; font-family: 'Montserrat', sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 1.5em;">
-                                    ${product.title}
-                                </h3>
-                                
-                                <p id="catalog-card-price-${product.id}" style="font-size: 0.92rem; font-weight: 700; color: var(--purple-primary, #202c55); margin: 4px 0 10px 0;">
-                                    ${displayPrice}
-                                </p>
+                            ${colorDotsHTML}
+
+                            <h3 class="angel-card-title">${product.title}</h3>
+                            
+                            <div class="angel-card-price-row">
+                                <span id="catalog-card-price-${product.id}" class="angel-card-price">${displayPrice}</span>
                             </div>
                             
-                            <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
+                            <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
                                     onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
-                                    ${isSoldOut ? 'disabled' : ''} 
-                                    style="width: 100%; padding: 10px 0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: auto; font-family: 'Montserrat', sans-serif; transition: all 0.2s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'}; box-shadow: ${isSoldOut ? 'none' : '0 2px 6px rgba(32,44,85,0.1)'};">
+                                    ${isSoldOut ? 'disabled' : ''}>
                                 <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.72rem;"></i> 
                                 <span>${isSoldOut ? 'Restocking Soon!' : 'Add to Cart'}</span>
                             </button>
@@ -881,8 +892,7 @@ function renderVaultSaleSection() {
         
         // Create the card element frame first so it exists in memory!
         const saleCard = document.createElement('div');
-        saleCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        saleCard.style.cssText = "cursor: pointer; position: relative;";
+        saleCard.className = `angel-card ${isSoldOut ? 'is-disabled' : ''}`;
         saleCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
         // Admin controls markup safely generated matching your authentication state variables
@@ -895,8 +905,6 @@ function renderVaultSaleSection() {
             </button>
         ` : '';
 
-        const badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
-
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
         const fallbackOldPrice = product.originalPrice || product.original_price || product.oldPrice;
         
@@ -904,44 +912,43 @@ function renderVaultSaleSection() {
             ? (typeof fallbackOldPrice === 'number' ? fallbackOldPrice : parseFloat(fallbackOldPrice) || currentPriceValue)
             : Math.ceil(currentPriceValue * 1.25);
 
+        const discountPercent = originalPriceValue > currentPriceValue 
+            ? Math.round(((originalPriceValue - currentPriceValue) / originalPriceValue) * 100) 
+            : 0;
+
         const pricingLayoutHTML = `
-            <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
-                <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(currentPriceValue)}</span>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(originalPriceValue)}</span>
-            </p>
+            <div class="angel-card-price-row">
+                <span class="angel-card-price">${formatCurrency(currentPriceValue)}</span>
+                <span class="angel-card-price-was">${formatCurrency(originalPriceValue)}</span>
+                ${discountPercent > 0 ? `<span class="angel-card-discount-pill">${discountPercent}% OFF</span>` : ''}
+            </div>
         `;
 
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         saleCard.innerHTML = `
             ${adminEditInlineControlMarkup}
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
-                <div style="flex-grow: 1; text-align: left;">
-                    ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
-                </div>
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
-                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
-                        aria-label="Add to wishlist" 
-                        style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
-                </button>
-            </div>
 
-            <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
-                <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                <span class="angel-card-badge" style="background: linear-gradient(135deg, #cca43b, #b8862a); color: #fff;">${discountPercent > 0 ? discountPercent + '% Off' : (product.badge || 'Sale')}</span>
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                </button>
+                ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
             </div>
-            <div class="product-info" style="background: #ffffff; text-align: center; padding: 12px 0 0 0;">
-                <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Jewellery'} • Special Offer</p>
-                <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
-                <div style="text-align: center; margin-bottom: 14px;">${pricingLayoutHTML}</div>
-              <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
-                    onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
-                    ${isSoldOut ? 'disabled' : ''} 
-                    style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};">
-                <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
-                ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
-            </button>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Jewellery'} • Special Offer</p>
+                <h3 class="angel-card-title">${product.title}</h3>
+                ${pricingLayoutHTML}
+                <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
+                        onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
+                        ${isSoldOut ? 'disabled' : ''}>
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                    <span>${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}</span>
+                </button>
             </div>
         `;
         saleGrid.appendChild(saleCard);
@@ -976,8 +983,7 @@ function renderTrendingSection() {
         
         // Create the card element frame first so it exists in memory!
         const trendingCard = document.createElement('div');
-        trendingCard.className = `product-card ${isSoldOut ? 'disabled-card' : ''}`;
-        trendingCard.style.cssText = "cursor: pointer; position: relative;";
+        trendingCard.className = `angel-card ${isSoldOut ? 'is-disabled' : ''}`;
         trendingCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
         // Admin controls markup safely generated matching your authentication state variables
@@ -990,52 +996,46 @@ function renderTrendingSection() {
             </button>
         ` : '';
 
-        let badgeHTML = product.badge ? `<span class="product-badge" style="position: absolute; top: 15px; left: 15px; font-size: 0.65rem; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 2px; z-index: 2; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : '';
-        
-        let pricingLayoutHTML = "";
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+        const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+        const discountPercent = hasDiscount 
+            ? Math.round(((product.originalPrice - currentPriceValue) / product.originalPrice) * 100) 
+            : 0;
 
-        if (product.originalPrice && product.originalPrice > product.price) {
-            pricingLayoutHTML = `
-                <p class="product-price" style="display: flex; align-items: center; gap: 10px; margin: 0; justify-content:center;">
-                    <span style="color: var(--purple-primary); font-weight: 700;">${formatCurrency(currentPriceValue)}</span>
-                    <span style="color: var(--text-muted); font-size: 0.85rem; text-decoration: line-through; font-weight: 500;">${formatCurrency(product.originalPrice)}</span>
-                </p>
-            `;
-        } else {
-            pricingLayoutHTML = `<p class="product-price" style="margin: 0; text-align: center; font-weight: 700; color: var(--purple-primary);">${formatCurrency(currentPriceValue)}</p>`;
-        }
+        const pricingLayoutHTML = hasDiscount ? `
+            <div class="angel-card-price-row">
+                <span class="angel-card-price">${formatCurrency(currentPriceValue)}</span>
+                <span class="angel-card-price-was">${formatCurrency(product.originalPrice)}</span>
+                ${discountPercent > 0 ? `<span class="angel-card-discount-pill">${discountPercent}% OFF</span>` : ''}
+            </div>
+        ` : `
+            <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
+        `;
 
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         trendingCard.innerHTML = `
             ${adminEditInlineControlMarkup}
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; width: 100%; min-height: 32px; box-sizing: border-box; padding: 0 2px;">
-                <div style="flex-grow: 1; text-align: left;">
-                    ${product.badge ? `<span class="product-badge" style="font-size: 0.62rem; padding: 4px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 3px; display: inline-block; ${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
-                </div>
-                <button class="wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                <span class="angel-card-badge" style="background: linear-gradient(135deg, #202c55, #34407a); color: #fff;">${product.badge || 'Trending'}</span>
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
                         onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
-                        aria-label="Add to wishlist" 
-                        style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fafafa; border: 1px solid #e8e8ef; border-radius: 50%; box-shadow: 0 2px 6px rgba(32,44,85,0.03); cursor: pointer; outline: none; margin: 0; padding: 0;">
-                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.85rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
                 </button>
+                ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
             </div>
-
-            <div class="product-img-wrapper" style="background: #ffffff; position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 6px;">
-                <img src="${product.image}" loading="lazy" alt="${product.title}" style="width: 100%; height: 100%; object-fit: cover;" onload="this.classList.add('loaded')">
-            </div>
-            <div class="product-info" style="background: #ffffff; text-align: center; padding: 12px 0 0 0;">
-                <p class="product-category" style="color: var(--pink-accent); font-weight:600; margin-bottom: 4px; font-size: 0.78rem;">${product.category || 'Luxury Masterpiece'}</p>
-                <h3 class="product-title" style="font-size: 0.88rem; font-weight: 600; margin: 0 0 6px 0; color: var(--text-dark-primary); line-height: 1.4; min-height: 38px; font-family: 'Montserrat', sans-serif;">${product.title}</h3>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="angel-card-title">${product.title}</h3>
                 ${pricingLayoutHTML}
-                <button class="btn-order-wa ${isSoldOut ? 'btn-grid-sold-out' : ''}" 
+                <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
                         onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
-                        ${isSoldOut ? 'disabled' : ''} 
-                        style="width: 100%; padding: 11px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: ${isSoldOut ? 'not-allowed' : 'pointer'}; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; background: ${isSoldOut ? '#f4f4f7 !important' : 'var(--purple-primary, #202c55)'}; color: ${isSoldOut ? '#8a8da0 !important' : '#ffffff !important'}; border: ${isSoldOut ? '1px solid #e2e4ed !important' : 'none !important'};">
+                        ${isSoldOut ? 'disabled' : ''}>
                     <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
-                    ${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}
+                    <span>${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}</span>
                 </button>
             </div>
         `;
@@ -1218,7 +1218,7 @@ function updateCartUI() {
         const itemRow = document.createElement('div');
         itemRow.style.cssText = itemRowStyles;
         itemRow.innerHTML = `
-            <img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef;">
+            <img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e8e8ef;">
             <div style="flex-grow:1; text-align: left;">
                 <h4 class="cart-item-title" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title} ${item.color ? `<span style="color:var(--pink-accent); font-size:0.75rem;">(${item.color})</span>` : ''}</h4>
                 <p class="cart-item-meta" style="margin: 2px 0; font-size: 0.72rem; color: #777; font-family: 'Montserrat';">${item.category}</p>
@@ -2251,8 +2251,40 @@ window.addEventListener('DOMContentLoaded', () => {
 
 let globalPayableAmountInPaise = 0; 
 
+// =========================================================================
+// ANGEL JEWELLERY — ON-DEMAND RAZORPAY SDK LOADER
+// Previously checkout.js was loaded render-blocking in <head> on every page
+// view, even for visitors who never reach checkout. Now it's fetched once,
+// lazily, the moment the invoice/checkout screen actually opens.
+// =========================================================================
+let razorpaySDKLoadPromise = null;
+function loadRazorpaySDK() {
+    if (window.Razorpay) return Promise.resolve();
+    if (razorpaySDKLoadPromise) return razorpaySDKLoadPromise;
+
+    razorpaySDKLoadPromise = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve());
+            existing.addEventListener('error', () => reject(new Error('Failed to load Razorpay SDK')));
+            return;
+        }
+        const scriptNode = document.createElement('script');
+        scriptNode.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        scriptNode.onload = () => resolve();
+        scriptNode.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+        document.head.appendChild(scriptNode);
+    });
+    return razorpaySDKLoadPromise;
+}
+
 function openInvoiceScreen() {
     if (shoppingCart.length === 0) return;
+
+    // Kick off the Razorpay SDK fetch as soon as checkout opens, in the
+    // background, so it's already loaded (or close to it) by the time the
+    // customer finishes filling in the form and hits submit.
+    loadRazorpaySDK().catch(err => console.error(err));
 
     const invoiceOverlay = document.getElementById('invoiceOverlayScreen');
     const itemsContainer = document.getElementById('invoiceItemsContainer');
@@ -2340,8 +2372,18 @@ function closeInvoiceScreen() {
     document.getElementById('invoiceOverlayScreen').style.display = 'none';
 }
 
-function initiateRazorpayPaymentProcess(event) {
+async function initiateRazorpayPaymentProcess(event) {
     event.preventDefault();
+
+    // Safety net: openInvoiceScreen() already started loading the SDK in the
+    // background, but if the customer submits before it finishes, wait here.
+    try {
+        await loadRazorpaySDK();
+    } catch (err) {
+        console.error(err);
+        alert("Payment gateway failed to load. Please check your internet connection and try again.");
+        return;
+    }
 
     const name = document.getElementById('invClientName').value.trim();
     const phone = document.getElementById('invClientPhone').value.trim();
@@ -2709,7 +2751,7 @@ async function executeLiveOrderTrackingSearch() {
                     <tr style="border-bottom: 1px solid #f1f1f5;">
                         <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
                             <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
-                                <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                                <img src="${matchedImgUrl}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                             </div>
                         </td>
                         <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
@@ -3456,7 +3498,7 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
                     <tr style="border-bottom: 1px solid #f1f1f5;">
                         <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
                             <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff;">
-                                <img src="${matchedImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                                <img src="${matchedImgUrl}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                             </div>
                         </td>
                         <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116;">${parsedTitle}</td>
@@ -3694,7 +3736,7 @@ function generateDynamicCatalogFilters() {
                  onmouseout="this.style.transform='translateY(0)'">
                 
                 <div style="width: 150px; height: 150px; min-width: 100px; min-height: 100px; border-radius: 20px; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
-                    <img src="${folder.thumbnail}" alt="${folder.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
+                    <img src="${folder.thumbnail}" alt="${folder.name}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
                     
                     <div style="position: absolute; bottom: 4px; right: 4px; background: #202c55; color: #ffffff; font-size: 0.58rem; padding: 2px 6px; font-weight: 700; border-radius: 10px; font-family: 'Montserrat';">
                         ${folder.itemCount}
@@ -4443,25 +4485,25 @@ function renderFlashVaultShowroom() {
             </button>
         ` : '';
         return `
-            <div onclick="openQuickViewShield(${item.id})" 
-                 style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); opacity: ${isClaimed ? '0.65' : '1'}; cursor: pointer;">
+            <div class="angel-card angel-card--flash ${isClaimed ? 'is-disabled' : ''}" onclick="openQuickViewShield(${item.id})">
                 
                 ${adminEditInlineControlMarkup}
 
-                <div style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 10px; position: relative;">
-                    <img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                    ${isClaimed ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
+                <div class="angel-card-media">
+                    <img src="${item.image}" loading="lazy" decoding="async" alt="${item.title}">
+                    ${isClaimed ? `<div class="angel-card-soldout-scrim">🔒 Sold Out</div>` : ''}
                 </div>
-                <div style="text-align: left; margin-bottom: 8px;">
-                    <h4 style="margin: 0; font-size: 0.78rem; font-weight: 600; color: #111116; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat';">${item.title}</h4>
-                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">₹350</p>
+                <div class="angel-card-body">
+                    <h4 class="angel-card-title">${item.title}</h4>
+                    ${isClaimed ? `
+                        <button disabled class="angel-card-cta is-sold-out">Sold Out</button>
+                    ` : `
+                        <button class="angel-card-cta" onclick="event.stopPropagation(); addToCartEngine(${item.id}, '${safeTitle}')">
+                            <i class="fas fa-shopping-bag" style="font-size: 0.62rem;"></i> Add to Bag
+                        </button>
+                    `}
                 </div>
-                
-                ${isClaimed ? `
-                    <button disabled style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: #e1e1e6; color: #8e8e9f; border: none; border-radius: 3px; cursor: not-allowed;">Sold Out</button>
-                ` : `
-                    <button onclick="event.stopPropagation(); addToCartEngine(${item.id}, '${safeTitle}')" style="width: 100%; padding: 6px 0; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #202c55; color: #fff; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s;">Add to Bag</button>
-                `}
+                <span class="angel-card-price-tag">₹350</span>
             </div>
         `;
     }).join('');
@@ -4541,7 +4583,7 @@ function selectStyleClusterFilter(clusterKeyword) {
                         <!-- Uniform Aspect-Ratio Image Frame -->
                         <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" 
                              style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 8px; position: relative; cursor: pointer; border: 1px solid #f4f4f7; box-sizing: border-box;">
-                            <img src="${product.image}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            <img src="${product.image}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                             ${isSoldOut ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
                         </div>
 
@@ -5114,7 +5156,7 @@ async function loadLiveCarouselDatabaseEngine() {
         // Hydrate slider track window element nodes dynamically!
         track.innerHTML = carouselRegistryCache.map(slide => `
             <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
-                <img src="${slide.image_url}" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title}">
+                <img src="${slide.image_url}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title}">
             </div>
         `).join('');
 
