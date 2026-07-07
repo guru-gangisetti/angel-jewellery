@@ -1657,3 +1657,42 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .variant-field input[type="text"]:focus, .variant-field input[type="number"]:focus {
     border-color: var(--purple-primary);
 }
+
+/* =========================================================================
+   ANGEL JEWELLERY — "SIMILAR PRODUCTS" QUICK VIEW CROSS-SELL TILES
+   ========================================================================= */
+.qv-pairing-tile {
+    flex: 0 0 110px;
+    width: 110px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.25s ease;
+}
+.qv-pairing-tile:hover { transform: translateY(-3px); }
+.qv-pairing-tile-img {
+    width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden;
+    background: #f6f6f9; border: 1px solid var(--border-subtle); margin-bottom: 6px;
+}
+.qv-pairing-tile-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.qv-pairing-tile-title {
+    font-size: 0.68rem; font-weight: 600; color: #111116; line-height: 1.3;
+    margin: 0 0 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: var(--font-body);
+}
+.qv-pairing-tile-price {
+    font-size: 0.72rem; font-weight: 700; color: var(--purple-primary); margin: 0;
+    font-family: var(--font-body);
+}
+.qv-pairing-tile::-webkit-scrollbar { display: none; }
+
+/* =========================================================================
+   ANGEL JEWELLERY — LOW-STOCK URGENCY FLAG (catalog / sale / trending cards)
+   Reuses the same "Only X Left" language and color already established in
+   the Quick View modal's scarcity indicator, just surfaced on grid cards.
+   ========================================================================= */
+.angel-card-stock-flag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.64rem; font-weight: 700; color: var(--pink-accent);
+    background: rgba(255,20,147,0.08); padding: 2px 8px; border-radius: 20px;
+    margin: 2px 0 6px; width: fit-content; font-family: var(--font-body);
+}

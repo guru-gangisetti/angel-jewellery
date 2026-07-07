@@ -736,6 +736,11 @@ function filterCatalog(passedSearchQuery) {
                 const safeTitleString = (product.title || '').replace(/'/g, "\\'");
                 const displayCategory = product.category || product.type || 'Luxury Collection';
 
+                // Reuse the same live inventory cache the admin form and Flash Vault already read from
+                const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+                const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+                const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+
                 const cardVariants = product.product_variants || product.Product_Variants || product.variants || [];
                 const firstColorName = cardVariants.length > 0 ? cardVariants[0].color_name : 'Standard';
                 const isFavorited = wishlistMemory.includes(`${product.id}|${firstColorName}`);
@@ -801,6 +806,8 @@ function filterCatalog(passedSearchQuery) {
 
                             <h3 class="angel-card-title">${product.title}</h3>
                             
+                            ${isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : ''}
+
                             <div class="angel-card-price-row">
                                 <span id="catalog-card-price-${product.id}" class="angel-card-price">${displayPrice}</span>
                             </div>
@@ -916,6 +923,11 @@ function renderVaultSaleSection() {
             ? Math.round(((originalPriceValue - currentPriceValue) / originalPriceValue) * 100) 
             : 0;
 
+        const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+        const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+
         const pricingLayoutHTML = `
             <div class="angel-card-price-row">
                 <span class="angel-card-price">${formatCurrency(currentPriceValue)}</span>
@@ -942,6 +954,7 @@ function renderVaultSaleSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Jewellery'} • Special Offer</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                ${stockFlagHTML}
                 ${pricingLayoutHTML}
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
                         onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
@@ -1002,6 +1015,11 @@ function renderTrendingSection() {
             ? Math.round(((product.originalPrice - currentPriceValue) / product.originalPrice) * 100) 
             : 0;
 
+        const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+        const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+
         const pricingLayoutHTML = hasDiscount ? `
             <div class="angel-card-price-row">
                 <span class="angel-card-price">${formatCurrency(currentPriceValue)}</span>
@@ -1030,6 +1048,7 @@ function renderTrendingSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                ${stockFlagHTML}
                 ${pricingLayoutHTML}
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
                         onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
@@ -1842,7 +1861,68 @@ function openQuickViewShield(id) {
             addToCartEngine(product.id); 
         };
     }
+
+    renderQuickViewPairingRecommendations(product);
+
     document.getElementById('quickviewModalShield').style.display = "flex"; 
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — "SIMILAR PRODUCTS" CROSS-SELL CAROUSEL
+// Populates the previously-dormant qvPairingRecommendationSection: the
+// markup already existed in the Quick View modal, but nothing ever filled
+// it in. Matches same-category items first, tops up with same-style items
+// if there aren't enough, and hides the whole section if nothing matches.
+// =========================================================================
+function renderQuickViewPairingRecommendations(currentProduct) {
+    const section = document.getElementById('qvPairingRecommendationSection');
+    const track = document.getElementById('qvPairingCarouselTrack');
+    if (!section || !track) return;
+
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    if (!currentDb || currentDb.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    const currentCategory = String(currentProduct.category || '').trim().toLowerCase();
+    const currentStyle = String(currentProduct.style || '').trim().toLowerCase();
+
+    // Priority 1: other items in the same category
+    let matches = currentDb.filter(p => p && p.id !== currentProduct.id &&
+        String(p.category || '').trim().toLowerCase() === currentCategory);
+
+    // Priority 2: top up with same-style items if category alone isn't enough
+    if (matches.length < 4 && currentStyle) {
+        const styleMatches = currentDb.filter(p => p && p.id !== currentProduct.id &&
+            currentStyle === String(p.style || '').trim().toLowerCase() &&
+            !matches.some(m => m.id === p.id));
+        matches = matches.concat(styleMatches);
+    }
+
+    matches = matches.slice(0, 8);
+
+    if (matches.length === 0) {
+        section.style.display = 'none';
+        track.innerHTML = '';
+        return;
+    }
+
+    track.innerHTML = matches.map(p => {
+        const safeTitle = (p.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const tilePrice = typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0;
+        return `
+            <div class="qv-pairing-tile" onclick="openQuickViewShield(${p.id})" title="${safeTitle}">
+                <div class="qv-pairing-tile-img">
+                    <img src="${p.image || 'assets/placeholder.png'}" loading="lazy" decoding="async" alt="${safeTitle}" onerror="this.src='assets/placeholder.png'">
+                </div>
+                <p class="qv-pairing-tile-title">${p.title}</p>
+                <p class="qv-pairing-tile-price">${formatCurrency(tilePrice)}</p>
+            </div>
+        `;
+    }).join('');
+
+    section.style.display = 'block';
 }
 
 function updateTopRightScarcityBadge(stockCount) {
@@ -1857,40 +1937,6 @@ function updateTopRightScarcityBadge(stockCount) {
         indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`; 
     } else {
         indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;"; 
-        indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`; //[cite: 2]
-    }
-}
-
-// ➔ Helper: Keeps the scarcity badge updated[cite: 2]
-function updateTopRightScarcityBadge(stockCount) {
-    const indicator = document.getElementById('qvVaultScarcityIndicator'); //[cite: 2]
-    if (!indicator) return;
-
-    if (stockCount <= 0) {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(108,117,125,0.1); color:#6c757d; border-radius:2px;"; //[cite: 2]
-        indicator.innerHTML = `<i class="fas fa-times-circle"></i> Sold Out`; //[cite: 2]
-    } else if (stockCount <= 2) {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(255,20,147,0.08); color:#ff1493; border-radius:2px;"; //[cite: 2]
-        indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`; //[cite: 2]
-    } else {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;"; //[cite: 2]
-        indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`; //[cite: 2]
-    }
-}
-
-// ➔ Helper: Keeps the scarcity header completely responsive
-function updateTopRightScarcityBadge(stockCount) {
-    const indicator = document.getElementById('qvVaultScarcityIndicator');
-    if (!indicator) return;
-
-    if (stockCount <= 0) {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(108,117,125,0.1); color:#6c757d; border-radius:2px;";
-        indicator.innerHTML = `<i class="fas fa-times-circle"></i> Sold Out`;
-    } else if (stockCount <= 2) {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(255,20,147,0.08); color:#ff1493; border-radius:2px;";
-        indicator.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} Left!`;
-    } else {
-        indicator.style.cssText = "display:inline-block; font-family:'Montserrat'; font-size:0.65rem; font-weight:700; text-transform:uppercase; padding:4px 10px; background:rgba(42,123,106,0.1); color:#2a7b6a; border-radius:2px;";
         indicator.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} Available`;
     }
 }
