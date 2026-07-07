@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <!-- Razorpay checkout.js is no longer loaded here — it's fetched on demand right before checkout opens (see loadRazorpaySDK() in script.js). This removes a render-blocking third-party script from every page load. -->
 </head>
-<body style="display: none;">
+<body>
 
     <div id="preloader"><div class="spinner"></div></div>
 
@@ -1176,7 +1176,7 @@
                 </div>
             </div>
             <div style="border-top: 1px dashed #cca43b; padding-top: 15px; margin-top: 5px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h4 style="margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #202c55; letter-spacing: 0.5px;">
                         <i class="fas fa-layer-group" style="color: #ff1493;"></i> Inventory Product Variants
                     </h4>
@@ -1184,9 +1184,14 @@
                         + Add Variant Option
                     </button>
                 </div>
+
+                <p style="margin: 0 0 12px 0; font-size: 0.7rem; color: #8a8da0; line-height: 1.5; font-family: 'Montserrat', sans-serif;">
+                    <i class="fas fa-circle-info" style="color: #cca43b;"></i>
+                    The <strong style="color: #202c55;">first variant below</strong> also sets this product's main price, stock, and image on the storefront card — add more for additional color options.
+                </p>
                 
                 <!-- This container will hold our dynamic rows generated via JavaScript -->
-                <div id="adminFormDynamicVariantsContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 4px; margin-bottom: 15px; box-sizing: border-box;"></div>
+                <div id="adminFormDynamicVariantsContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; margin-bottom: 15px; box-sizing: border-box;"></div>
             </div>
             <div>
                 <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Description</label>
@@ -1747,4 +1752,4 @@
 }
 </style>
 </body>
-</html>
+</html>

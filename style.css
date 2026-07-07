@@ -977,39 +977,10 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     #adminFormDynamicVariantsContainer {
         max-height: 350px !important; /* Grant more scroll height to view stacked rows */
     }
-    
-    .admin-variant-input-row {
-        grid-template-columns: 1fr !important; /* Break horizontal rows down into a vertical block stack */
-        gap: 8px !important;
-        padding: 12px !important;
-        background: #fdfdfd !important;
-        border: 1px solid #cca43b !important; /* Clear gold boundary per option block */
-        margin-bottom: 5px !important;
-        position: relative !important;
+
+    .admin-variant-fields-grid {
+        grid-template-columns: 1fr !important; /* Stack labeled fields fully on narrow screens */
     }
-    
-    /* Give each input full responsive field layout widths */
-    .admin-variant-input-row input {
-        height: 38px !important;
-        font-size: 0.82rem !important;
-        padding: 8px 12px !important;
-    }
-    
-    .admin-variant-input-row .v-hex {
-        height: 38px !important;
-        padding: 0 !important;
-    }
-    
-    /* Style the remove button as a full bar at the bottom of the individual variant block */
-    .admin-variant-input-row button {
-        width: 100% !important;
-        height: 34px !important;
-        background: rgba(217, 56, 58, 0.05) !important;
-        border: 1px solid #d9383a !important;
-        border-radius: 4px !important;
-        margin-top: 4px !important;
-    }
-        
 }
 
 /* =========================================================================
@@ -1610,4 +1581,79 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 @media (max-width: 480px) {
     .story-section-wrapper { padding: 36px 0 !important; }
     .feedback-display-section { padding: 36px 16px !important; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — ADMIN VARIANT CARD (redesigned)
+   Each color variant option in the Add/Edit Item form. Same field classes
+   as before (v-name, v-hex, v-sku, v-price, v-stock, v-img) — this only
+   changes labeling and layout, not what gets saved.
+   ========================================================================= */
+.admin-variant-card {
+    background: #fafafa;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 12px 14px 14px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.admin-variant-card:hover {
+    border-color: rgba(32,44,85,0.16);
+    box-shadow: 0 4px 14px rgba(32,44,85,0.05);
+}
+
+.admin-variant-card-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+}
+.admin-variant-swatch-input {
+    width: 28px; height: 28px; padding: 0; flex-shrink: 0;
+    border: 2px solid #ffffff; border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 0 1.5px var(--border-subtle);
+    background: transparent; -webkit-appearance: none; appearance: none;
+}
+.admin-variant-swatch-input::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+.admin-variant-swatch-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+.admin-variant-swatch-input::-moz-color-swatch { border: none; border-radius: 50%; }
+
+.admin-variant-card-label {
+    font-size: 0.66rem; font-weight: 700; color: var(--text-muted, #8a8da0);
+    text-transform: uppercase; letter-spacing: 0.6px; flex-grow: 1;
+    font-family: var(--font-body);
+}
+.admin-variant-remove-btn {
+    background: transparent; border: 1px solid transparent; color: #d9383a;
+    cursor: pointer; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; padding: 5px 9px; border-radius: 5px;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    font-family: var(--font-body); flex-shrink: 0;
+}
+.admin-variant-remove-btn:hover { background: rgba(217,56,58,0.08); border-color: rgba(217,56,58,0.25); }
+
+.admin-variant-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+}
+.admin-variant-fields-grid .variant-field-wide { grid-column: 1 / -1; }
+
+.variant-field label {
+    display: block; font-size: 0.62rem; font-weight: 700; color: #8a8da0;
+    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px;
+    font-family: var(--font-body);
+}
+.variant-field-hint {
+    font-weight: 500; text-transform: none; letter-spacing: 0; color: #b0b2bd;
+}
+.variant-field input[type="text"], .variant-field input[type="number"] {
+    width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--border-subtle);
+    border-radius: 6px; outline: none; font-size: 0.78rem; box-sizing: border-box;
+    font-family: var(--font-body); background: #ffffff; transition: border-color 0.2s ease;
+}
+.variant-field input[type="text"]:focus, .variant-field input[type="number"]:focus {
+    border-color: var(--purple-primary);
 }

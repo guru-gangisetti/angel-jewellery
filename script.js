@@ -5425,8 +5425,7 @@ function appendNewVariantRowToAdminForm(existingData = null) {
     const uniqueRowId = 'var-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const rowDiv = document.createElement('div');
     rowDiv.id = uniqueRowId;
-    rowDiv.className = "admin-variant-input-row";
-    rowDiv.style.cssText = "display: grid; grid-template-columns: 1.2fr 45px 1.2fr 1fr 0.8fr 2fr 30px; gap: 6px; align-items: center; background: #fafafa; padding: 8px; border: 1px solid #e8e8ef; border-radius: 4px; box-sizing: border-box; width:100%;";
+    rowDiv.className = "admin-variant-input-row admin-variant-card";
 
     // Fallbacks for Edit mode hydration profiles
     const colorName = existingData ? (existingData.color_name || '') : '';
@@ -5439,13 +5438,35 @@ function appendNewVariantRowToAdminForm(existingData = null) {
 
     rowDiv.innerHTML = `
         <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
-        <input type="text" class="v-name" value="${colorName}" placeholder="Color (e.g. Red)" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
-        <input type="color" class="v-hex" value="${colorHex}" title="Choose color swatch dot style" style="padding: 0; width: 100%; height: 28px; border: 1px solid #e8e8ef; border-radius: 4px; cursor: pointer; background:transparent;">
-        <input type="text" class="v-sku" value="${sku}" placeholder="SKU" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box; font-family:monospace;">
-        <input type="number" class="v-price" value="${price}" placeholder="Price" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
-        <input type="number" class="v-stock" value="${stock}" placeholder="Stock" required style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
-        <input type="text" class="v-img" value="${imgUrl}" placeholder="Image URL" style="padding: 6px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; width:100%; box-sizing:border-box;">
-        <button type="button" onclick="document.getElementById('${uniqueRowId}').remove()" style="background: transparent; border: none; color: #d9383a; cursor: pointer; font-size: 0.85rem; padding: 0; display:flex; align-items:center; justify-content:center;" title="Remove this variant option"><i class="fas fa-minus-circle"></i></button>
+        <div class="admin-variant-card-header">
+            <input type="color" class="v-hex admin-variant-swatch-input" value="${colorHex}" title="Pick the swatch color shown as the storefront color dot">
+            <span class="admin-variant-card-label">Color Variant</span>
+            <button type="button" class="admin-variant-remove-btn" onclick="document.getElementById('${uniqueRowId}').remove()" title="Remove this variant option">
+                <i class="fas fa-trash-alt"></i> Remove
+            </button>
+        </div>
+        <div class="admin-variant-fields-grid">
+            <div class="variant-field">
+                <label>Color Name</label>
+                <input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required>
+            </div>
+            <div class="variant-field">
+                <label>SKU</label>
+                <input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required>
+            </div>
+            <div class="variant-field">
+                <label>Price (₹)</label>
+                <input type="number" class="v-price" value="${price}" placeholder="4500" required>
+            </div>
+            <div class="variant-field">
+                <label>Stock Qty</label>
+                <input type="number" class="v-stock" value="${stock}" placeholder="5" required>
+            </div>
+            <div class="variant-field variant-field-wide">
+                <label>Image URL <span class="variant-field-hint">(this color's own photo — optional)</span></label>
+                <input type="text" class="v-img" value="${imgUrl}" placeholder="assets/products/ruby-red.jpg">
+            </div>
+        </div>
     `;
 
     container.appendChild(rowDiv);
