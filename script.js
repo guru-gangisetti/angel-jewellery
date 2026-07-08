@@ -6,12 +6,12 @@
 // new entry into the array below. Keep images square (1:1) for best fit.
 // =========================================================================
 const instagramShowcaseFeed = [
-    { image: 'assets/ugc/ugc-1.jpg', handle: '@priya.wears.gold' },
-    { image: 'assets/ugc/ugc-2.jpg', handle: '@meera.style' },
-    { image: 'assets/ugc/ugc-3.jpg', handle: '@ananya.k' },
-    { image: 'assets/ugc/ugc-4.jpg', handle: '@thejewelrydiaries' },
-    { image: 'assets/ugc/ugc-5.jpg', handle: '@radhika.official' },
-    { image: 'assets/ugc/ugc-6.jpg', handle: '@styledby.sn' }
+    { image: 'assets/ugc/ugc-1.webp', handle: '@priya.wears.gold' },
+    { image: 'assets/ugc/ugc-2.webp', handle: '@meera.style' },
+    { image: 'assets/ugc/ugc-3.jpeg', handle: '@ananya.k' },
+    { image: 'assets/ugc/ugc-4.jpeg', handle: '@thejewelrydiaries' },
+    { image: 'assets/ugc/ugc-5.webp', handle: '@radhika.official' },
+    { image: 'assets/ugc/ugc-6.jpeg', handle: '@styledby.sn' }
 ];
 const instagramProfileLink = 'https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl';
 
@@ -5738,4 +5738,4 @@ window.addEventListener('click', function(e) {
     if (e.target === modal) {
         closeWhyAngelModal();
     }
-});
+});
