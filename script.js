@@ -417,6 +417,86 @@ function challengeAdminIdentityGateway(event) {
 }
 
 // =========================================================================
+// ANGEL JEWELLERY — SINGLE-ITEM vs COLOR-VARIANT MODE TOGGLE
+// Drives which half of the form is shown, and keeps whatever the admin
+// already typed when they switch between the two — nothing gets lost.
+// =========================================================================
+function setProductVariantMode(hasVariants) {
+    const yesBtn = document.getElementById('variantModeToggleYes');
+    const noBtn = document.getElementById('variantModeToggleNo');
+    const variantWrapper = document.getElementById('variantSectionWrapper');
+    const priceStockWrapper = document.getElementById('singleItemPriceStockWrapper');
+    const imageWrapper = document.getElementById('singleItemImageWrapper');
+    const variantsContainer = document.getElementById('adminFormDynamicVariantsContainer');
+    const priceInput = document.getElementById('formProductPrice');
+    const stockInput = document.getElementById('formProductStock');
+    if (!yesBtn || !noBtn || !variantWrapper || !priceStockWrapper) return;
+
+    if (hasVariants) {
+        yesBtn.classList.add('active');
+        noBtn.classList.remove('active');
+        variantWrapper.style.display = 'block';
+        priceStockWrapper.style.display = 'none';
+        if (imageWrapper) imageWrapper.style.display = 'none';
+        if (priceInput) priceInput.required = false;
+        if (stockInput) stockInput.required = false;
+
+        // If there's nothing in the variant list yet, start one row and
+        // carry over anything already typed in the single-item fields
+        // instead of making the admin re-enter it.
+        if (variantsContainer && variantsContainer.children.length === 0) {
+            appendNewVariantRowToAdminForm();
+            const firstRow = variantsContainer.children[0];
+            if (firstRow) {
+                const masterPrice = priceInput ? priceInput.value : '';
+                const masterStock = stockInput ? stockInput.value : '';
+                const masterImage = document.getElementById('formProductImage').value;
+                if (masterPrice) { const f = firstRow.querySelector('.v-price'); if (f) f.value = masterPrice; }
+                if (masterStock) { const f = firstRow.querySelector('.v-stock'); if (f) f.value = masterStock; }
+                if (masterImage) {
+                    const f = firstRow.querySelector('.v-img');
+                    if (f) { f.value = masterImage; refreshVariantImagePreview(f); }
+                }
+            }
+        }
+    } else {
+        noBtn.classList.add('active');
+        yesBtn.classList.remove('active');
+        variantWrapper.style.display = 'none';
+        priceStockWrapper.style.display = 'grid';
+        if (imageWrapper) imageWrapper.style.display = 'block';
+        if (priceInput) priceInput.required = true;
+        if (stockInput) stockInput.required = true;
+
+        // Carry the first variant row's values back into the single-item
+        // fields before the rows disappear, so switching modes both ways
+        // stays non-destructive.
+        if (variantsContainer && variantsContainer.children.length > 0) {
+            const firstRow = variantsContainer.children[0];
+            const vPrice = firstRow.querySelector('.v-price');
+            const vStock = firstRow.querySelector('.v-stock');
+            const vImg = firstRow.querySelector('.v-img');
+            if (vPrice && vPrice.value && priceInput) priceInput.value = vPrice.value;
+            if (vStock && vStock.value && stockInput) stockInput.value = vStock.value;
+            if (vImg && vImg.value) {
+                document.getElementById('formProductImage').value = vImg.value;
+                const previewFrame = document.getElementById('adminFormImagePreviewFrame');
+                const previewVisual = document.getElementById('adminFormImagePreviewVisual');
+                if (previewFrame && previewVisual) {
+                    previewVisual.src = vImg.value;
+                    previewFrame.style.display = 'block';
+                }
+            }
+        }
+
+        // Actually remove the rows — display:none on the wrapper alone
+        // wouldn't stop document.querySelectorAll('.admin-variant-input-row')
+        // from still finding and submitting them at save time.
+        if (variantsContainer) variantsContainer.innerHTML = '';
+    }
+}
+
+// =========================================================================
 // ANGEL JEWELLERY — DYNAMIC INLINE CRUD WRITE OPERATIONS METHODS
 // =========================================================================
 function openAdminFormModalForCreation(event) {
@@ -433,6 +513,10 @@ function openAdminFormModalForCreation(event) {
     if (variantRowsContainer) {
         variantRowsContainer.innerHTML = ""; 
     }
+
+    // Default new items to the simpler single-item mode — admin explicitly
+    // opts into color variants rather than always seeing both at once.
+    setProductVariantMode(false);
 
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Add New Item`;
     document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
@@ -474,18 +558,33 @@ function openAdminFormModalForEditing(event, id) {
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
     document.getElementById('formSubmitActionBtn').innerText = "Update";
     document.getElementById('adminPieceVaultModal').style.display = 'flex';
-    // ➔ INSERT THIS LINE INSIDE openAdminFormModalForEditing RIGHT BELOW THE OTHER DATA ELEMENT HYDRATIONS:
-    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
-    if (variantRowsContainer) {
-        variantRowsContainer.innerHTML = ""; // Clean layout slate fields
-        if (product.product_variants && product.product_variants.length > 0) {
-            product.product_variants.forEach(variant => {
-                appendNewVariantRowToAdminForm(variant); // Hydrate structural row indices into view fields
-            });
-        } else {
-            appendNewVariantRowToAdminForm(); // Append empty base container row if none exist
-        }
+
+    // ➔ Detect whether this product genuinely uses color variants, or is
+    // just the single automatic "Standard" row every product gets under
+    // the hood — same convention already used by the Quick View modal's
+    // own variant detection, so the two stay consistent.
+    const existingVariants = product.product_variants || [];
+    let hasRealVariants = false;
+    if (existingVariants.length > 1) {
+        hasRealVariants = true;
+    } else if (existingVariants.length === 1) {
+        const onlyColorName = String(existingVariants[0].color_name || '').toLowerCase().trim();
+        hasRealVariants = onlyColorName !== '' && onlyColorName !== 'standard' && onlyColorName !== 'default';
     }
+
+    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
+    if (variantRowsContainer) variantRowsContainer.innerHTML = "";
+
+    // Populate real variant rows BEFORE toggling the mode, so setProductVariantMode's
+    // "container is empty, auto-add a starter row" logic correctly skips —
+    // the container already has the real rows in it by that point.
+    if (hasRealVariants && variantRowsContainer) {
+        existingVariants.forEach(variant => {
+            appendNewVariantRowToAdminForm(variant);
+        });
+    }
+
+    setProductVariantMode(hasRealVariants);
 }
 
 function closeAdminFormVaultModal() {
@@ -748,15 +847,18 @@ function filterCatalog(passedSearchQuery) {
 
                 if (cardVariants.length > 0 && cardVariants[0].color_name !== 'Standard') {
                     colorDotsHTML = `
-                        <div class="card-color-swatches angel-card-swatches" style="display: flex; gap: 8px; justify-content: flex-start; align-items: center; width: 100%; position: relative; z-index: 5;">
-                            ${cardVariants.map((v, vIdx) => `
-                                <span title="${v.color_name || 'Option'}" 
-                                    onclick="event.stopPropagation(); handleCatalogCardDotClick(event, ${product.id}, ${v.id}, ${vIdx})"
-                                    class="catalog-variant-dot-${product.id}"
-                                    data-variant-idx="${vIdx}"
-                                    style="width: 14px; height: 14px; border-radius: 50%; background: ${v.color_hex || '#ccc'}; display: inline-block; border: ${vIdx === 0 ? '2px solid #202c55' : '1px solid rgba(0,0,0,0.15)'}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; transform: ${vIdx === 0 ? 'scale(1.1)' : 'scale(1)'};">
-                                </span>
-                            `).join('')}
+                        <div class="card-color-swatches angel-card-swatches" style="display: flex; flex-direction: column; gap: 6px; width: 100%; position: relative; z-index: 5;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                ${cardVariants.map((v, vIdx) => `
+                                    <span title="${v.color_name || 'Option'}" 
+                                        onclick="event.stopPropagation(); handleCatalogCardDotClick(event, ${product.id}, ${v.id}, ${vIdx})"
+                                        class="angel-card-swatch-dot catalog-variant-dot-${product.id} ${vIdx === 0 ? 'is-active' : ''}"
+                                        data-variant-idx="${vIdx}"
+                                        style="background: ${v.color_hex || '#ccc'};">
+                                    </span>
+                                `).join('')}
+                            </div>
+                            <span class="angel-card-active-color-label" id="catalog-card-colorname-${product.id}">${cardVariants[0].color_name || ''}</span>
                         </div>
                     `;
                 }
@@ -5382,12 +5484,27 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
 
     // 2. Smoothly cross-fade image asset
     const imgEl = document.getElementById(`catalog-card-img-${productId}`);
-    if (imgEl && matchedVariant.image_url) {
+    if (imgEl && matchedVariant.image_url && imgEl.src !== matchedVariant.image_url) {
+        const newImageUrl = matchedVariant.image_url;
         imgEl.style.opacity = "0.3";
-        setTimeout(() => {
-            imgEl.src = matchedVariant.image_url;
+
+        // Preload the new image off-DOM first. Previously .src was swapped
+        // on a fixed 120ms timer regardless of whether the browser had
+        // actually finished fetching the new image yet — on anything but
+        // an instant cache hit, that left a blank/half-loaded frame
+        // visible right as opacity faded back to 1. Waiting for the
+        // preloader's onload means the swap-and-reveal only happens once
+        // the image is actually ready to paint.
+        const preloader = new Image();
+        preloader.onload = () => {
+            imgEl.src = newImageUrl;
             imgEl.style.opacity = "1";
-        }, 120);
+        };
+        preloader.onerror = () => {
+            imgEl.src = newImageUrl; // let the card's existing onerror fallback handle a bad URL
+            imgEl.style.opacity = "1";
+        };
+        preloader.src = newImageUrl;
     }
 
     // 3. Swap the pricing string text
@@ -5414,13 +5531,19 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
     const dots = document.querySelectorAll(`.catalog-variant-dot-${productId}`);
     dots.forEach((dot, idx) => {
         if (idx === variantIdx) {
-            dot.style.border = "2px solid #202c55";
-            dot.style.transform = "scale(1.1)";
+            dot.classList.add('is-active');
         } else {
-            dot.style.border = "1px solid rgba(0,0,0,0.15)";
-            dot.style.transform = "scale(1)";
+            dot.classList.remove('is-active');
         }
     });
+
+    // 6. Update the visible color-name label — tooltips (title=) never show
+    // up on touch devices at all, so this is the only way a mobile shopper
+    // actually sees which color they've selected.
+    const colorNameLabel = document.getElementById(`catalog-card-colorname-${productId}`);
+    if (colorNameLabel) {
+        colorNameLabel.textContent = matchedVariant.color_name || '';
+    }
 }
 
 // ➔ Routes the main card "Add to Cart" button clicks through the active color state
@@ -5473,9 +5596,20 @@ function appendNewVariantRowToAdminForm(existingData = null) {
     rowDiv.id = uniqueRowId;
     rowDiv.className = "admin-variant-input-row admin-variant-card";
 
+    // Previously every new row defaulted to this site's own navy brand
+    // color (#202c55). If the color name got typed in but the swatch
+    // itself never got clicked — easy to miss — every variant silently
+    // saved with the same identical color_hex. Cycling new rows through
+    // a small jewelry-tone palette means an untouched swatch is at least
+    // visibly distinct from the row next to it, not an invisible trap.
+    const NEW_VARIANT_DEFAULT_COLOR_PALETTE = ['#D4AF37', '#B76E79', '#C0C0C0', '#8C7853', '#9B111E', '#0F52BA', '#046307', '#F0EAD6'];
+    const existingRowCount = container.children.length;
+
     // Fallbacks for Edit mode hydration profiles
     const colorName = existingData ? (existingData.color_name || '') : '';
-    const colorHex = existingData ? (existingData.color_hex || '#202c55') : '#202c55';
+    const colorHex = existingData 
+        ? (existingData.color_hex || '#202c55') 
+        : NEW_VARIANT_DEFAULT_COLOR_PALETTE[existingRowCount % NEW_VARIANT_DEFAULT_COLOR_PALETTE.length];
     const sku = existingData ? (existingData.sku || '') : '';
     const price = existingData ? (existingData.price || '') : '';
     const stock = existingData ? (existingData.stock || '0') : '0';
@@ -5486,7 +5620,7 @@ function appendNewVariantRowToAdminForm(existingData = null) {
         <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
         <div class="admin-variant-card-header">
             <input type="color" class="v-hex admin-variant-swatch-input" value="${colorHex}" title="Pick the swatch color shown as the storefront color dot">
-            <span class="admin-variant-card-label">Color Variant</span>
+            <span class="admin-variant-card-label">Color Variant <span class="variant-field-hint">(tap the circle to set its swatch)</span></span>
             <button type="button" class="admin-variant-remove-btn" onclick="document.getElementById('${uniqueRowId}').remove()" title="Remove this variant option">
                 <i class="fas fa-trash-alt"></i> Remove
             </button>
@@ -5509,13 +5643,92 @@ function appendNewVariantRowToAdminForm(existingData = null) {
                 <input type="number" class="v-stock" value="${stock}" placeholder="5" required>
             </div>
             <div class="variant-field variant-field-wide">
-                <label>Image URL <span class="variant-field-hint">(this color's own photo — optional)</span></label>
-                <input type="text" class="v-img" value="${imgUrl}" placeholder="assets/products/ruby-red.jpg">
+                <label>Product Image <span class="variant-field-hint">(upload a photo, or paste a URL)</span></label>
+                <div class="variant-image-upload-row">
+                    <div class="variant-image-preview">
+                        ${imgUrl ? `<img src="${imgUrl}" alt="Variant preview">` : `<i class="fas fa-image"></i>`}
+                    </div>
+                    <div class="variant-image-upload-inputs">
+                        <input type="text" class="v-img" value="${imgUrl}" placeholder="Paste a URL, or upload a photo" oninput="refreshVariantImagePreview(this)">
+                        <button type="button" class="variant-image-upload-btn" onclick="document.getElementById('${uniqueRowId}-file').click()">
+                            <i class="fas fa-cloud-upload-alt"></i> <span class="variant-image-upload-label">Upload Photo</span>
+                        </button>
+                        <input type="file" accept="image/*" id="${uniqueRowId}-file" class="variant-image-file-input" onchange="handleVariantImageFileSelected(event, '${uniqueRowId}')">
+                    </div>
+                </div>
             </div>
         </div>
     `;
 
     container.appendChild(rowDiv);
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — VARIANT IMAGE UPLOAD
+// Reuses your existing uploadProductImageToSupabaseStorage() pipeline
+// (already used by the main product image and carousel uploads) instead
+// of re-implementing WebP conversion + Storage upload a third time.
+// =========================================================================
+
+// Live-updates the little thumbnail as someone types/pastes a URL manually
+function refreshVariantImagePreview(inputEl) {
+    const card = inputEl.closest('.admin-variant-card');
+    if (!card) return;
+    const preview = card.querySelector('.variant-image-preview');
+    if (!preview) return;
+
+    const url = inputEl.value.trim();
+    if (!url) {
+        preview.innerHTML = `<i class="fas fa-image"></i>`;
+        return;
+    }
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Variant preview';
+    img.onerror = () => { preview.innerHTML = `<i class="fas fa-image"></i>`; };
+    preview.innerHTML = '';
+    preview.appendChild(img);
+}
+
+// Wires the file input's change event to your existing upload pipeline
+// (uploadProductImageToSupabaseStorage already handles WebP conversion,
+// downsizing large photos to 1920px max, and the Storage upload itself —
+// this just reuses it instead of re-implementing the same thing twice).
+async function handleVariantImageFileSelected(event, rowId) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        event.target.value = '';
+        return;
+    }
+
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    const urlInput = row.querySelector('.v-img');
+    const uploadBtn = row.querySelector('.variant-image-upload-btn');
+    const uploadLabel = row.querySelector('.variant-image-upload-label');
+    const originalLabelText = uploadLabel ? uploadLabel.textContent : 'Upload Photo';
+
+    if (uploadBtn) uploadBtn.disabled = true;
+
+    try {
+        if (uploadLabel) uploadLabel.textContent = 'Uploading...';
+        const publicUrl = await uploadProductImageToSupabaseStorage(file);
+
+        if (urlInput) {
+            urlInput.value = publicUrl;
+            refreshVariantImagePreview(urlInput);
+        }
+    } catch (err) {
+        console.error('Variant image upload failed:', err);
+        alert(`Image upload failed: ${err.message}\n\nYou can paste an image URL manually instead.`);
+    } finally {
+        if (uploadBtn) uploadBtn.disabled = false;
+        if (uploadLabel) uploadLabel.textContent = originalLabelText;
+        event.target.value = '';
+    }
 }
 // ➔ Controls for the Footer "Why Angel" Trust Modal Window
 function openWhyAngelModal(event) {

@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <!-- Razorpay checkout.js is no longer loaded here — it's fetched on demand right before checkout opens (see loadRazorpaySDK() in script.js). This removes a render-blocking third-party script from every page load. -->
 </head>
-<body style="display: none;">
+<body>
 
     <div id="preloader"><div class="spinner"></div></div>
 
@@ -1133,7 +1133,20 @@
                 <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Title</label>
                 <input type="text" id="formProductTitle" placeholder="e.g. The Royal Kundan Haar" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+            <div>
+                <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 8px;">Does this product have color variants?</label>
+                <div class="variant-mode-toggle-group">
+                    <button type="button" id="variantModeToggleNo" class="variant-mode-toggle-btn active" onclick="setProductVariantMode(false)">
+                        <i class="fas fa-cube"></i> No, single item
+                    </button>
+                    <button type="button" id="variantModeToggleYes" class="variant-mode-toggle-btn" onclick="setProductVariantMode(true)">
+                        <i class="fas fa-layer-group"></i> Yes, multiple colors
+                    </button>
+                </div>
+            </div>
+
+            <div id="singleItemPriceStockWrapper" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
                     <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Price</label>
                     <input type="number" id="formProductPrice" placeholder="18500" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
@@ -1159,9 +1172,9 @@
                         <option value="navratna">Navratna & Beads</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px; text-align: left; font-family: 'Montserrat', sans-serif;">
+                <div class="form-group" id="singleItemImageWrapper" style="margin-bottom: 15px; text-align: left; font-family: 'Montserrat', sans-serif;">
                     <label style="display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; margin-bottom: 6px;">
-                        <i class="fas fa-camera"></i>Image
+                        <i class="fas fa-camera"></i> Image
                     </label>
                     
                     <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
@@ -1175,7 +1188,7 @@
                     </div>
                 </div>
             </div>
-            <div style="border-top: 1px dashed #cca43b; padding-top: 15px; margin-top: 5px;">
+            <div id="variantSectionWrapper" style="border-top: 1px dashed #cca43b; padding-top: 15px; margin-top: 5px; display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h4 style="margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #202c55; letter-spacing: 0.5px;">
                         <i class="fas fa-layer-group" style="color: #ff1493;"></i> Inventory Product Variants
@@ -1187,7 +1200,7 @@
 
                 <p style="margin: 0 0 12px 0; font-size: 0.7rem; color: #8a8da0; line-height: 1.5; font-family: 'Montserrat', sans-serif;">
                     <i class="fas fa-circle-info" style="color: #cca43b;"></i>
-                    The <strong style="color: #202c55;">first variant below</strong> also sets this product's main price, stock, and image on the storefront card — add more for additional color options.
+                    Price and stock are set per color below instead of above. The <strong style="color: #202c55;">first variant</strong> is also what displays on the main storefront card.
                 </p>
                 
                 <!-- This container will hold our dynamic rows generated via JavaScript -->
@@ -1752,4 +1765,4 @@
 }
 </style>
 </body>
-</html>
+</html>
