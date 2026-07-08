@@ -6,12 +6,12 @@
 // new entry into the array below. Keep images square (1:1) for best fit.
 // =========================================================================
 const instagramShowcaseFeed = [
-    { image: 'assets/ugc/ugc-1.webp', handle: '@priya.wears.gold' },
-    { image: 'assets/ugc/ugc-2.webp', handle: '@meera.style' },
-    { image: 'assets/ugc/ugc-3.jpeg', handle: '@ananya.k' },
-    { image: 'assets/ugc/ugc-4.jpeg', handle: '@thejewelrydiaries' },
-    { image: 'assets/ugc/ugc-5.webp', handle: '@radhika.official' },
-    { image: 'assets/ugc/ugc-6.jpeg', handle: '@styledby.sn' }
+    { image: 'assets/ugc/ugc-1.jpg', handle: '@priya.wears.gold' },
+    { image: 'assets/ugc/ugc-2.jpg', handle: '@meera.style' },
+    { image: 'assets/ugc/ugc-3.jpg', handle: '@ananya.k' },
+    { image: 'assets/ugc/ugc-4.jpg', handle: '@thejewelrydiaries' },
+    { image: 'assets/ugc/ugc-5.jpg', handle: '@radhika.official' },
+    { image: 'assets/ugc/ugc-6.jpg', handle: '@styledby.sn' }
 ];
 const instagramProfileLink = 'https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl';
 
@@ -3849,7 +3849,7 @@ function generateDynamicCatalogFilters() {
         foldersGrid.style.setProperty("display", "flex", "important");
         foldersGrid.style.setProperty("flex-wrap", "wrap", "important");
         foldersGrid.style.setProperty("justify-content", "center", "important");
-        foldersGrid.style.setProperty("gap", "45px", "important");
+        foldersGrid.style.setProperty("gap", "22px", "important");
     }
 
     const categoryMap = {};
@@ -3874,29 +3874,15 @@ function generateDynamicCatalogFilters() {
         }
     });
 
-    // Re-maps remaining premium categories into ultra-premium minimalist circle nodes
+    // Re-maps remaining premium categories into true minimalist circle nodes
     foldersGrid.innerHTML = Object.values(categoryMap).map(folder => {
         return `
-            <div class="category-compact-node-card" 
-                 onclick="selectShowroomCategoryFolder('${folder.name}')"
-                 style="display: flex; flex-direction: column; align-items: center; width: 110px; cursor: pointer; transition: transform 0.25s ease; box-sizing: border-box;"
-                 onmouseover="this.style.transform='translateY(-3px)'"
-                 onmouseout="this.style.transform='translateY(0)'">
-                
-                <div style="width: 150px; height: 150px; min-width: 100px; min-height: 100px; border-radius: 20px; overflow: hidden; background: #fafafa; border: 1px solid #e8e8ef; position: relative; box-shadow: 0 4px 12px rgba(32,44,85,0.04);">
-                    <img src="${folder.thumbnail}" alt="${folder.name}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
-                    
-                    <div style="position: absolute; bottom: 4px; right: 4px; background: #202c55; color: #ffffff; font-size: 0.58rem; padding: 2px 6px; font-weight: 700; border-radius: 10px; font-family: 'Montserrat';">
-                        ${folder.itemCount}
-                    </div>
+            <div class="category-node-card" onclick="selectShowroomCategoryFolder('${folder.name}')">
+                <div class="category-node-circle">
+                    <img src="${folder.thumbnail}" alt="${folder.name}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
                 </div>
-
-                <div style="margin-top: 10px; text-align: center; width: 100%;">
-                    <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; color: #202c55; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${folder.name}
-                    </h3>
-                </div>
-
+                <h3 class="category-node-name">${folder.name}</h3>
+                <p class="category-node-count">${folder.itemCount} Piece${folder.itemCount === 1 ? '' : 's'}</p>
             </div>
         `;
     }).join('');
@@ -5752,4 +5738,4 @@ window.addEventListener('click', function(e) {
     if (e.target === modal) {
         closeWhyAngelModal();
     }
-});
+});

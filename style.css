@@ -1767,3 +1767,49 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     font-size: 0.66rem; font-weight: 600; color: var(--text-muted, #8a8da0);
     font-family: var(--font-body);
 }
+
+/* =========================================================================
+   ANGEL JEWELLERY — CATEGORY FOLDER NODES ("All Collections", redesigned)
+   Previously inline-only rounded squares with no hover depth. Now true
+   circles with the same halo-ring hover language as the swatch dots, and
+   image zoom matching the rest of the card system.
+   ========================================================================= */
+.category-node-card {
+    display: flex; flex-direction: column; align-items: center;
+    width: 175px; cursor: pointer; box-sizing: border-box;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.category-node-card:hover { transform: translateY(-5px); }
+
+.category-node-circle {
+    width: 175px; height: 175px; border-radius: 50%; overflow: hidden;
+    background: #fafafa; border: 3px solid #ffffff;
+    box-shadow: 0 0 0 1px var(--border-subtle), 0 8px 20px rgba(32,44,85,0.08);
+    position: relative; transition: box-shadow 0.35s ease;
+}
+.category-node-card:hover .category-node-circle {
+    box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #cca43b, 0 14px 28px rgba(32,44,85,0.16);
+}
+.category-node-circle img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.category-node-card:hover .category-node-circle img { transform: scale(1.1); }
+
+.category-node-name {
+    margin: 14px 0 2px; font-family: var(--font-body); font-size: 0.8rem;
+    font-weight: 700; color: var(--purple-primary); text-transform: uppercase;
+    letter-spacing: 0.6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
+}
+.category-node-count {
+    margin: 0; font-family: var(--font-body); font-size: 0.68rem; font-weight: 600;
+    color: #cca43b; letter-spacing: 0.3px;
+}
+
+@media (max-width: 640px) {
+    .category-node-card { width: 132px; }
+    .category-node-circle { width: 132px; height: 132px; }
+    .category-node-name { font-size: 0.7rem; margin-top: 10px; }
+    .category-node-count { font-size: 0.62rem; }
+}
