@@ -335,6 +335,7 @@ async function loadProductDatabaseEngine() {
                 badge: updatedStatus === "sold" ? "Sold Out" : (item.badge || ''),
                 description: item.description || '',
                 style: item.style ? String(item.style).trim().toLowerCase() : '',
+                created_at: item.created_at || null,
                 product_variants: variations
             };
         });
@@ -410,6 +411,12 @@ function challengeAdminIdentityGateway(event) {
         }
         if (typeof renderTrendingSection === "function") {
             renderTrendingSection();
+        }
+        if (typeof renderNewArrivalsSection === "function") {
+            renderNewArrivalsSection();
+        }
+        if (typeof renderRecentlyViewedSection === "function") {
+            renderRecentlyViewedSection();
         }
     } else {
         alert("❌ Identity Handshake Blocked: Invalid Passcode.");
@@ -1164,6 +1171,187 @@ function renderTrendingSection() {
     });
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — "NEW THIS WEEK" ARRIVALS CAROUSEL
+// Filters strictly on genuine created_at within the last 7 days. If
+// nothing was actually added this week, the section hides entirely rather
+// than padding itself out with older items relabeled as "new" — same
+// honesty principle as the Flash Vault fix: no content pretending to be
+// something it isn't.
+// =========================================================================
+function renderNewArrivalsSection() {
+    const newArrivalsSection = document.getElementById('newArrivalsSection');
+    const newArrivalsGrid = document.getElementById('newArrivalsProductGrid');
+
+    if (!newArrivalsSection || !newArrivalsGrid) return;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const newItems = productDatabase.filter(product => {
+        if (!product.created_at) return false;
+        const createdDate = new Date(product.created_at);
+        if (isNaN(createdDate.getTime())) return false;
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        return createdDate >= sevenDaysAgo && !isSoldOut;
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    if (newItems.length === 0) {
+        newArrivalsSection.style.setProperty("display", "none", "important");
+        return;
+    }
+
+    newArrivalsSection.style.setProperty("display", "block", "important");
+    newArrivalsGrid.innerHTML = "";
+
+    newItems.forEach(product => {
+        const isFavorited = wishlistMemory.includes(product.id);
+
+        const newArrivalCard = document.createElement('div');
+        newArrivalCard.className = 'angel-card';
+        newArrivalCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
+
+        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
+            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
+                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
+            </button>
+            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        ` : '';
+
+        const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+
+        const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+        const isLowStock = liveStockCount > 0 && liveStockCount <= 2;
+        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+
+        const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+        newArrivalCard.innerHTML = `
+            ${adminEditInlineControlMarkup}
+
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                <span class="angel-card-badge" style="background: linear-gradient(135deg, #2a7b6a, #1f5f52); color: #fff;">New</span>
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                </button>
+            </div>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="angel-card-title">${product.title}</h3>
+                ${stockFlagHTML}
+                <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
+                <button class="angel-card-cta" 
+                        onclick="event.stopPropagation(); handleCatalogCardAddToCart(${product.id}, '${safeTitleString}');">
+                    <i class="fas fa-shopping-cart" style="font-size: 0.7rem;"></i> 
+                    <span>Add to Cart</span>
+                </button>
+            </div>
+        `;
+        newArrivalsGrid.appendChild(newArrivalCard);
+    });
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — "RECENTLY VIEWED" STRIP
+// Tracks product ids in localStorage (most-recent-first, capped at 10,
+// deduplicated) whenever Quick View opens, and renders them back as a
+// carousel. Hides entirely for first-time visitors with no view history,
+// and quietly drops any id that no longer matches a real product (e.g.
+// deleted since it was last viewed).
+// =========================================================================
+const RECENTLY_VIEWED_STORAGE_KEY = 'angelJewelleryRecentlyViewed';
+const RECENTLY_VIEWED_MAX_ITEMS = 10;
+
+function recordRecentlyViewedProduct(productId) {
+    try {
+        let viewedIds = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_STORAGE_KEY)) || [];
+        viewedIds = viewedIds.filter(id => id !== productId);
+        viewedIds.unshift(productId);
+        viewedIds = viewedIds.slice(0, RECENTLY_VIEWED_MAX_ITEMS);
+        localStorage.setItem(RECENTLY_VIEWED_STORAGE_KEY, JSON.stringify(viewedIds));
+    } catch (err) {
+        console.error('Could not save recently viewed history:', err);
+    }
+}
+
+function renderRecentlyViewedSection() {
+    const section = document.getElementById('recentlyViewedSection');
+    const grid = document.getElementById('recentlyViewedProductGrid');
+    if (!section || !grid) return;
+
+    let viewedIds = [];
+    try {
+        viewedIds = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_STORAGE_KEY)) || [];
+    } catch (err) {
+        viewedIds = [];
+    }
+
+    if (viewedIds.length === 0) {
+        section.style.setProperty("display", "none", "important");
+        return;
+    }
+
+    const viewedProducts = viewedIds
+        .map(id => productDatabase.find(p => p.id === id))
+        .filter(p => p !== undefined);
+
+    if (viewedProducts.length === 0) {
+        section.style.setProperty("display", "none", "important");
+        return;
+    }
+
+    section.style.setProperty("display", "block", "important");
+    grid.innerHTML = "";
+
+    viewedProducts.forEach(product => {
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        const isFavorited = wishlistMemory.includes(product.id);
+
+        const card = document.createElement('div');
+        card.className = `angel-card ${isSoldOut ? 'is-disabled' : ''}`;
+        card.setAttribute('onclick', `openQuickViewShield(${product.id})`);
+
+        const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+        const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+        card.innerHTML = `
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}" 
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)" 
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                </button>
+                ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
+            </div>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="angel-card-title">${product.title}</h3>
+                <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
+                <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
+                        onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
+                        ${isSoldOut ? 'disabled' : ''}>
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i> 
+                    <span>${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}</span>
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function shareReferralViaWhatsApp() {
+    const shareMessage = `Hey! I've been loving pieces from Angel Jewellery ✨ Check them out — mention my name when you message them to order and you'll get ₹100 off: ${window.location.origin}`;
+    const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+    window.open(shareUrl, '_blank');
+}
+
 function addToCartEngine(productId) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
     const product = currentDb.find(p => p.id === productId);
@@ -1800,6 +1988,42 @@ function triggerCartNotification(title) {
     toast.innerHTML = `<i class="fas fa-check-circle"></i> Added ${title} to selection`;
     document.body.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 2400);
+
+    // A brief sparkle + cart-icon pulse — kept quick and quiet so it reads
+    // as a nice touch rather than a distraction. Hooked here rather than
+    // in each individual "Add to Cart" button since every add-to-cart path
+    // already calls this same notification function.
+    spawnAddToCartSparkles();
+
+    const cartBadge = document.getElementById('cartCountBadge');
+    if (cartBadge) {
+        cartBadge.classList.remove('cart-badge-pulse');
+        void cartBadge.offsetWidth; // restart the animation if triggered again quickly
+        cartBadge.classList.add('cart-badge-pulse');
+    }
+}
+
+function spawnAddToCartSparkles() {
+    const cartIconAnchor = document.getElementById('cartCountBadge');
+    if (!cartIconAnchor) return;
+    const rect = cartIconAnchor.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+
+    const sparkleCount = 6;
+    for (let i = 0; i < sparkleCount; i++) {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'cart-sparkle-particle';
+        sparkle.innerHTML = '✦';
+        const angle = (Math.PI * 2 * i) / sparkleCount + (Math.random() * 0.6 - 0.3);
+        const distance = 22 + Math.random() * 14;
+        sparkle.style.left = `${originX}px`;
+        sparkle.style.top = `${originY}px`;
+        sparkle.style.setProperty('--sparkle-x', `${Math.cos(angle) * distance}px`);
+        sparkle.style.setProperty('--sparkle-y', `${Math.sin(angle) * distance}px`);
+        document.body.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 950);
+    }
 }
 
 
@@ -1812,6 +2036,8 @@ function openQuickViewShield(id) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
     const product = currentDb.find(p => p.id === id);
     if (!product) return;
+
+    recordRecentlyViewedProduct(id);
 
     // Pull variants safely
     const rawVariants = product.product_variants || product.Product_Variants || product.variants || [];
@@ -4047,6 +4273,8 @@ async function synchronizeLiveStorefrontInventory() {
         renderFlashVaultShowroom();
         renderTrendingSection();
         renderVaultSaleSection();
+        renderNewArrivalsSection();
+        renderRecentlyViewedSection();
         
     } catch (error) {
         console.error("❌ Inventory download sync failed. Store falling back to default availability states:", error);

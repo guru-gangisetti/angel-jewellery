@@ -211,6 +211,29 @@
     </section>
 
     <!-- =========================================================================
+         ANGEL JEWELLERY — AS SEEN ON INSTAGRAM (UGC SHOWCASE)
+         ========================================================================= -->
+    <section class="ugc-showcase-section">
+        <div class="ugc-showcase-header">
+            <span class="ugc-showcase-eyebrow">Real Angels, Real Style</span>
+            <h2 class="ugc-showcase-title">As Seen On Instagram</h2>
+            <div class="ugc-showcase-divider"></div>
+            <p class="ugc-showcase-subtext">Tag us <strong>@angeljewelleryofficial</strong> for a chance to be featured here</p>
+        </div>
+
+        <div id="ugcShowcaseGrid" class="ugc-showcase-grid">
+            <!-- Rendered dynamically by renderInstagramShowcaseGallery() in script.js -->
+        </div>
+
+        <div class="ugc-showcase-cta">
+            <a href="https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl" target="_blank" rel="noopener" class="ugc-showcase-follow-btn">
+                <i class="fab fa-instagram"></i> Follow @angeljewelleryofficial
+            </a>
+        </div>
+    </section>
+
+
+    <!-- =========================================================================
      ANGEL JEWELLERY — STYLISTIC MOSAIC COLLECTION (REAL PRODUCT VAULT)
      ========================================================================= -->
     <section class="style-clusters-section" style="max-width: 1200px; margin: 60px auto; padding: 0px; font-family: 'Montserrat', sans-serif;">
@@ -317,29 +340,6 @@
         }
     </style>
 
-        <!-- =========================================================================
-         ANGEL JEWELLERY — AS SEEN ON INSTAGRAM (UGC SHOWCASE)
-         ========================================================================= -->
-    <section class="ugc-showcase-section">
-        <div class="ugc-showcase-header">
-            <span class="ugc-showcase-eyebrow">Real Angels, Real Style</span>
-            <h2 class="ugc-showcase-title">As Seen On Instagram</h2>
-            <div class="ugc-showcase-divider"></div>
-            <p class="ugc-showcase-subtext">Tag us <strong>@angeljewelleryofficial</strong> for a chance to be featured here</p>
-        </div>
-
-        <div id="ugcShowcaseGrid" class="ugc-showcase-grid">
-            <!-- Rendered dynamically by renderInstagramShowcaseGallery() in script.js -->
-        </div>
-
-        <div class="ugc-showcase-cta">
-            <a href="https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl" target="_blank" rel="noopener" class="ugc-showcase-follow-btn">
-                <i class="fab fa-instagram"></i> Follow @angeljewelleryofficial
-            </a>
-        </div>
-    </section>
-
-
     <section class="sale-section-wrapper" id="saleSection" style="background: #ffffff; padding: 90px 10px; display: none; font-family: 'Montserrat', sans-serif; position: relative;">
         <div class="container" style="margin-bottom: 0px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box;">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; width: 100%;">
@@ -359,6 +359,29 @@
             <div style="flex-grow: 1; height: 1px; background: linear-gradient(to left, rgba(32,44,85,0.1), rgba(32,44,85,0));"></div>
             <span style="color: #202c55; font-size: 0.7rem; opacity: 0.25;">✦</span>
             <div style="flex-grow: 1; height: 1px; background: linear-gradient(to right, rgba(32,44,85,0.1), rgba(32,44,85,0));"></div>
+        </div>
+    </section>
+
+    <section class="new-arrivals-section-wrapper" id="newArrivalsSection" style="background: #ffffff; padding: 90px 10px; display: none; font-family: 'Montserrat', sans-serif; position: relative;">
+        <div class="container" style="margin-bottom: 0px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; width: 100%;">
+                <span style="color: #cca43b; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;">Just Landed</span>
+                <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #202c55; margin: 0;">
+                    New This Week
+                </h2>
+                <div style="width: 30px; height: 2px; background: #cca43b; margin-top: 6px; opacity: 0.85;"></div>
+            </div>
+        </div>
+        
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; overflow: hidden;">
+            <div id="newArrivalsProductGrid" class="modern-trending-carousel-track" style="display: flex; gap: 24px; overflow-x: auto; padding: 10px 4px 25px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0;">
+            </div>
+        </div>
+
+        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; width: 100%; max-width: 800px; gap: 15px; padding: 0 20px; box-sizing: border-box;">
+            <div style="flex-grow: 1; height: 1px; background: linear-gradient(to left, rgba(204,164,59,0.15), rgba(204,164,59,0));"></div>
+            <span style="color: #cca43b; font-size: 0.7rem; opacity: 0.4;">✦</span>
+            <div style="flex-grow: 1; height: 1px; background: linear-gradient(to right, rgba(204,164,59,0.15), rgba(204,164,59,0));"></div>
         </div>
     </section>
 
@@ -382,9 +405,15 @@
     /* Hide scrollbars for both modern sliding tracks */
     .modern-trending-carousel-track::-webkit-scrollbar { display: none; }
     
-    /* Desktop & Tablet slider card constraint proportions for BOTH tracks */
-    #trendingProductGrid .angel-card,
-    #saleProductGrid .angel-card {
+    /* Desktop & Tablet slider card constraint proportions for every
+       horizontal-scroll carousel section (Sale, Trending, New Arrivals,
+       Recently Viewed). Previously listed by individual section id, which
+       meant New Arrivals and Recently Viewed were silently missed when
+       added later — their cards had no defined width in the flex row at
+       all, collapsed to near-zero, and stretched tall to match. Targeting
+       the shared class instead means any future carousel section
+       automatically gets correct sizing too. */
+    .modern-trending-carousel-track .angel-card {
         flex: 0 0 calc(25% - 18px) !important;
         min-width: 250px !important;
         box-sizing: border-box;
@@ -392,15 +421,13 @@
 
     /* Mobile View constraints adjustment loops */
     @media (max-width: 900px) {
-        #trendingProductGrid .angel-card,
-        #saleProductGrid .angel-card { 
+        .modern-trending-carousel-track .angel-card { 
             flex: 0 0 calc(50% - 12px) !important; 
             min-width: 180px !important; 
         }
     }
     @media (max-width: 550px) {
-        #trendingProductGrid .angel-card,
-        #saleProductGrid .angel-card { 
+        .modern-trending-carousel-track .angel-card { 
             flex: 0 0 calc(70% - 10px) !important; 
             min-width: 160px !important; 
         }
@@ -512,6 +539,23 @@
 <!-- =========================================================================
          ANGEL JEWELLERY — LUXURY TESTIMONIALS & FEEDBACK SHOWROOM (MARQUEE)
          ========================================================================= -->
+    <section class="recently-viewed-section-wrapper" id="recentlyViewedSection" style="background: #ffffff; padding: 70px 10px; display: none; font-family: 'Montserrat', sans-serif; position: relative;">
+        <div class="container" style="margin-bottom: 0px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; width: 100%;">
+                <span style="color: #cca43b; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;">Pick Up Where You Left Off</span>
+                <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #202c55; margin: 0;">
+                    Recently Viewed
+                </h2>
+                <div style="width: 30px; height: 2px; background: #cca43b; margin-top: 6px; opacity: 0.85;"></div>
+            </div>
+        </div>
+        
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; overflow: hidden;">
+            <div id="recentlyViewedProductGrid" class="modern-trending-carousel-track" style="display: flex; gap: 24px; overflow-x: auto; padding: 10px 4px 25px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0;">
+            </div>
+        </div>
+    </section>
+
     <section class="feedback-display-section" style="background: #fafafa; padding: 80px 24px; border-top: 1px solid #e8e8ef; font-family: 'Montserrat', sans-serif; box-sizing: border-box; width: 100%; overflow: hidden;">
         <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
             
@@ -584,7 +628,18 @@
             </div>
         </div>
     </section>
-    
+
+    <section class="referral-banner-section" id="referralBannerSection">
+        <div class="referral-banner-inner">
+            <div class="referral-banner-icon"><i class="fab fa-whatsapp"></i></div>
+            <h2 class="referral-banner-title">Refer a Friend, You Both Get ₹100 Off</h2>
+            <p class="referral-banner-subtext">Share Angel Jewellery with someone who'd love it. When they message us on WhatsApp to order and mention your name, they get ₹100 off instantly — and we'll credit ₹100 off your next order too.</p>
+            <button type="button" class="referral-banner-share-btn" onclick="shareReferralViaWhatsApp()">
+                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+        </div>
+    </section>
+
     <div id="trackingScreenOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #ffffff; color: #111116; z-index: 9999; overflow-y: auto; padding: 60px 20px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; align-items: flex-start; justify-content: center;">
         <div style="max-width: 650px; width: 100%; height: auto; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 40px; box-shadow: 0 20px 50px rgba(32,44,85,0.06); box-sizing: border-box; margin: 0 auto; text-align: center;">
             <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; width: 100%;">
@@ -704,6 +759,11 @@
                         <button type="submit" style="width:100%; background:var(--purple-primary); color:#fff; border:none; padding:18px; font-size:0.85rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; cursor:pointer; border-radius:4px; display:flex; align-items:center; justify-content:center; gap:10px; box-sizing: border-box;">
                             <i class="fas fa-credit-card"></i> Pay & Confirm Order
                         </button>
+
+                        <div class="checkout-secure-payment-badge">
+                            <i class="fas fa-lock"></i>
+                            <span>Secure Payment powered by Razorpay · 256-bit SSL Encrypted</span>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -1765,4 +1825,4 @@
 }
 </style>
 </body>
-</html>
+</html>

@@ -1574,7 +1574,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .style-clusters-section { margin: 32px auto !important; }
     .ugc-showcase-section { margin: 36px auto !important; }
     .ugc-showcase-header { margin-bottom: 24px !important; }
-    #catalog, #saleSection, #trendingSection { padding: 28px 0 !important; }
+    #catalog, #saleSection, #trendingSection, #newArrivalsSection, #recentlyViewedSection { padding: 28px 0 !important; }
     .sale-section-wrapper, .trending-section-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
     #flashVaultSection { margin: 20px 8px !important; padding: 18px 14px !important; }
 }
@@ -1810,4 +1810,78 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .angel-card-active-color-label {
     font-size: 0.66rem; font-weight: 600; color: var(--text-muted, #8a8da0);
     font-family: var(--font-body);
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — CHECKOUT SECURE PAYMENT BADGE
+   ========================================================================= */
+.checkout-secure-payment-badge {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 14px; padding: 10px 12px; background: rgba(4,105,58,0.06);
+    border: 1px solid rgba(4,105,58,0.15); border-radius: 6px;
+    font-family: var(--font-body); font-size: 0.7rem; font-weight: 600;
+    color: #04693a; text-align: center;
+}
+.checkout-secure-payment-badge i { font-size: 0.78rem; }
+@media (max-width: 480px) {
+    .checkout-secure-payment-badge { font-size: 0.64rem; padding: 9px 10px; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — ADD TO CART DELIGHT MOMENT
+   A small gold sparkle burst toward the cart icon, plus a quick pulse on
+   the item-count badge. Kept brief (under a second) and quiet.
+   ========================================================================= */
+.cart-sparkle-particle {
+    position: fixed; pointer-events: none; z-index: 5001;
+    color: #cca43b; font-size: 0.9rem;
+    animation: cartSparkleFloat 0.9s ease-out forwards;
+}
+@keyframes cartSparkleFloat {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.4) rotate(0deg); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--sparkle-x), var(--sparkle-y)) scale(1.1) rotate(180deg); }
+}
+
+#cartCountBadge.cart-badge-pulse { animation: cartBadgePulse 0.5s ease; }
+@keyframes cartBadgePulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — REFER & EARN BANNER
+   ========================================================================= */
+.referral-banner-section {
+    background: linear-gradient(135deg, #202c55, #2a3868);
+    padding: 60px 24px; text-align: center;
+}
+.referral-banner-inner { max-width: 560px; margin: 0 auto; }
+.referral-banner-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: #25d366;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;
+    font-size: 1.5rem; color: #ffffff; box-shadow: 0 8px 20px rgba(37,211,102,0.3);
+}
+.referral-banner-title {
+    color: #ffffff; font-family: var(--font-body); font-size: 1.5rem; font-weight: 600;
+    letter-spacing: 0.5px; margin: 0 0 12px;
+}
+.referral-banner-subtext {
+    color: rgba(255,255,255,0.75); font-family: var(--font-body); font-size: 0.85rem;
+    line-height: 1.6; margin: 0 0 26px;
+}
+.referral-banner-share-btn {
+    display: inline-flex; align-items: center; gap: 10px; background: #25d366;
+    color: #ffffff; border: none; padding: 14px 30px; border-radius: 6px;
+    font-family: var(--font-body); font-size: 0.78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    transition: all 0.25s ease; box-shadow: 0 8px 20px rgba(37,211,102,0.25);
+}
+.referral-banner-share-btn:hover { background: #20ba5a; transform: translateY(-2px); }
+.referral-banner-share-btn i { font-size: 1rem; }
+
+@media (max-width: 480px) {
+    .referral-banner-title { font-size: 1.25rem; }
+    .referral-banner-section { padding: 46px 20px; }
 }
