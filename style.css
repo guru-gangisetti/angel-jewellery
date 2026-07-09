@@ -1742,37 +1742,9 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .variant-mode-toggle-btn.active:hover { color: #ffffff; }
 
 /* =========================================================================
-   ANGEL JEWELLERY — CATALOG CARD COLOR SWATCH DOTS (redesigned)
-   Halo-ring selected state (white gap + brand-color ring) instead of a
-   plain border, so "selected" reads clearly no matter what color the
-   swatch itself is. Added a proper hover state, and a visible color-name
-   label since the title= tooltip never appears on touch devices at all.
-   ========================================================================= */
-.angel-card-swatch-dot {
-    width: 16px; height: 16px; border-radius: 50%;
-    display: inline-block; cursor: pointer; flex-shrink: 0;
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.14);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.angel-card-swatch-dot:hover {
-    transform: scale(1.18);
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 3px 8px rgba(0,0,0,0.15);
-}
-.angel-card-swatch-dot.is-active {
-    transform: scale(1.15);
-    box-shadow: 0 0 0 1px #ffffff, 0 0 0 2.5px var(--purple-primary);
-}
-.angel-card-active-color-label {
-    font-size: 0.66rem; font-weight: 600; color: var(--text-muted, #8a8da0);
-    font-family: var(--font-body);
-}
-
-/* =========================================================================
-   ANGEL JEWELLERY — CATEGORY FOLDER NODES ("All Collections", redesigned)
-   Previously inline-only rounded squares with no hover depth. Now true
-   circles with the same halo-ring hover language as the swatch dots, and
-   image zoom matching the rest of the card system.
+   ANGEL JEWELLERY — CATEGORY FOLDER NODES ("All Collections")
+   True circles with halo-ring hover, image zoom, bigger size (175px
+   desktop / 132px mobile) with a tighter gap for a denser cluster feel.
    ========================================================================= */
 .category-node-card {
     display: flex; flex-direction: column; align-items: center;
@@ -1812,4 +1784,30 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .category-node-circle { width: 132px; height: 132px; }
     .category-node-name { font-size: 0.7rem; margin-top: 10px; }
     .category-node-count { font-size: 0.62rem; }
+}
+
+/* =========================================================================
+   ANGEL JEWELLERY — CATALOG CARD COLOR SWATCH DOTS
+   Halo-ring selected state (white gap + brand-color ring), a real hover
+   state, and a visible color-name label since title= tooltips never show
+   on touch devices at all.
+   ========================================================================= */
+.angel-card-swatch-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: inline-block; cursor: pointer; flex-shrink: 0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.14);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.angel-card-swatch-dot:hover {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 3px 8px rgba(0,0,0,0.15);
+}
+.angel-card-swatch-dot.is-active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 1px #ffffff, 0 0 0 2.5px var(--purple-primary);
+}
+.angel-card-active-color-label {
+    font-size: 0.66rem; font-weight: 600; color: var(--text-muted, #8a8da0);
+    font-family: var(--font-body);
 }

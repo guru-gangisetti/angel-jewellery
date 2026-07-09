@@ -908,7 +908,7 @@ function filterCatalog(passedSearchQuery) {
 
                             <h3 class="angel-card-title">${product.title}</h3>
                             
-                            ${isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : ''}
+                            <span id="catalog-card-stockflag-${product.id}" class="angel-card-stock-flag" style="${isLowStock ? '' : 'display:none;'}"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>
 
                             <div class="angel-card-price-row">
                                 <span id="catalog-card-price-${product.id}" class="angel-card-price">${displayPrice}</span>
@@ -3874,6 +3874,7 @@ function generateDynamicCatalogFilters() {
         }
     });
 
+    // Re-maps remaining premium categories into ultra-premium minimalist circle nodes
     // Re-maps remaining premium categories into true minimalist circle nodes
     foldersGrid.innerHTML = Object.values(categoryMap).map(folder => {
         return `
@@ -4109,7 +4110,7 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
 
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const cleanPurgeTargetUrl = `${sbUrl}/rest/v1/Products?id=eq.${productId}`;
+    const cleanPurgeTargetUrl = `${sbUrl}/rest/v1/products?id=eq.${productId}`;
 
     try {
         const networkResponse = await fetch(cleanPurgeTargetUrl, {
@@ -4569,29 +4570,24 @@ function renderFlashVaultShowroom() {
     const paginationDock = document.getElementById('flashVaultPagination');
     if (!grid) return;
 
-    // 2. Filter dataset
+    // 2. Filter dataset — only real products tagged Flash / Flash Vault
     const vaultPool = productDatabase.filter(p => {
         if (!p || !p.category) return false;
         const catLower = String(p.category).trim().toLowerCase();
         return catLower === 'flash vault' || catLower === 'flash';
     });
 
-    // Mock testing placeholder array
+    // No real flash items yet — hide the section entirely rather than
+    // show fake placeholder data pretending to be real inventory. Tag a
+    // product's category as "Flash" or "Flash Vault" in the admin panel
+    // and this section reappears automatically on the next render.
     if (vaultPool.length === 0) {
-        vaultPool.push({
-            id: 9991,
-            title: "Premium Stone Drop Earrings",
-            price: 350,
-            image: "images/mini-haram-14.jpeg",
-            category: "Flash"
-        }, {
-            id: 9992,
-            title: "Handcrafted Heritage Trinket",
-            price: 350,
-            image: "images/pendent-chains-4.jpeg",
-            category: "Flash"
-        });
+        section.style.display = 'none';
+        grid.innerHTML = '';
+        if (paginationDock) paginationDock.innerHTML = '';
+        return;
     }
+    section.style.display = 'block';
 
     const totalPages = Math.ceil(vaultPool.length / FLASH_VAULT_ITEMS_PER_PAGE);
     const sliceStart = flashVaultCurrentPage * FLASH_VAULT_ITEMS_PER_PAGE;
@@ -5529,6 +5525,28 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
     const colorNameLabel = document.getElementById(`catalog-card-colorname-${productId}`);
     if (colorNameLabel) {
         colorNameLabel.textContent = matchedVariant.color_name || '';
+    }
+
+    // 7. Update the "Only X left" stock flag for the color actually selected.
+    // Previously this never ran at all, so switching colors left the flag
+    // frozen on whichever variant happened to load first — showing "Only 2
+    // left" (or nothing) regardless of the newly selected color's real
+    // stock. Prefer the live-synced cache (kept current by
+    // synchronizeLiveStorefrontInventory) over the page's initial snapshot,
+    // falling back to the snapshot only if the live cache has nothing yet.
+    const stockFlagEl = document.getElementById(`catalog-card-stockflag-${productId}`);
+    if (stockFlagEl) {
+        const liveCacheEntry = MASTER_LIVE_INVENTORY_CACHE[productId];
+        const liveVariantMatch = liveCacheEntry?.variants?.find(v => v.id === variantId);
+        const resolvedStock = liveVariantMatch ? parseInt(liveVariantMatch.stock) : parseInt(matchedVariant.stock);
+        const stockCount = Number.isFinite(resolvedStock) ? resolvedStock : 0;
+
+        if (stockCount > 0 && stockCount <= 2) {
+            stockFlagEl.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} left`;
+            stockFlagEl.style.display = '';
+        } else {
+            stockFlagEl.style.display = 'none';
+        }
     }
 }
 
