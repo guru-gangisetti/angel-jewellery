@@ -5985,3 +5985,39 @@ window.addEventListener('click', function(e) {
         closeWhyAngelModal();
     }
 });
+
+// =========================================================================
+// ANGEL JEWELLERY — CATALOG LAYOUT SWITCHER ENGINE
+// =========================================================================
+function switchCatalogLayout(layoutType) {
+    const grid = document.getElementById('productGrid');
+    if (!grid) return;
+
+    // 1. Remove any existing layout modifier classes
+    grid.classList.remove('layout-list', 'layout-large', 'layout-standard');
+    
+    // 2. Add the newly selected layout class (unless it's 'standard', which is default)
+    if (layoutType !== 'standard') {
+        grid.classList.add(`layout-${layoutType}`);
+    }
+
+    // 3. Update the visual UI state of the buttons
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+        if (btn.getAttribute('data-layout') === layoutType) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 4. Save preference silently so it persists on page refresh
+    localStorage.setItem('angelJewelleryLayoutPref', layoutType);
+}
+
+// 5. Automatically apply the saved layout on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLayout = localStorage.getItem('angelJewelleryLayoutPref');
+    if (savedLayout) {
+        switchCatalogLayout(savedLayout);
+    }
+});

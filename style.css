@@ -1885,3 +1885,109 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .referral-banner-title { font-size: 1.25rem; }
     .referral-banner-section { padding: 46px 20px; }
 }
+
+/* =========================================================================
+   ANGEL JEWELLERY — CATALOG LAYOUT SWITCHER STYLES
+   ========================================================================= */
+
+.catalog-layout-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 20px 5px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.layout-controls-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.layout-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: #a1a1b5; /* Neutral unselected grey */
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.layout-btn:hover {
+    color: var(--purple-primary);
+    border-color: var(--purple-primary);
+}
+
+.layout-btn.active {
+    color: var(--purple-primary);
+    border-color: var(--purple-primary);
+    box-shadow: 0 2px 6px rgba(32, 44, 85, 0.1);
+}
+
+/* ➔ OVERRIDE 1: LARGE GRID (2 Columns Desktop, 1 Column Mobile) */
+.product-grid.layout-large {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+@media (max-width: 768px) {
+    .product-grid.layout-large {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ➔ OVERRIDE 2: LIST VIEW (Horizontal Rows) */
+.product-grid.layout-list {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+}
+
+.product-grid.layout-list .angel-card {
+    flex-direction: row !important;
+    align-items: stretch;
+}
+
+.product-grid.layout-list .angel-card-media {
+    width: 260px !important;
+    max-width: 35%;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-subtle);
+    aspect-ratio: unset; /* Remove 1:1 constraint for list view */
+}
+
+.product-grid.layout-list .angel-card-body {
+    padding: 24px !important;
+    justify-content: center;
+    flex: 1;
+}
+
+.product-grid.layout-list .angel-card-cta {
+    width: max-content;
+    padding: 10px 30px;
+    margin-top: 15px;
+}
+
+/* Mobile Adjustments for List View */
+@media (max-width: 640px) {
+    .product-grid.layout-list .angel-card-media {
+        width: 130px !important;
+        max-width: 40%;
+    }
+    .product-grid.layout-list .angel-card-body {
+        padding: 12px !important;
+    }
+    .product-grid.layout-list .angel-card-title {
+        font-size: 0.8rem !important;
+    }
+    .product-grid.layout-list .angel-card-cta {
+        width: 100%; /* Go back to full width button on tiny mobile list */
+        padding: 8px 0;
+        margin-top: 10px;
+        font-size: 0.65rem;
+    }
+}
