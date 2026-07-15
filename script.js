@@ -763,6 +763,159 @@ function formatCurrency(amount) {
 // =========================================================================
 // ANGEL JEWELLERY — HARMONIZED INDESTRUCTIBLE SEARCH & FILTER ENGINE
 // =========================================================================
+// =========================================================================
+// ANGEL JEWELLERY — SECTION COUNTDOWN TIMERS (Sale + Flash Vault)
+// Sale end-date is admin-configurable below — edit it whenever you run a
+// real timed promotion. The countdown hides itself if unset or already
+// passed, so it can never show a stale or fake deadline.
+// Flash Vault resets to midnight every day automatically, with zero
+// maintenance needed — "today's ₹350 picks" is always literally true.
+// =========================================================================
+
+// ➔ EDIT THIS whenever you run a real sale with a real end date/time.
+// Example: const SALE_SECTION_END_DATETIME = new Date('2026-07-31T23:59:59');
+//const SALE_SECTION_END_DATETIME = null;
+const SALE_SECTION_END_DATETIME = new Date('2026-07-31T23:59:59');
+
+function formatCountdownParts(msRemaining) {
+    const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return { days, hours, minutes, seconds };
+}
+
+function updateSaleCountdown() {
+    const badge = document.getElementById('saleCountdownBadge');
+    if (!badge) return;
+
+    if (!SALE_SECTION_END_DATETIME || SALE_SECTION_END_DATETIME.getTime() <= Date.now()) {
+        badge.style.display = 'none';
+        return;
+    }
+
+    const { days, hours, minutes, seconds } = formatCountdownParts(SALE_SECTION_END_DATETIME.getTime() - Date.now());
+    const dayPrefix = days > 0 ? `${days}d ` : '';
+    badge.innerHTML = `<i class="fas fa-clock"></i> Sale ends in ${dayPrefix}${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+    badge.style.display = 'inline-flex';
+}
+
+function updateFlashVaultCountdown() {
+    const badge = document.getElementById('flashVaultCountdownBadge');
+    if (!badge) return;
+
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+
+    const { hours, minutes, seconds } = formatCountdownParts(nextMidnight.getTime() - now.getTime());
+    badge.innerHTML = `<i class="fas fa-clock"></i> Today's ₹350 picks end in ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+    badge.style.display = 'inline-flex';
+}
+
+setInterval(() => {
+    updateSaleCountdown();
+    updateFlashVaultCountdown();
+}, 1000);
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateSaleCountdown();
+    updateFlashVaultCountdown();
+});
+
+// =========================================================================
+// ANGEL JEWELLERY — LIVE ACTIVITY INDICATOR (site-wide, real data only)
+// Counts real rows from the Orders table in the last 24 hours. This is
+// deliberately site-wide rather than per-product: order_items is stored
+// as a flat comma-joined text string with no product_id link (confirmed
+// by reading the actual order-creation code), so a reliable per-product
+// count isn't achievable here — and would silently misfire if a
+// product's title is ever edited later. This version is slower to
+// impress but never wrong. Hides itself entirely if the count is 0.
+// =========================================================================
+async function renderLiveActivityIndicator() {
+    const badge = document.getElementById('liveActivityBadge');
+    if (!badge) return;
+
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+    if (!sbUrl || !sbKey) return;
+
+    try {
+        const sinceIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const url = `${sbUrl}/rest/v1/Orders?select=id&created_at=gte.${sinceIso}`;
+        const response = await fetch(url, {
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
+        });
+        if (!response.ok) throw new Error(`Orders count fetch failed: ${response.status}`);
+
+        const rows = await response.json();
+        const count = Array.isArray(rows) ? rows.length : 0;
+
+        if (count === 0) {
+            badge.style.display = 'none';
+            return;
+        }
+
+        badge.innerHTML = `<i class="fas fa-fire"></i> ${count} ${count === 1 ? 'person' : 'people'} shopped with us in the last 24 hours`;
+        badge.style.display = 'inline-flex';
+    } catch (err) {
+        console.error('Could not load live activity indicator:', err);
+        badge.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', renderLiveActivityIndicator);
+
+// =========================================================================
+// ANGEL JEWELLERY — FIRST-TIME VISITOR WELCOME DISCOUNT
+// Shows once ever per browser (localStorage flag). IMPORTANT: this only
+// actually works at checkout if a matching coupon genuinely exists in
+// your Coupons table — create one with code WELCOME10 (type: percentage,
+// value: 10) via your existing admin Promo Codes panel. Without that,
+// this is just a popup with no teeth.
+// =========================================================================
+const WELCOME_DISCOUNT_STORAGE_KEY = 'angelJewelleryWelcomeDiscountShown';
+const WELCOME_DISCOUNT_CODE = 'WELCOME10';
+
+function maybeShowWelcomeDiscountPopup() {
+    let alreadyShown = true;
+    try {
+        alreadyShown = localStorage.getItem(WELCOME_DISCOUNT_STORAGE_KEY) === 'true';
+    } catch (err) {
+        alreadyShown = true; // fail safe: don't show if storage is unavailable
+    }
+    if (alreadyShown) return;
+
+    setTimeout(() => {
+        const modal = document.getElementById('welcomeDiscountModal');
+        if (modal) modal.style.display = 'flex';
+        try {
+            localStorage.setItem(WELCOME_DISCOUNT_STORAGE_KEY, 'true');
+        } catch (err) {
+            console.error('Could not save welcome discount shown flag:', err);
+        }
+    }, 2500);
+}
+
+function closeWelcomeDiscountModal() {
+    const modal = document.getElementById('welcomeDiscountModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyWelcomeDiscountCode() {
+    navigator.clipboard.writeText(WELCOME_DISCOUNT_CODE).then(() => {
+        const btn = document.getElementById('welcomeDiscountCopyBtn');
+        if (!btn) return;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = originalHTML; }, 1800);
+    }).catch(err => console.error('Clipboard copy failed:', err));
+}
+
+document.addEventListener('DOMContentLoaded', maybeShowWelcomeDiscountPopup);
+
 function filterCatalog(passedSearchQuery) {
     const productGrid = document.getElementById('productGrid');
 
@@ -4765,6 +4918,7 @@ function renderFlashVaultShowroom() {
                     <span style="font-size: 0.65rem; background: #202c55; color: #fff; padding: 4px 10px; font-weight: 700; letter-spacing: 1.5px; border-radius: 2px; text-transform: uppercase;">⚡ Limited Stock</span>
                     <h2 style="color: #202c55; font-size: 1.4rem; font-weight: 600; margin: 8px 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;">Pick Any Item @ ₹350</h2>
                     <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: #777;">Single piece earrings & small trinkets. Once sold, it will be gone!</p>
+                    <div id="flashVaultCountdownBadge" class="section-countdown-badge" style="margin-top: 10px;"></div>
                 </div>
                 <div style="background: #ffffff; border: 1px solid #e8e8ef; padding: 8px 16px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: #ff1493; letter-spacing: 0.5px;">
                     PRICE FOR ANY PIECE: <span style="font-size: 1rem; color: #202c55;">₹350</span>
@@ -6043,4 +6197,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedLayout) {
         switchCatalogLayout(savedLayout);
     }
-});
+});
