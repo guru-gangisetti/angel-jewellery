@@ -846,6 +846,7 @@ function filterCatalog(passedSearchQuery) {
                 const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
                 const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
                 const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+                const isHealthyStock = !isSoldOut && liveStockCount > 2;
 
                 const cardVariants = product.product_variants || product.Product_Variants || product.variants || [];
                 const firstColorName = cardVariants.length > 0 ? cardVariants[0].color_name : 'Standard';
@@ -915,7 +916,7 @@ function filterCatalog(passedSearchQuery) {
 
                             <h3 class="angel-card-title">${product.title}</h3>
                             
-                            <span id="catalog-card-stockflag-${product.id}" class="angel-card-stock-flag" style="${isLowStock ? '' : 'display:none;'}"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>
+                            <span id="catalog-card-stockflag-${product.id}" class="angel-card-stock-flag ${isHealthyStock ? 'angel-card-stock-flag--available' : ''}" style="${(isLowStock || isHealthyStock) ? '' : 'display:none;'}">${isLowStock ? `<i class="fas fa-fire"></i> Only ${liveStockCount} left` : `<i class="fas fa-check-circle"></i> ${liveStockCount} in stock`}</span>
 
                             <div class="angel-card-price-row">
                                 <span id="catalog-card-price-${product.id}" class="angel-card-price">${displayPrice}</span>
@@ -1035,7 +1036,10 @@ function renderVaultSaleSection() {
         const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
         const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
         const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
-        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+        const isHealthyStock = !isSoldOut && liveStockCount > 2;
+        const stockFlagHTML = isLowStock 
+            ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` 
+            : (isHealthyStock ? `<span class="angel-card-stock-flag angel-card-stock-flag--available"><i class="fas fa-check-circle"></i> ${liveStockCount} in stock</span>` : '');
 
         const pricingLayoutHTML = `
             <div class="angel-card-price-row">
@@ -1127,7 +1131,10 @@ function renderTrendingSection() {
         const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
         const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
         const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
-        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+        const isHealthyStock = !isSoldOut && liveStockCount > 2;
+        const stockFlagHTML = isLowStock 
+            ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` 
+            : (isHealthyStock ? `<span class="angel-card-stock-flag angel-card-stock-flag--available"><i class="fas fa-check-circle"></i> ${liveStockCount} in stock</span>` : '');
 
         const pricingLayoutHTML = hasDiscount ? `
             <div class="angel-card-price-row">
@@ -1225,7 +1232,10 @@ function renderNewArrivalsSection() {
         const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
         const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
         const isLowStock = liveStockCount > 0 && liveStockCount <= 2;
-        const stockFlagHTML = isLowStock ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` : '';
+        const isHealthyStock = liveStockCount > 2;
+        const stockFlagHTML = isLowStock 
+            ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` 
+            : (isHealthyStock ? `<span class="angel-card-stock-flag angel-card-stock-flag--available"><i class="fas fa-check-circle"></i> ${liveStockCount} in stock</span>` : '');
 
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
@@ -1320,6 +1330,14 @@ function renderRecentlyViewedSection() {
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
+        const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+        const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+        const isHealthyStock = !isSoldOut && liveStockCount > 2;
+        const stockFlagHTML = isLowStock 
+            ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>` 
+            : (isHealthyStock ? `<span class="angel-card-stock-flag angel-card-stock-flag--available"><i class="fas fa-check-circle"></i> ${liveStockCount} in stock</span>` : '');
+
         card.innerHTML = `
             <div class="angel-card-media">
                 <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
@@ -1333,6 +1351,7 @@ function renderRecentlyViewedSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                ${stockFlagHTML}
                 <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
                         onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
@@ -5755,13 +5774,12 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
         colorNameLabel.textContent = matchedVariant.color_name || '';
     }
 
-    // 7. Update the "Only X left" stock flag for the color actually selected.
-    // Previously this never ran at all, so switching colors left the flag
-    // frozen on whichever variant happened to load first — showing "Only 2
-    // left" (or nothing) regardless of the newly selected color's real
-    // stock. Prefer the live-synced cache (kept current by
-    // synchronizeLiveStorefrontInventory) over the page's initial snapshot,
-    // falling back to the snapshot only if the live cache has nothing yet.
+    // 7. Update the stock flag for the color actually selected. Previously
+    // this never ran at all, so switching colors left the flag frozen on
+    // whichever variant happened to load first. Prefer the live-synced
+    // cache (kept current by synchronizeLiveStorefrontInventory) over the
+    // page's initial snapshot, falling back to the snapshot only if the
+    // live cache has nothing yet.
     const stockFlagEl = document.getElementById(`catalog-card-stockflag-${productId}`);
     if (stockFlagEl) {
         const liveCacheEntry = MASTER_LIVE_INVENTORY_CACHE[productId];
@@ -5771,6 +5789,11 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
 
         if (stockCount > 0 && stockCount <= 2) {
             stockFlagEl.innerHTML = `<i class="fas fa-fire"></i> Only ${stockCount} left`;
+            stockFlagEl.classList.remove('angel-card-stock-flag--available');
+            stockFlagEl.style.display = '';
+        } else if (stockCount > 2) {
+            stockFlagEl.innerHTML = `<i class="fas fa-check-circle"></i> ${stockCount} in stock`;
+            stockFlagEl.classList.add('angel-card-stock-flag--available');
             stockFlagEl.style.display = '';
         } else {
             stockFlagEl.style.display = 'none';
@@ -6020,4 +6043,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedLayout) {
         switchCatalogLayout(savedLayout);
     }
-});
+});

@@ -1696,6 +1696,10 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     background: rgba(255,20,147,0.08); padding: 2px 8px; border-radius: 20px;
     margin: 2px 0 6px; width: fit-content; font-family: var(--font-body);
 }
+.angel-card-stock-flag--available {
+    color: #2a7b6a;
+    background: rgba(42,123,106,0.09);
+}
 
 /* =========================================================================
    ANGEL JEWELLERY — VARIANT IMAGE UPLOAD UI
@@ -1990,4 +1994,4 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
         margin-top: 10px;
         font-size: 0.65rem;
     }
-}
+}
