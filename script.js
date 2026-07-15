@@ -835,9 +835,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // impress but never wrong. Hides itself entirely if the count is 0.
 // =========================================================================
 async function renderLiveActivityIndicator() {
-    const badge = document.getElementById('liveActivityBadge');
-    if (!badge) return;
-
     const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
     if (!sbUrl || !sbKey) return;
@@ -852,14 +849,6 @@ async function renderLiveActivityIndicator() {
 
         const rows = await response.json();
         const count = Array.isArray(rows) ? rows.length : 0;
-
-        if (count === 0) {
-            badge.style.display = 'none';
-            return;
-        }
-
-        badge.innerHTML = `<i class="fas fa-fire"></i> ${count} ${count === 1 ? 'person' : 'people'} shopped with us in the last 24 hours`;
-        badge.style.display = 'inline-flex';
     } catch (err) {
         console.error('Could not load live activity indicator:', err);
         badge.style.display = 'none';
