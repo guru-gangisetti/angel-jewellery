@@ -398,6 +398,11 @@ function challengeAdminIdentityGateway(event) {
         if (promoLinkNode) {
             promoLinkNode.style.display = 'flex'; // Reveals link perfectly next to your unlock buttons
         }
+
+        const inventoryLinkNode = document.getElementById('adminInventoryDashboardFooterLink');
+        if (inventoryLinkNode) {
+            inventoryLinkNode.style.display = 'flex';
+        }
         
         // Refresh catalog view grids to render "Edit" inline buttons on product cards
        if (typeof filterCatalog === "function") {
@@ -684,6 +689,20 @@ if (adminFormNode) {
             if (!parentResponse.ok) throw new Error("Supabase master product row registration rejected.");
             
             // --- ENGINE PART B: PROCESS AND UPDATE RELATIONAL PRODUCT VARIANTS ---
+            // Snapshot pre-edit stock by color name BEFORE the delete below — this
+            // save flow deletes all variants and reinserts fresh ones (new ids
+            // every time), so variant_id continuity can't be used to track
+            // before/after stock. Matching by color name is a best-effort
+            // approach: it works correctly unless a color is renamed in this
+            // same edit, in which case that specific change won't be logged.
+            const preEditVariantsSnapshot = {};
+            if (isEditOperationMode) {
+                const existingProductRecord = productDatabase.find(p => p.id === assignedProductId);
+                (existingProductRecord?.product_variants || []).forEach(v => {
+                    preEditVariantsSnapshot[v.color_name || 'Standard'] = parseInt(v.stock) || 0;
+                });
+            }
+
             if (isEditOperationMode) {
                 // Clear old relation rows to maintain clean indexes
                 await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}`, {
@@ -735,6 +754,33 @@ if (adminFormNode) {
 
             if (!variantResponse.ok) throw new Error("Variant rows population execution failed.");
 
+            // Best-effort history logging: compare the pre-edit snapshot against
+            // what was just saved, matched by color name (see note above on why
+            // variant_id continuity isn't available here).
+            if (isEditOperationMode && typeof logStockHistoryEntry === 'function') {
+                try {
+                    const freshVariantsResponse = await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}&select=*`, {
+                        headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
+                    });
+                    if (freshVariantsResponse.ok) {
+                        const freshVariants = await freshVariantsResponse.json();
+                        const productTitleForLog = document.getElementById('formProductTitle').value.trim();
+                        for (const fv of freshVariants) {
+                            const colorKey = fv.color_name || 'Standard';
+                            const newStockValue = parseInt(fv.stock) || 0;
+                            const previousStockValue = Object.prototype.hasOwnProperty.call(preEditVariantsSnapshot, colorKey)
+                                ? preEditVariantsSnapshot[colorKey]
+                                : 0; // no prior match found — treat as a newly added color variant
+                            if (previousStockValue !== newStockValue) {
+                                await logStockHistoryEntry(fv.id, assignedProductId, productTitleForLog, colorKey, 'manual_edit', previousStockValue, newStockValue);
+                            }
+                        }
+                    }
+                } catch (historyErr) {
+                    console.error('Could not log stock history for this edit (product save itself still succeeded):', historyErr);
+                }
+            }
+
             alert(`✨ Success! Database sync complete for item reference #${assignedProductId}`);
             closeAdminFormVaultModal();
             
@@ -774,8 +820,7 @@ function formatCurrency(amount) {
 
 // ➔ EDIT THIS whenever you run a real sale with a real end date/time.
 // Example: const SALE_SECTION_END_DATETIME = new Date('2026-07-31T23:59:59');
-//const SALE_SECTION_END_DATETIME = null;
-const SALE_SECTION_END_DATETIME = new Date('2026-07-31T23:59:59');
+const SALE_SECTION_END_DATETIME = null;
 
 function formatCountdownParts(msRemaining) {
     const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
@@ -825,39 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================================================
-// ANGEL JEWELLERY — LIVE ACTIVITY INDICATOR (site-wide, real data only)
-// Counts real rows from the Orders table in the last 24 hours. This is
-// deliberately site-wide rather than per-product: order_items is stored
-// as a flat comma-joined text string with no product_id link (confirmed
-// by reading the actual order-creation code), so a reliable per-product
-// count isn't achievable here — and would silently misfire if a
-// product's title is ever edited later. This version is slower to
-// impress but never wrong. Hides itself entirely if the count is 0.
-// =========================================================================
-async function renderLiveActivityIndicator() {
-    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
-    if (!sbUrl || !sbKey) return;
-
-    try {
-        const sinceIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const url = `${sbUrl}/rest/v1/Orders?select=id&created_at=gte.${sinceIso}`;
-        const response = await fetch(url, {
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
-        });
-        if (!response.ok) throw new Error(`Orders count fetch failed: ${response.status}`);
-
-        const rows = await response.json();
-        const count = Array.isArray(rows) ? rows.length : 0;
-    } catch (err) {
-        console.error('Could not load live activity indicator:', err);
-        badge.style.display = 'none';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', renderLiveActivityIndicator);
-
-// =========================================================================
 // ANGEL JEWELLERY — FIRST-TIME VISITOR WELCOME DISCOUNT
 // Shows once ever per browser (localStorage flag). IMPORTANT: this only
 // actually works at checkout if a matching coupon genuinely exists in
@@ -904,6 +916,401 @@ function copyWelcomeDiscountCode() {
 }
 
 document.addEventListener('DOMContentLoaded', maybeShowWelcomeDiscountPopup);
+
+// =========================================================================
+// ANGEL JEWELLERY — INVENTORY DASHBOARD
+// A dedicated admin view for managing stock across every product/variant
+// at once, instead of opening each product's Edit form individually.
+// =========================================================================
+
+let inventorySelectedVariantIds = new Set();
+
+function openInventoryDashboard(event) {
+    if (event) event.preventDefault();
+    const modal = document.getElementById('inventoryDashboardModal');
+    if (modal) modal.style.display = 'flex';
+    populateInventoryCategoryFilterOptions();
+    renderInventoryTable();
+}
+
+function closeInventoryDashboard() {
+    const modal = document.getElementById('inventoryDashboardModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Flattens the nested product -> variants structure into one row per
+// variant, which is what the dashboard actually manages. Prefers the
+// live-synced cache over the initial page-load snapshot, same pattern
+// used everywhere else stock is displayed on the storefront.
+function getFlattenedInventoryRows() {
+    const rows = [];
+    (productDatabase || []).forEach(product => {
+        const variants = product.product_variants || [];
+        variants.forEach(variant => {
+            const liveCacheEntry = MASTER_LIVE_INVENTORY_CACHE[product.id];
+            const liveVariantMatch = liveCacheEntry?.variants?.find(v => v.id === variant.id);
+            const resolvedStock = liveVariantMatch ? parseInt(liveVariantMatch.stock) : parseInt(variant.stock);
+            rows.push({
+                variantId: variant.id,
+                productId: product.id,
+                productTitle: product.title || 'Untitled',
+                colorName: variant.color_name || 'Standard',
+                sku: variant.sku || '',
+                category: product.category || '',
+                price: variant.price,
+                stock: Number.isFinite(resolvedStock) ? resolvedStock : 0,
+                image: variant.image_url || product.image
+            });
+        });
+    });
+    return rows;
+}
+
+function populateInventoryCategoryFilterOptions() {
+    const select = document.getElementById('inventoryCategoryFilter');
+    if (!select) return;
+    const currentValue = select.value;
+    const categories = [...new Set((productDatabase || []).map(p => p.category).filter(Boolean))].sort();
+    select.innerHTML = `<option value="">All Categories</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    select.value = currentValue;
+}
+
+function renderInventorySummaryCards(allRows) {
+    const container = document.getElementById('inventorySummaryCards');
+    if (!container) return;
+
+    const totalSkus = allRows.length;
+    const totalUnits = allRows.reduce((sum, r) => sum + r.stock, 0);
+    const outOfStockCount = allRows.filter(r => r.stock <= 0).length;
+    const lowStockCount = allRows.filter(r => r.stock > 0 && r.stock <= 2).length;
+
+    container.innerHTML = `
+        <div class="inventory-summary-card">
+            <span class="inventory-summary-value">${totalSkus}</span>
+            <span class="inventory-summary-label">Total SKUs</span>
+        </div>
+        <div class="inventory-summary-card">
+            <span class="inventory-summary-value">${totalUnits}</span>
+            <span class="inventory-summary-label">Units In Stock</span>
+        </div>
+        <div class="inventory-summary-card inventory-summary-card--warning">
+            <span class="inventory-summary-value">${lowStockCount}</span>
+            <span class="inventory-summary-label">Low Stock</span>
+        </div>
+        <div class="inventory-summary-card inventory-summary-card--danger">
+            <span class="inventory-summary-value">${outOfStockCount}</span>
+            <span class="inventory-summary-label">Out of Stock</span>
+        </div>
+    `;
+}
+
+function renderInventoryTable() {
+    const tbody = document.getElementById('inventoryTableBody');
+    if (!tbody) return;
+
+    const allRows = getFlattenedInventoryRows();
+    renderInventorySummaryCards(allRows);
+
+    let rows = allRows;
+    const searchTerm = (document.getElementById('inventorySearchInput')?.value || '').toLowerCase().trim();
+    const categoryFilter = document.getElementById('inventoryCategoryFilter')?.value || '';
+    const stockFilter = document.getElementById('inventoryStockFilter')?.value || '';
+
+    if (searchTerm) {
+        rows = rows.filter(r => r.productTitle.toLowerCase().includes(searchTerm) || (r.sku || '').toLowerCase().includes(searchTerm));
+    }
+    if (categoryFilter) rows = rows.filter(r => r.category === categoryFilter);
+    if (stockFilter === 'out') rows = rows.filter(r => r.stock <= 0);
+    else if (stockFilter === 'low') rows = rows.filter(r => r.stock > 0 && r.stock <= 2);
+    else if (stockFilter === 'healthy') rows = rows.filter(r => r.stock > 2);
+
+    rows = rows.slice().sort((a, b) => a.stock - b.stock);
+
+    if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#8a8da0;">No matching items.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+        const statusInfo = r.stock <= 0
+            ? { label: 'Out of Stock', className: 'inventory-status-out' }
+            : (r.stock <= 2 ? { label: 'Low Stock', className: 'inventory-status-low' } : { label: 'In Stock', className: 'inventory-status-healthy' });
+
+        const safeLabel = `${r.productTitle} - ${r.colorName}`.replace(/'/g, "\\'");
+
+        return `
+            <tr data-variant-id="${r.variantId}">
+                <td><input type="checkbox" class="inventory-row-checkbox" value="${r.variantId}" ${inventorySelectedVariantIds.has(r.variantId) ? 'checked' : ''} onchange="toggleInventoryRowSelection(${r.variantId}, this.checked)"></td>
+                <td class="inventory-td-item">
+                    <img src="${r.image || 'assets/placeholder.png'}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
+                    <span>${r.productTitle}</span>
+                </td>
+                <td>${r.colorName}</td>
+                <td class="inventory-td-sku">${r.sku || '—'}</td>
+                <td>${r.category || '—'}</td>
+                <td>${formatCurrency(parseFloat(r.price) || 0)}</td>
+                <td><input type="number" class="inventory-stock-input" value="${r.stock}" min="0" onchange="handleInventoryStockInlineEdit(${r.variantId}, ${r.productId}, this)"></td>
+                <td><span class="inventory-status-pill ${statusInfo.className}">${statusInfo.label}</span></td>
+                <td><button type="button" class="inventory-history-btn" onclick="openStockHistoryModal(${r.variantId}, '${safeLabel}')" title="View history"><i class="fas fa-clock-rotate-left"></i></button></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// --- Bulk selection ---
+function toggleInventoryRowSelection(variantId, isChecked) {
+    if (isChecked) inventorySelectedVariantIds.add(variantId);
+    else inventorySelectedVariantIds.delete(variantId);
+    updateInventoryBulkActionsBarVisibility();
+}
+
+function toggleSelectAllInventoryRows(checkbox) {
+    document.querySelectorAll('.inventory-row-checkbox').forEach(cb => {
+        cb.checked = checkbox.checked;
+        const variantId = parseInt(cb.value);
+        if (checkbox.checked) inventorySelectedVariantIds.add(variantId);
+        else inventorySelectedVariantIds.delete(variantId);
+    });
+    updateInventoryBulkActionsBarVisibility();
+}
+
+function clearInventorySelection() {
+    inventorySelectedVariantIds.clear();
+    renderInventoryTable();
+}
+
+function updateInventoryBulkActionsBarVisibility() {
+    const bar = document.getElementById('inventoryBulkActionsBar');
+    const countLabel = document.getElementById('inventoryBulkSelectedCount');
+    if (!bar) return;
+    if (inventorySelectedVariantIds.size > 0) {
+        bar.style.display = 'flex';
+        if (countLabel) countLabel.innerText = `${inventorySelectedVariantIds.size} selected`;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+// --- Stock history logging ---
+// Called from every point stock actually changes: sales, manual edits in
+// this dashboard, bulk actions, and (best-effort) admin product edits.
+// Failures here are logged but never block the actual stock update —
+// history is a record of what happened, not a gate on whether it can.
+async function logStockHistoryEntry(variantId, productId, productTitle, colorName, changeType, previousStock, newStock, note = '') {
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        await fetch(`${sbUrl}/rest/v1/stock_history`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey,
+                'Authorization': `Bearer ${sbKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                variant_id: variantId,
+                product_id: productId,
+                product_title: productTitle,
+                color_name: colorName,
+                change_type: changeType,
+                previous_stock: previousStock,
+                new_stock: newStock,
+                change_amount: newStock - previousStock,
+                note: note
+            })
+        });
+    } catch (err) {
+        console.error('Could not log stock history entry (stock update itself still succeeded):', err);
+    }
+}
+
+// --- Inline single-row edit ---
+async function handleInventoryStockInlineEdit(variantId, productId, inputEl) {
+    const newStock = parseInt(inputEl.value);
+    if (!Number.isFinite(newStock) || newStock < 0) {
+        alert('Please enter a valid stock number.');
+        return;
+    }
+
+    const rowData = getFlattenedInventoryRows().find(r => r.variantId === variantId);
+    const previousStock = rowData ? rowData.stock : null;
+
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
+            method: 'PATCH',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stock: newStock, status: newStock <= 0 ? 'sold' : 'active' })
+        });
+        if (!response.ok) throw new Error(`Update failed: ${response.status}`);
+
+        if (previousStock !== null && previousStock !== newStock && rowData) {
+            await logStockHistoryEntry(variantId, productId, rowData.productTitle, rowData.colorName, 'manual_edit', previousStock, newStock);
+        }
+
+        await synchronizeLiveStorefrontInventory();
+        renderInventoryTable();
+    } catch (err) {
+        console.error('Stock update failed:', err);
+        alert('Could not update stock. Please check your connection and try again.');
+    }
+}
+
+// --- Bulk actions ---
+async function applyBulkRestock() {
+    const valueInput = document.getElementById('inventoryBulkStockValue');
+    const newStock = parseInt(valueInput?.value);
+    if (!Number.isFinite(newStock) || newStock < 0) {
+        alert('Enter a valid stock number to apply to the selected items.');
+        return;
+    }
+    if (inventorySelectedVariantIds.size === 0) return;
+    if (!confirm(`Set stock to ${newStock} for ${inventorySelectedVariantIds.size} selected item(s)?`)) return;
+
+    const rows = getFlattenedInventoryRows();
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+
+    for (const variantId of inventorySelectedVariantIds) {
+        const rowData = rows.find(r => r.variantId === variantId);
+        if (!rowData) continue;
+        try {
+            await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
+                method: 'PATCH',
+                headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock: newStock, status: newStock <= 0 ? 'sold' : 'active' })
+            });
+            if (rowData.stock !== newStock) {
+                await logStockHistoryEntry(variantId, rowData.productId, rowData.productTitle, rowData.colorName, 'bulk_update', rowData.stock, newStock);
+            }
+        } catch (err) {
+            console.error(`Bulk restock failed for variant ${variantId}:`, err);
+        }
+    }
+
+    if (valueInput) valueInput.value = '';
+    inventorySelectedVariantIds.clear();
+    await synchronizeLiveStorefrontInventory();
+    renderInventoryTable();
+}
+
+async function applyBulkSoldOut() {
+    if (inventorySelectedVariantIds.size === 0) return;
+    if (!confirm(`Mark ${inventorySelectedVariantIds.size} selected item(s) as sold out (stock set to 0)?`)) return;
+
+    const rows = getFlattenedInventoryRows();
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+
+    for (const variantId of inventorySelectedVariantIds) {
+        const rowData = rows.find(r => r.variantId === variantId);
+        if (!rowData) continue;
+        try {
+            await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
+                method: 'PATCH',
+                headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock: 0, status: 'sold' })
+            });
+            if (rowData.stock !== 0) {
+                await logStockHistoryEntry(variantId, rowData.productId, rowData.productTitle, rowData.colorName, 'bulk_update', rowData.stock, 0);
+            }
+        } catch (err) {
+            console.error(`Bulk sold-out failed for variant ${variantId}:`, err);
+        }
+    }
+
+    inventorySelectedVariantIds.clear();
+    await synchronizeLiveStorefrontInventory();
+    renderInventoryTable();
+}
+
+// --- CSV export ---
+function exportInventoryToCsv() {
+    const rows = getFlattenedInventoryRows();
+    const header = ['Product', 'Color', 'SKU', 'Category', 'Price', 'Stock', 'Status'];
+    const csvLines = [header.join(',')];
+
+    rows.forEach(r => {
+        const status = r.stock <= 0 ? 'Out of Stock' : (r.stock <= 2 ? 'Low Stock' : 'In Stock');
+        const escapedTitle = `"${(r.productTitle || '').replace(/"/g, '""')}"`;
+        csvLines.push([escapedTitle, r.colorName, r.sku, r.category, r.price || 0, r.stock, status].join(','));
+    });
+
+    const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `angel-jewellery-inventory-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// --- Per-variant stock history viewer ---
+async function openStockHistoryModal(variantId, labelText) {
+    const modal = document.getElementById('stockHistoryModal');
+    const titleEl = document.getElementById('stockHistoryModalTitle');
+    const listEl = document.getElementById('stockHistoryList');
+    if (!modal || !listEl) return;
+
+    if (titleEl) titleEl.innerText = `Stock History — ${labelText}`;
+    listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#8a8da0;">Loading...</p>`;
+    modal.style.display = 'flex';
+
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+
+    try {
+        const url = `${sbUrl}/rest/v1/stock_history?variant_id=eq.${variantId}&select=*&order=created_at.desc&limit=50`;
+        const response = await fetch(url, {
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
+        });
+        if (!response.ok) throw new Error(`History fetch failed: ${response.status}`);
+
+        const historyRows = await response.json();
+        if (!historyRows || historyRows.length === 0) {
+            listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#8a8da0;">No history recorded yet for this item.</p>`;
+            return;
+        }
+
+        const typeLabels = {
+            sale: { label: 'Sale', icon: 'fa-cart-shopping', color: '#04693a' },
+            manual_edit: { label: 'Manual Edit', icon: 'fa-pen', color: '#202c55' },
+            bulk_update: { label: 'Bulk Update', icon: 'fa-layer-group', color: '#cca43b' },
+            restock: { label: 'Restock', icon: 'fa-box', color: '#04693a' }
+        };
+
+        listEl.innerHTML = historyRows.map(entry => {
+            const typeInfo = typeLabels[entry.change_type] || { label: entry.change_type, icon: 'fa-circle', color: '#8a8da0' };
+            const changeSign = entry.change_amount > 0 ? '+' : '';
+            const dateStr = new Date(entry.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="stock-history-entry">
+                    <div class="stock-history-entry-icon" style="color:${typeInfo.color};"><i class="fas ${typeInfo.icon}"></i></div>
+                    <div class="stock-history-entry-body">
+                        <span class="stock-history-entry-type">${typeInfo.label}</span>
+                        <span class="stock-history-entry-change">${entry.previous_stock} → ${entry.new_stock} (${changeSign}${entry.change_amount})</span>
+                        <span class="stock-history-entry-date">${dateStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Could not load stock history:', err);
+        listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#d9383a;">Could not load history — make sure the stock_history table has been created in Supabase (see the SQL setup script).</p>`;
+    }
+}
+
+function closeStockHistoryModal() {
+    const modal = document.getElementById('stockHistoryModal');
+    if (modal) modal.style.display = 'none';
+}
 
 function filterCatalog(passedSearchQuery) {
     const productGrid = document.getElementById('productGrid');
@@ -4480,6 +4887,10 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
                 })
             });
 
+            if (typeof logStockHistoryEntry === 'function') {
+                await logStockHistoryEntry(exactVariant.id, product.id, product.title, exactVariant.color_name, 'sale', currentStockLevel, absoluteNewStockLevel);
+            }
+
         } catch (err) {
             console.error(`Inventory deduction sync failure catch trace:`, err);
         }
@@ -6186,4 +6597,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedLayout) {
         switchCatalogLayout(savedLayout);
     }
-});
+});

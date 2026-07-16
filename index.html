@@ -168,6 +168,7 @@
             </div>
         </div>
     </section>
+
     <section class="catalog-controls" id="catalog" style="background: #fafafa; padding: 90px 0 70px 0; width: 100%; display: block !important; position: relative;">
         
         <!-- =========================================================================
@@ -659,6 +660,70 @@
         </div>
     </section>
 
+    <div id="inventoryDashboardModal" class="inventory-dashboard-modal" style="display:none;">
+        <div class="inventory-dashboard-panel">
+            <div class="inventory-dashboard-header">
+                <h2><i class="fas fa-boxes-stacked"></i> Inventory Dashboard</h2>
+                <button type="button" onclick="closeInventoryDashboard()" class="inventory-dashboard-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="inventory-summary-cards" id="inventorySummaryCards"></div>
+
+            <div class="inventory-toolbar">
+                <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search by title or SKU..." oninput="renderInventoryTable()">
+                <select id="inventoryCategoryFilter" class="inventory-filter-select" onchange="renderInventoryTable()">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="inventoryStockFilter" class="inventory-filter-select" onchange="renderInventoryTable()">
+                    <option value="">All Stock Levels</option>
+                    <option value="out">Out of Stock</option>
+                    <option value="low">Low Stock (≤2)</option>
+                    <option value="healthy">In Stock</option>
+                </select>
+                <button type="button" onclick="exportInventoryToCsv()" class="inventory-export-btn">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+            </div>
+
+            <div id="inventoryBulkActionsBar" class="inventory-bulk-actions-bar" style="display:none;">
+                <span id="inventoryBulkSelectedCount" class="inventory-bulk-count"></span>
+                <input type="number" id="inventoryBulkStockValue" class="inventory-bulk-input" placeholder="Set stock to..." min="0">
+                <button type="button" onclick="applyBulkRestock()" class="inventory-bulk-btn inventory-bulk-btn--primary">Apply to Selected</button>
+                <button type="button" onclick="applyBulkSoldOut()" class="inventory-bulk-btn inventory-bulk-btn--danger">Mark Sold Out</button>
+                <button type="button" onclick="clearInventorySelection()" class="inventory-bulk-btn inventory-bulk-btn--ghost">Clear</button>
+            </div>
+
+            <div class="inventory-table-wrapper">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th style="width:36px;"><input type="checkbox" id="inventorySelectAllCheckbox" onchange="toggleSelectAllInventoryRows(this)"></th>
+                            <th>Item</th>
+                            <th>Color</th>
+                            <th>SKU</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th style="width:50px;">History</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="stockHistoryModal" class="stock-history-modal" style="display:none;">
+        <div class="stock-history-panel">
+            <div class="stock-history-header">
+                <h3 id="stockHistoryModalTitle">Stock History</h3>
+                <button type="button" onclick="closeStockHistoryModal()" class="stock-history-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="stockHistoryList" class="stock-history-list"></div>
+        </div>
+    </div>
+
     <div id="welcomeDiscountModal" class="welcome-discount-modal" style="display:none;">
         <div class="welcome-discount-modal-inner">
             <button type="button" class="welcome-discount-close-btn" onclick="closeWelcomeDiscountModal()" aria-label="Close">
@@ -993,6 +1058,11 @@
                 </button>
                 <button id="adminCarouselMasterFooterLink" onclick="openAdminCarouselConsoleOverlay(event)" class="footer-action-circle admin-carousel" title="Manage Carousel Banners" style="display: none; border-color: #cca43b !important;">
                     <i class="fas fa-images" style="color: #cca43b;"></i>
+                </button>
+
+                <!-- 5. Inventory Dashboard Trigger (The Boxes Button — Starts Hidden) -->
+                <button id="adminInventoryDashboardFooterLink" onclick="openInventoryDashboard(event)" class="footer-action-circle admin-inventory" title="Manage Inventory" style="display: none; border-color: #04693a !important;">
+                    <i class="fas fa-boxes-stacked" style="color: #04693a;"></i>
                 </button>
             </div>
         </div>
