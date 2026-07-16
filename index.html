@@ -759,66 +759,79 @@
         </div>
     </div>
 
-    <div id="adminMasterConsoleOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #ffffff; color: #111116; z-index: 10001; overflow-y: auto; padding: 60px 20px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; align-items: flex-start; justify-content: center;">
-        <div style="max-width: 900px; width: 100%; height: auto; background: #ffffff; border: 1px solid var(--pink-accent); border-radius: 8px; padding: 40px; box-shadow: 0 20px 50px rgba(32,44,85,0.08); box-sizing: border-box; margin: 0 auto;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e8e8ef; padding-bottom: 15px; width: 100%;">
+    <div id="adminMasterConsoleOverlay" class="order-desk-overlay" style="display: none;">
+        <div class="order-desk-panel">
+
+            <div class="order-desk-header">
                 <div>
-                    <h2 style="font-size: 1.6rem; font-weight: 600; color: var(--purple-primary); margin: 0;">Master Order Desk</h2>
-                    <p style="color: var(--text-muted); font-size: 0.75rem; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px; font-weight:600;">Internal Administration Ledger</p>
+                    <h2>Master Order Desk</h2>
+                    <p>Internal Administration Ledger</p>
                 </div>
-                <button onclick="closeAdminMasterConsole()" style="background: none; border: 1px solid #e8e8ef; color: #111116; padding: 8px 16px; cursor: pointer; font-size: 0.75rem; font-weight:600; letter-spacing: 1px; text-transform: uppercase;">✕ Close Console</button>
+                <button onclick="closeAdminMasterConsole()" class="order-desk-close-btn"><i class="fas fa-times"></i> Close</button>
             </div>
 
-            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #e8e8ef; padding-bottom: 16px;">
-                <!-- MASTER ORDER DESK NAVIGATION TABS -->
-                <div id="adminConsoleTabsWrapper" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <button id="adminTabPendingBtn" onclick="switchAdminConsoleTab('pending')" style="background: var(--purple-primary, #202c55); color: #ffffff; border: 1px solid var(--purple-primary, #202c55); padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; transition: all 0.2s;">
-                        <i class="fas fa-clock"></i> Pending (<span id="adminPendingCount">0</span>)
-                    </button>
-                    <button id="adminTabShippedBtn" onclick="switchAdminConsoleTab('shipped')" style="background: #f9f9fb; color: #77778b; border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; transition: all 0.2s;">
-                        <i class="fas fa-truck"></i> Shipped (<span id="adminShippedCount">0</span>)
-                    </button>
-                    <!-- ➔ THE VISUAL LINK FIX: Added Cancelled Orders Button Node directly here -->
-                    <button id="adminTabCancelledBtn" onclick="switchAdminConsoleTab('cancelled')" style="background: #f9f9fb; color: #77778b; border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; transition: all 0.2s;">
-                        <i class="fas fa-times-circle"></i> Cancelled & Refunded (<span id="adminCancelledCount">0</span>)
-                    </button>
+            <div class="order-desk-strip-label">Order Volume</div>
+            <div class="order-desk-analytics-strip" id="adminVolumeStrip">
+                <div class="order-desk-analytic-card order-desk-analytic-card--purple">
+                    <span>Today</span>
+                    <h3 id="analyticsOrdersToday">0</h3>
                 </div>
-                
-                <div style="position: relative; min-width: 280px;">
-                    <input type="text" id="adminConsoleSearchInput" oninput="handleAdminConsoleSearch(this.value)" placeholder="Search by name, phone, or Ref ID..." style="width: 100%; padding: 10px 14px 10px 35px; border: 1px solid var(--border-subtle, #e8e8ef); border-radius: 4px; font-size: 0.82rem; font-family: 'Montserrat', sans-serif; box-sizing: border-box;">
-                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 0.85rem;"></i>
+                <div class="order-desk-analytic-card order-desk-analytic-card--pink">
+                    <span>This Week</span>
+                    <h3 id="analyticsOrdersThisWeek">0</h3>
                 </div>
-                <div class="admin-view-switcher-dock" style="display: inline-flex; background: #f4f4f7; padding: 4px; border-radius: 6px; border: 1px solid #e8e8ef; box-sizing: border-box;">
-                    <button type="button" id="adminViewModeCardsBtn" onclick="toggleAdminConsoleLayoutMode('cards')" style="background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;" title="Card Visual Ledger Mode">
-                        <i class="fas fa-th-large"></i> Cards
-                    </button>
-                    <button type="button" id="adminViewModeTableBtn" onclick="toggleAdminConsoleLayoutMode('table')" style="background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;" title="Compact Spreadsheet Grid Mode">
-                        <i class="fas fa-table"></i> Table
-                    </button>
-                </div>
-                <button type="button" onclick="exportCurrentAdminOrdersToCSV()" style="background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 9px 16px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none; height: 38px; box-sizing: border-box;" onmouseover="this.style.background='#25d366'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#25d366';">
-                    <i class="fas fa-file-excel"></i> Export CSV
-                </button>
-            </div>
-
-            <div id="adminAnalyticsStrip" class="analytics-cards-row-wrapper-selector" style="display: flex; gap: 10px; width: 100%; box-sizing: border-box; flex-wrap: wrap;">
-                <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--purple-primary);">
-                    <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Pending Fulfillment Value</span>
-                    <h3 id="analyticsPendingValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: var(--purple-primary); font-weight: 700;">₹0</h3>
-                </div>
-                <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--pink-accent);">
-                    <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Total Shipped Value</span>
-                    <h3 id="analyticsShippedValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: var(--pink-accent); font-weight: 700;">₹0</h3>
-                </div>
-                <div style="background: #f4f4f7; padding: 12px 16px; border-radius: 6px; border-left: 4px solid #cca43b;">
-                    <span style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Total Combined Value</span>
-                    <h3 id="analyticsCombinedValue" style="margin: 4px 0 0 0; font-size: 1.3rem; color: #cca43b; font-weight: 700;">₹0</h3>
+                <div class="order-desk-analytic-card order-desk-analytic-card--gold">
+                    <span>This Month</span>
+                    <h3 id="analyticsOrdersThisMonth">0</h3>
                 </div>
             </div>
 
-            <p id="adminConsoleStatus" style="font-size: 0.9rem; margin-bottom: 25px; color: var(--purple-primary); font-weight: 600; text-align: left;"></p>
-            <div id="adminMasterOrdersContainer" style="display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; width: 100%;"></div>
+            <div class="order-desk-strip-label">Order Value by Status</div>
+            <div class="order-desk-analytics-strip" id="adminAnalyticsStrip">
+                <div class="order-desk-analytic-card order-desk-analytic-card--purple">
+                    <span>Pending Value</span>
+                    <h3 id="analyticsPendingValue">₹0</h3>
+                </div>
+                <div class="order-desk-analytic-card order-desk-analytic-card--pink">
+                    <span>Shipped Value</span>
+                    <h3 id="analyticsShippedValue">₹0</h3>
+                </div>
+                <div class="order-desk-analytic-card order-desk-analytic-card--gold">
+                    <span>Combined Value</span>
+                    <h3 id="analyticsCombinedValue">₹0</h3>
+                </div>
+            </div>
+
+            <div class="order-desk-toolbar">
+                <div class="order-desk-tabs" id="adminConsoleTabsWrapper">
+                    <button id="adminTabPendingBtn" class="order-desk-tab-btn is-active" onclick="switchAdminConsoleTab('pending')">
+                        <i class="fas fa-clock"></i> Pending <span class="order-desk-tab-count" id="adminPendingCount">0</span>
+                    </button>
+                    <button id="adminTabShippedBtn" class="order-desk-tab-btn" onclick="switchAdminConsoleTab('shipped')">
+                        <i class="fas fa-truck"></i> Shipped <span class="order-desk-tab-count" id="adminShippedCount">0</span>
+                    </button>
+                    <button id="adminTabCancelledBtn" class="order-desk-tab-btn" onclick="switchAdminConsoleTab('cancelled')">
+                        <i class="fas fa-times-circle"></i> Cancelled <span class="order-desk-tab-count" id="adminCancelledCount">0</span>
+                    </button>
+                </div>
+
+                <div class="order-desk-toolbar-right">
+                    <div class="order-desk-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adminConsoleSearchInput" oninput="handleAdminConsoleSearch(this.value)" placeholder="Search name, phone, or Ref ID...">
+                    </div>
+                    <div class="order-desk-view-switcher">
+                        <button type="button" id="adminViewModeCardsBtn" class="is-active" onclick="toggleAdminConsoleLayoutMode('cards')" title="Card view"><i class="fas fa-th-large"></i> Cards</button>
+                        <button type="button" id="adminViewModeTableBtn" onclick="toggleAdminConsoleLayoutMode('table')" title="Table view"><i class="fas fa-table"></i> Table</button>
+                    </div>
+                    <button type="button" onclick="exportCurrentAdminOrdersToCSV()" class="order-desk-export-btn">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <p id="adminConsoleStatus" class="order-desk-status-line"></p>
+            <div id="adminMasterOrdersContainer" class="order-desk-orders-container"></div>
         </div>
     </div>
 

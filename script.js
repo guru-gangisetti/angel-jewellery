@@ -1040,21 +1040,28 @@ function renderInventoryTable() {
 
         return `
             <tr data-variant-id="${r.variantId}">
-                <td><input type="checkbox" class="inventory-row-checkbox" value="${r.variantId}" ${inventorySelectedVariantIds.has(r.variantId) ? 'checked' : ''} onchange="toggleInventoryRowSelection(${r.variantId}, this.checked)"></td>
+                <td class="inventory-td-checkbox"><input type="checkbox" class="inventory-row-checkbox" value="${r.variantId}" ${inventorySelectedVariantIds.has(r.variantId) ? 'checked' : ''} onchange="toggleInventoryRowSelection(${r.variantId}, this.checked)"></td>
                 <td class="inventory-td-item">
                     <img src="${r.image || 'assets/placeholder.png'}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
                     <span>${r.productTitle}</span>
                 </td>
-                <td>${r.colorName}</td>
-                <td class="inventory-td-sku">${r.sku || '—'}</td>
-                <td>${r.category || '—'}</td>
-                <td>${formatCurrency(parseFloat(r.price) || 0)}</td>
-                <td><input type="number" class="inventory-stock-input" value="${r.stock}" min="0" onchange="handleInventoryStockInlineEdit(${r.variantId}, ${r.productId}, this)"></td>
-                <td><span class="inventory-status-pill ${statusInfo.className}">${statusInfo.label}</span></td>
-                <td><button type="button" class="inventory-history-btn" onclick="openStockHistoryModal(${r.variantId}, '${safeLabel}')" title="View history"><i class="fas fa-clock-rotate-left"></i></button></td>
+                <td data-label="Color">${r.colorName}</td>
+                <td class="inventory-td-sku" data-label="SKU">${r.sku || '—'}</td>
+                <td data-label="Category">${r.category || '—'}</td>
+                <td data-label="Price">${formatCurrency(parseFloat(r.price) || 0)}</td>
+                <td data-label="Stock"><input type="number" class="inventory-stock-input" value="${r.stock}" min="0" onchange="handleInventoryStockInlineEdit(${r.variantId}, ${r.productId}, this)"></td>
+                <td data-label="Status"><span class="inventory-status-pill ${statusInfo.className}">${statusInfo.label}</span></td>
+                <td data-label="History"><button type="button" class="inventory-history-btn" onclick="openStockHistoryModal(${r.variantId}, '${safeLabel}')" title="View history"><i class="fas fa-clock-rotate-left"></i></button></td>
             </tr>
         `;
     }).join('');
+
+    // Keeps the bulk actions bar in sync with the actual current selection
+    // every time the table re-renders — previously this only ran when a
+    // checkbox was clicked directly, so clearing the selection via a bulk
+    // action or the Clear button left the bar visibly stuck open even
+    // though nothing was selected anymore.
+    updateInventoryBulkActionsBarVisibility();
 }
 
 // --- Bulk selection ---
@@ -3846,6 +3853,7 @@ function openAdminMasterConsole(event) {
             "payment_id": order.payment_id,
             "Payment ID": order.payment_id,
             "Date": order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A',
+            "created_at": order.created_at,
             "customer_name": order.customer_name,
             "Client Name": order.customer_name,
             "phone": order.phone,
@@ -3913,34 +3921,18 @@ function renderTabularSpreadsheetAdminOrders(datasetArray) {
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     if (!ordersContainer) return;
 
-    if (!document.getElementById('adminTableResponsiveStylesTag')) {
-        const styleSheetNode = document.createElement("style");
-        styleSheetNode.id = "adminTableResponsiveStylesTag";
-        styleSheetNode.innerHTML = `
-            .admin-compact-table-scroller { width: 100%; overflow-x: auto; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; box-shadow: 0 4px 15px rgba(32,44,85,0.01); box-sizing: border-box; }
-            .admin-master-data-table { width: 100%; border-collapse: collapse; margin: 0; font-size: 0.82rem; font-family: 'Montserrat', sans-serif; }
-            .admin-master-data-table th { background: #f4f4f7; color: var(--text-muted, #777); font-weight: 700; padding: 12px 16px; border-bottom: 2px solid #e8e8ef; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.8px; text-align: left; }
-            .admin-master-data-table td { padding: 14px 16px; border-bottom: 1px solid #f1f1f5; color: #111116; font-weight: 500; vertical-align: middle; transition: background-color 0.2s ease; }
-            .admin-master-data-table tr:hover td { background: #fafafa; }
-            /* Highlight class for active shipping action */
-            .admin-master-data-table tr.active-shipping-row td { background: #fff9e6 !important; border-top: 1px solid #cca43b; border-bottom: 1px solid #cca43b; }
-            .table-action-mini-pill { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; text-decoration: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; height: 26px; box-sizing: border-box; }
-        `;
-        document.head.appendChild(styleSheetNode);
-    }
-ordersContainer.innerHTML = `
-        <div class="admin-compact-table-scroller">
-            <table class="admin-master-data-table">
+    ordersContainer.innerHTML = `
+        <div class="order-table-scroller">
+            <table class="order-desk-table">
                 <thead>
                     <tr>
-                        <th style="width: 130px;">Reference ID</th>
-                        <th>Client details</th>
-                        <th>Purchased masterpieces</th>
-                        <th style="width: 110px;">Total Bill</th>
-                        <th style="width: 100px;">Status</th>
-                        <!-- ➔ NEW HEADER COLUMN ADDED -->
-                        <th style="width: 140px;">Tracking Waybill</th>
-                        <th style="text-align: center; width: 180px;">Quick Actions Hub</th>
+                        <th class="col-ref">Reference ID</th>
+                        <th>Client Details</th>
+                        <th>Items</th>
+                        <th class="col-amount">Total</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-tracking">Tracking</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -3952,9 +3944,7 @@ ordersContainer.innerHTML = `
                         const ordDate = order['Date'] || order.Date || 'N/A';
                         
                         const isShipped = String(order.status).toLowerCase() === 'shipped';
-                        const badgeStyle = isShipped 
-                            ? "background: rgba(255, 20, 147, 0.08); color: var(--pink-accent, #ff1493); font-weight:700;" 
-                            : "background: rgba(32, 44, 85, 0.06); color: var(--purple-primary, #202c55); font-weight:700;";
+                        const statusPillClass = isShipped ? 'order-status-pill--shipped' : 'order-status-pill--placed';
 
                         const itemsSummary = (order.order_items || '').split(',').map(i => i.trim()).join(' | ');
 
@@ -3962,16 +3952,15 @@ ordersContainer.innerHTML = `
                         const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
 
                         const inlineShipActionHTML = !isShipped 
-                            ? `<button class="table-action-mini-pill" onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="background: var(--purple-primary, #202c55); color:#fff; border:none;"><i class="fas fa-shipping-fast"></i> Ship</button>`
-                            : `<span style="font-size:0.7rem; color:#8a8da0; font-weight:600;"><i class="fas fa-check-circle"></i> Handed Off</span>`;
+                            ? `<button class="table-action-mini-pill table-action-mini-pill--primary" onclick="revealCourierAllocationPanel('${ordPaymentId}')"><i class="fas fa-shipping-fast"></i> Ship</button>`
+                            : `<span class="order-handed-off-label"><i class="fas fa-check-circle"></i> Handed Off</span>`;
 
-                        // ➔ MAP DYNAMIC WAYBILL MARKUP METRICS
                         const partnerCompany = order.Courier || order.courier || 'Standard Logistics';
                         const trackingWaybillNo = order['Tracking Number'] || order.tracking_number || 'N/A';
                         const tableTrackingCellHTML = isShipped 
-                            ? `<div style="font-weight:700; color:#202c55; font-size:0.75rem;">${partnerCompany}</div>
-                               <div style="font-family:monospace; font-size:0.72rem; color:#777; margin-top:2px;">${trackingWaybillNo}</div>`
-                            : `<span style="color:#aaa; font-style:italic; font-size:0.75rem;">Not Shipped Yet</span>`;
+                            ? `<div class="order-tracking-courier">${partnerCompany}</div>
+                               <div class="order-tracking-waybill">${trackingWaybillNo}</div>`
+                            : `<span class="order-tracking-empty">Not Shipped Yet</span>`;
 
                         const safeName = ordClientName.replace(/'/g, "\\'");
                         const safePhone = String(order.phone).replace(/'/g, "\\'");
@@ -3979,45 +3968,36 @@ ordersContainer.innerHTML = `
 
                         return `
                             <tr id="order-row-${ordPaymentId}">
-                                <td style="font-family: monospace; font-weight: 700; color: var(--purple-primary, #202c55);">
+                                <td class="order-td-ref">
                                     #${ordPaymentId.slice(0, 12)}...
-                                    <span style="display:block; font-size:0.65rem; color:#aaa; font-weight:500; font-family:'Montserrat'; margin-top:2px;">${ordDate}</span>
+                                    <span class="order-td-ref-date">${ordDate}</span>
                                 </td>
-                                <td>
-                                    <div style="font-weight:700; color:#111116;">${ordClientName}</div>
-                                    <div style="font-size:0.72rem; color:#777; margin-top:2px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${order.address}">${order.address}</div>
+                                <td class="order-td-client">
+                                    <div class="order-td-client-name">${ordClientName}</div>
+                                    <div class="order-td-client-address" title="${order.address}">${order.address}</div>
                                 </td>
-                                <td style="font-size: 0.78rem; color:#4a4a5a; max-width: 250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${itemsSummary}">
-                                    ${itemsSummary}
-                                </td>
-                                <td style="font-weight:700; color: var(--purple-primary, #202c55);">${ordTotalAmount}</td>
-                                <td>
-                                    <span style="${badgeStyle} font-size:0.6rem; padding:4px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:0.5px; display:inline-block; text-align:center;">
-                                        ${isShipped ? 'Shipped' : 'Placed'}
-                                    </span>
-                                </td>
-                                
-                                <!-- ➔ NEW DATA CELL INJECTED INTO ROW -->
+                                <td class="order-td-items" title="${itemsSummary}">${itemsSummary}</td>
+                                <td class="order-td-amount">${ordTotalAmount}</td>
+                                <td><span class="order-status-pill ${statusPillClass}">${isShipped ? 'Shipped' : 'Placed'}</span></td>
                                 <td>${tableTrackingCellHTML}</td>
-                                
-                                <td style="text-align: center; position: relative;">
-                                    <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
-                                        <button class="table-action-mini-pill" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="background:transparent; border:1px solid #e8e8ef; color:#111116;" title="Copy Tag"><i class="far fa-copy"></i></button>
-                                        <a href="${whatsappUpdateLink}" target="_blank" class="table-action-mini-pill" style="background:transparent; border:1px solid #25d366; color:#25d366;"><i class="fab fa-whatsapp"></i> Ping</a>
+                                <td class="order-td-actions">
+                                    <div class="order-td-actions-row">
+                                        <button class="table-action-mini-pill" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" title="Copy Tag"><i class="far fa-copy"></i></button>
+                                        <a href="${whatsappUpdateLink}" target="_blank" class="table-action-mini-pill table-action-mini-pill--chat"><i class="fab fa-whatsapp"></i> Ping</a>
                                         <div id="shipped-action-slot-${ordPaymentId}" style="display:contents;">${inlineShipActionHTML}</div>
                                     </div>
 
-                                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel" style="position: absolute; display: none; background: #ffffff; border: 1px solid #202c55; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 6px; margin-top: 8px; right: 0; z-index: 100; padding: 12px; width: 240px; box-sizing: border-box; text-align: left;">
-                                        <p style="margin: 0 0 8px 0; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #202c55; letter-spacing: 0.5px;">Logistics Partner</p>
-                                        <div style="display: flex; gap: 8px; margin-bottom: 8px; font-size: 0.72rem; font-weight: 700;">
-                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="DTDC" checked style="accent-color:#202c55;"> DTDC</label>
-                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="Delhivery" style="accent-color:#202c55;"> Delhivery</label>
-                                            <label style="display: inline-flex; align-items: center; gap: 3px; cursor:pointer;"><input type="radio" name="table-courier-${ordPaymentId}" value="Blue Dart" style="accent-color:#202c55;"> Blue Dart</label>
+                                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel order-table-courier-panel">
+                                        <p>Logistics Partner</p>
+                                        <div class="order-table-courier-options">
+                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="DTDC" checked> DTDC</label>
+                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="Delhivery"> Delhivery</label>
+                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="Blue Dart"> Blue Dart</label>
                                         </div>
-                                        <div style="display: flex; gap: 6px; width: 100%;">
-                                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Waybill No" style="padding: 6px 8px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; flex-grow: 1; min-width: 0; outline: none; font-family:'Montserrat';">
-                                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #fff; border: none; padding: 0 10px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; cursor: pointer; height: 28px;">OK</button>
-                                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; border: 1px solid #e8e8ef; padding: 0 8px; font-size: 0.65rem; border-radius: 4px; color: #777; cursor: pointer; height: 28px;">✕</button>
+                                        <div class="order-table-courier-input-row">
+                                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Waybill No">
+                                            <button onclick="updateShippingStatus('${ordPaymentId}', this)">OK</button>
+                                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')">✕</button>
                                         </div>
                                     </div>
                                 </td>
@@ -4182,80 +4162,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // ANGEL JEWELLERY — THREE-TAB RESPONSIVE ADMINISTRATIVE CONSOLE LAYOUT
 // =========================================================================
 function renderSegregatedAdminOrders() {
-if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
-        const mobileOverrideNode = document.createElement("style");
-        mobileOverrideNode.id = "adminMasterConsoleMobileOverrides";
-        mobileOverrideNode.innerHTML = `
-            #adminConsoleTabsWrapper, 
-            .analytics-cards-row-wrapper-selector { 
-                display: flex !important; 
-                gap: 10px !important; 
-                flex-wrap: wrap !important; 
-            }
-            
-            #adminConsoleTabsWrapper > button,
-            [id^="analytics"] {
-                flex: 1 1 calc(33.33% - 10px) !important;
-                min-width: 120px !important;
-            }
-
-            @media (max-width: 768px) {
-                .admin-card-header {
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    gap: 10px !important;
-                }
-                .admin-header-right {
-                    text-align: left !important;
-                    width: 100% !important;
-                    justify-content: space-between !important;
-                    flex-direction: row-reverse !important;
-                    border-top: 1px dashed #e8e8ef !important;
-                    padding-top: 10px !important;
-                }
-                
-                /* ➔ FIX FOR THE LEFT-SIDE OFFSET OVERFLOW SHOWN IN image_7d8643.png */
-                .admin-action-row-container {
-                    flex-direction: column !important;
-                    align-items: stretch !important;
-                    gap: 15px !important;
-                }
-                
-                /* Switch out grid layout patterns for an automated 50-50 percentage split row wrap system */
-                .admin-card-actions-group {
-                    display: flex !important;
-                    flex-wrap: wrap !important;
-                    gap: 8px !important;
-                    width: 100% !important;
-                    margin-left: 0 !important;
-                    justify-content: flex-start !important;
-                }
-                
-                /* Target every child direct element including nested structural wrapper slots */
-                .admin-card-actions-group > button,
-                .admin-card-actions-group > a,
-                .admin-card-actions-group > div {
-                    flex: 1 1 calc(50% - 6px) !important;
-                    width: calc(50% - 6px) !important;
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-
-                /* Flatten nested child selectors inside dynamic slot blocks so they keep proportional size mapping */
-                .admin-card-actions-group > div {
-                    display: flex !important;
-                    gap: 8px !important;
-                }
-                .admin-card-actions-group > div > * {
-                    flex: 1 1 100% !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-            }
-        `;
-        document.head.appendChild(mobileOverrideNode);
-    }
-
     const statusMsg = document.getElementById('adminConsoleStatus');
     const ordersContainer = document.getElementById('adminMasterOrdersContainer');
     const pendingCountSpan = document.getElementById('adminPendingCount');
@@ -4290,6 +4196,39 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
     if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
     if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
     if (combinedValueHeading) combinedValueHeading.innerText = formatCurrency(combinedTotalSum);
+
+    // ➔ Order Volume strip: Today / This Week / This Month, calendar periods
+    // (not rolling windows), counting every order regardless of status —
+    // this answers "how many orders came in", not "how many shipped".
+    const ordersTodayHeading = document.getElementById('analyticsOrdersToday');
+    const ordersThisWeekHeading = document.getElementById('analyticsOrdersThisWeek');
+    const ordersThisMonthHeading = document.getElementById('analyticsOrdersThisMonth');
+
+    if (ordersTodayHeading || ordersThisWeekHeading || ordersThisMonthHeading) {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const dayOfWeek = now.getDay(); // 0 = Sunday ... 6 = Saturday
+        const daysSinceMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
+
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        let ordersToday = 0, ordersThisWeek = 0, ordersThisMonth = 0;
+        adminOrdersCache.forEach(order => {
+            if (!order.created_at) return;
+            const orderDate = new Date(order.created_at);
+            if (isNaN(orderDate.getTime())) return;
+            if (orderDate >= startOfToday) ordersToday++;
+            if (orderDate >= startOfWeek) ordersThisWeek++;
+            if (orderDate >= startOfMonth) ordersThisMonth++;
+        });
+
+        if (ordersTodayHeading) ordersTodayHeading.innerText = ordersToday;
+        if (ordersThisWeekHeading) ordersThisWeekHeading.innerText = ordersThisWeek;
+        if (ordersThisMonthHeading) ordersThisMonthHeading.innerText = ordersThisMonth;
+    }
 
     // Segregate cache matrices into 3 distinct operational groups
     const pendingOrdersList = adminOrdersCache.filter(order => {
@@ -4336,17 +4275,6 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
     if (currentAdminLayoutViewMode === "table" && typeof renderTabularSpreadsheetAdminOrders === 'function') {
         renderTabularSpreadsheetAdminOrders(chronologicallyReversedStack);
     } else {
-        // Initialize dynamic custom chat hover style tag context rule globally once
-        if (!document.getElementById('angelAdminChatHoverStyles')) {
-            const hoverStyleNode = document.createElement("style");
-            hoverStyleNode.id = "angelAdminChatHoverStyles";
-            hoverStyleNode.innerHTML = `
-                .admin-chat-action-btn { background: #ffffff !important; color: #25d366 !important; border: 1px solid #25d366 !important; }
-                .admin-chat-action-btn:hover { background: #25d366 !important; color: #ffffff !important; }
-            `;
-            document.head.appendChild(hoverStyleNode);
-        }
-
         ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
             const ordStatus = String(order.status || 'Paid').trim();
             const ordPaymentId = order.payment_id || 'N/A';
@@ -4366,18 +4294,17 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
             const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
 
             let badgeStyle = "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
-            if (isShipped) badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);";
-            if (isCancelled) badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;";
-            if (isRefunded) badgeStyle = "background: rgba(42, 123, 106, 0.1); color: #2a7b6a;";
+            let cardAccentClass = "order-card--pending";
+            if (isShipped) { badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);"; cardAccentClass = "order-card--shipped"; }
+            if (isCancelled) { badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;"; cardAccentClass = "order-card--cancelled"; }
+            if (isRefunded) { badgeStyle = "background: rgba(42, 123, 106, 0.1); color: #2a7b6a;"; cardAccentClass = "order-card--refunded"; }
 
             const clientMessage = `Hello ${ordClientName},\n\nRegarding your Angel Jewellery order portfolio update...`;
             const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
 
-            const sharedActionStyle = "display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; height: 36px !important; padding: 0 14px !important; font-size: 0.72rem !important; font-weight: 700 !important; text-transform: uppercase !important; font-family: 'Montserrat', sans-serif !important; letter-spacing: 0.5px !important; border-radius: 4px !important; cursor: pointer !important; text-decoration: none !important; box-sizing: border-box !important; transition: all 0.2s ease !important; white-space: nowrap !important; margin: 0 !important; line-height: 1 !important;";
-
             const chatButtonHTML = `
-                <a href="${whatsappUpdateLink}" target="_blank" class="admin-chat-action-btn" style="${sharedActionStyle}" title="WhatsApp Client">
-                    <i class="fab fa-whatsapp" style="font-size: 0.9rem;"></i> Chat
+                <a href="${whatsappUpdateLink}" target="_blank" class="order-action-btn order-action-btn--chat" title="WhatsApp Client">
+                    <i class="fab fa-whatsapp"></i> Chat
                 </a>
             `;
 
@@ -4386,7 +4313,7 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
             if (!isShipped && !isCancelled && !isRefunded) {
                 // Pending Tab: Ship + Chat
                 contextButtonsHTML = `
-                    <button onclick="revealCourierAllocationPanel('${ordPaymentId}')" style="${sharedActionStyle} background: var(--purple-primary, #202c55) !important; color: #ffffff !important; border: none !important;">
+                    <button onclick="revealCourierAllocationPanel('${ordPaymentId}')" class="order-action-btn order-action-btn--primary">
                         <i class="fas fa-shipping-fast"></i> Ship
                     </button>
                     ${chatButtonHTML}
@@ -4394,19 +4321,19 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
             } else if (isCancelled) {
                 // Cancelled Tab: Processed Refund + Chat
                 contextButtonsHTML = `
-                    <button onclick="executeAdminOrderRefundPipeline(event, ${order.id})" style="${sharedActionStyle} background: #2a7b6a !important; color: #ffffff !important; border: none !important;">
+                    <button onclick="executeAdminOrderRefundPipeline(event, ${order.id})" class="order-action-btn order-action-btn--refund">
                         <i class="fas fa-hand-holding-usd"></i> Processed Refund
                     </button>
-                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;">
-                        <i class="fas fa-undo-alt"></i> Move Back to Ordered
+                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" class="order-action-btn order-action-btn--outline">
+                        <i class="fas fa-undo-alt"></i> Move Back
                     </button>
                     ${chatButtonHTML}
                 `;
             }else if (isRefunded) {
                 // Refunded Tab: Just allow moving back to Ordered + Chat if adjustment is needed
                 contextButtonsHTML = `
-                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;">
-                        <i class="fas fa-undo-alt"></i> Move Back to Ordered
+                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" class="order-action-btn order-action-btn--outline">
+                        <i class="fas fa-undo-alt"></i> Move Back
                     </button>
                     ${chatButtonHTML}
                 `;
@@ -4415,9 +4342,9 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
             let cancelDetailsBlockHTML = "";
             if (isCancelled || isRefunded) {
                 cancelDetailsBlockHTML = `
-                    <div style="background: #fffdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 12px; margin-top: 10px; font-size: 0.8rem; font-family:'Montserrat'; text-align: left; width: 100%; box-sizing: border-box;">
-                        <div style="margin-bottom: 6px;"><strong style="color:#d9383a;">Cancellation Reason:</strong> ${order.cancel_reason || 'Not Specified'}</div>
-                        <div><strong style="color:var(--purple-primary, #202c55);">PhonePe Refund Number:</strong> <span style="font-weight:700;">+91 ${order.refund_phonepe || 'N/A'}</span></div>
+                    <div class="order-card-cancel-details">
+                        <div><strong class="order-cancel-label">Cancellation Reason:</strong> ${order.cancel_reason || 'Not Specified'}</div>
+                        <div><strong class="order-refund-label">PhonePe Refund Number:</strong> <span>+91 ${order.refund_phonepe || 'N/A'}</span></div>
                     </div>
                 `;
             }
@@ -4437,93 +4364,76 @@ if (!document.getElementById('adminMasterConsoleMobileOverrides')) {
                 const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
 
                 return `
-                    <tr style="border-bottom: 1px solid #f1f1f5;">
-                        <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff;">
-                                <img src="${matchedImgUrl}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
-                            </div>
+                    <tr>
+                        <td class="order-item-thumb-cell">
+                            <img src="${matchedImgUrl}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
                         </td>
-                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116;">${parsedTitle}</td>
-                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center;">${parsedQuantity}</td>
+                        <td class="order-item-title-cell">${parsedTitle}</td>
+                        <td class="order-item-qty-cell">×${parsedQuantity}</td>
                     </tr>
                 `;
             }).join('');
 
             return `
-            <div style="background: #ffffff; border: 1px solid var(--purple-primary, #202c55); border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); font-family: 'Montserrat', sans-serif;">
+            <div class="order-card ${cardAccentClass}">
                 
-                <!-- Card Header -->
-                <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
-                    <div class="admin-header-left" style="text-align: left; flex: 1;">
-                        <span style="font-size: 0.68rem; color: var(--text-muted, #777); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                            Transaction ID: <strong style="color: var(--purple-primary, #202c55);">${ordPaymentId}</strong>
-                        </span>
-                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary, #202c55); font-family: 'Montserrat', sans-serif;">
-                            ${ordClientName}
-                        </h4>
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="order-card-txn-id">Txn ID: <strong>${ordPaymentId}</strong></span>
+                        <h4>${ordClientName}</h4>
                     </div>
-                    <div class="admin-header-right" style="text-align: right; display: flex; gap: 12px; align-items: center;">
-                        <div style="line-height: 1.3;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted, #777); display: block; font-weight: 600;">${ordDate}</span>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary, #202c55); display: block;">${ordTotalAmount}</span>
+                    <div class="order-card-header-right">
+                        <div class="order-card-date-amount">
+                            <span class="order-card-date">${ordDate}</span>
+                            <span class="order-card-amount">${ordTotalAmount}</span>
                         </div>
-                        <span id="badge-status-${ordPaymentId}" style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
+                        <span id="badge-status-${ordPaymentId}" class="order-card-status-badge" style="${badgeStyle}">
                             ${order.status || 'Paid'}
                         </span>
                     </div>
                 </div>
 
-                <!-- Items Table Row -->
-                <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
-                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                <div class="order-card-items">
+                    <table>
                         <tbody>
                             ${inventoryRowsHTML}
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Shipping & Control Row Panel -->
-                <div style="display: flex; background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #e8e8ef; flex-direction: column; gap: 15px; width: 100%; box-sizing: border-box;">
-                    
-                    <!-- Added 'admin-action-row-container' class here -->
-                    <div class="admin-action-row-container" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%;">
-                        
-                        <!-- Destination address frame -->
-                        <div style="font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4; text-align: left; flex: 1; min-width: 200px;">
-                            <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
-                            <span style="color: var(--text-muted, #777); font-weight: 600;">Ship To:</span> ${ordAddress}
+                <div class="order-card-footer">
+                    <div class="order-card-footer-top">
+                        <div class="order-card-address">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><strong>Ship To:</strong> ${ordAddress}</span>
                         </div>
                         
-                        <!-- ➔ Added 'admin-card-actions-group' class name hook here to fix horizontal clipping -->
-                        <div class="admin-card-actions-group" style="display: flex; gap: 8px; align-items: center; justify-content: flex-end;">
-                            <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" style="${sharedActionStyle} background: transparent !important; color: var(--text-dark-primary, #111116) !important; border: 1px solid #e8e8ef !important;" title="Copy Address Tag">
+                        <div class="order-card-actions">
+                            <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" class="order-action-btn order-action-btn--ghost" title="Copy Address Tag">
                                 <i class="far fa-copy"></i> Label
                             </button>
                             
-                            <a href="tel:${ordPhone}" style="${sharedActionStyle} background: #ffffff !important; color: var(--purple-primary, #202c55) !important; border: 1px solid var(--purple-primary, #202c55) !important;" title="Call Client">
+                            <a href="tel:${ordPhone}" class="order-action-btn order-action-btn--outline" title="Call Client">
                                 <i class="fas fa-phone-alt"></i> Call
                             </a>
                             
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                ${contextButtonsHTML}
-                            </div>
+                            ${contextButtonsHTML}
                         </div>
                     </div>
 
                     ${cancelDetailsBlockHTML}
 
-                    <!-- Courier Slider Form Panel -->
-                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel" style="display: none; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 16px; width: 100%; box-sizing: border-box; margin-top: 5px;">
-                        <p style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary, #202c55); letter-spacing: 0.5px;">Assign Logistics Partner & Waybill</p>
-                        <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; font-size: 0.8rem; font-weight: 600;">
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked style="accent-color: var(--purple-primary, #202c55);"> DTDC</label>
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="Delhivery" style="accent-color: var(--purple-primary, #202c55);"> Delhivery</label>
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"><input type="radio" name="courier-${ordPaymentId}" value="Blue Dart" style="accent-color: var(--purple-primary, #202c55);"> Blue Dart</label>
+                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel order-card-courier-panel">
+                        <p>Assign Logistics Partner &amp; Waybill</p>
+                        <div class="order-card-courier-options">
+                            <label><input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked> DTDC</label>
+                            <label><input type="radio" name="courier-${ordPaymentId}" value="Delhivery"> Delhivery</label>
+                            <label><input type="radio" name="courier-${ordPaymentId}" value="Blue Dart"> Blue Dart</label>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number" style="flex: 1; padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; box-sizing: border-box;">
-                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" style="background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; height: 34px;">Confirm</button>
-                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" style="background: transparent; color: var(--text-muted, #777); border: 1px solid #e8e8ef; padding: 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; height: 34px;">Cancel</button>
+                        <div class="order-card-courier-input-row">
+                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number">
+                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" class="order-courier-confirm-btn">Confirm</button>
+                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" class="order-courier-cancel-btn">Cancel</button>
                         </div>
                     </div>
 
@@ -4815,17 +4725,26 @@ async function synchronizeLiveStorefrontInventory() {
        productsWithVariants.forEach(product => {
             const cleanProductId = parseInt(product.id);
             if (!isNaN(cleanProductId)) {
+                const variants = product.product_variants || [];
+                // ➔ THE FIX: products has no stock column of its own — stock only
+                // ever lives on product_variants. Reading product.stock directly
+                // was always undefined here, which reset every product's cached
+                // stock to 0 on every sync. Derive it from the default (first)
+                // variant instead, matching loadProductDatabaseEngine's convention.
+                const defaultVariant = variants.length > 0 ? variants[0] : null;
+                const liveStockLevel = defaultVariant ? (parseInt(defaultVariant.stock) || 0) : 0;
+
                 // Map the parent item and attach its variations directly to the global master memory cache
                 MASTER_LIVE_INVENTORY_CACHE[cleanProductId] = {
                     status: String(product.status || '').trim().toLowerCase(),
-                    stock: parseInt(product.stock) || 0,
-                    variants: product.product_variants || [] // Clean array of variations nested inside
+                    stock: liveStockLevel,
+                    variants: variants // Clean array of variations nested inside
                 };
                 
                 // Keep productDatabase instances strictly mirrored on background sync loops
                 const localMatch = productDatabase.find(p => p.id === cleanProductId);
                 if (localMatch) {
-                    localMatch.product_variants = product.product_variants || [];
+                    localMatch.product_variants = variants;
                 }
             }
         });
