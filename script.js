@@ -2768,6 +2768,7 @@ function openQuickViewShield(id) {
     renderQuickViewPairingRecommendations(product);
 
     document.getElementById('quickviewModalShield').style.display = "flex"; 
+    angelModalPushHistory(closeQuickViewShield);
 }
 
 // =========================================================================
@@ -2844,9 +2845,53 @@ function updateTopRightScarcityBadge(stockCount) {
     }
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — MOBILE BACK-BUTTON MODAL HANDLING
+// On mobile, opening a modal (Quick View, Cart, Wishlist, Checkout) never
+// told the browser's own history about it — so pressing the phone's
+// physical back button had nothing "modal" to go back to, and instead
+// left the site entirely. Fix: push a history entry when a modal opens,
+// and intercept the back button to close the modal instead of navigating
+// away. If nothing is open, back behaves exactly as it always did.
+// =========================================================================
+let angelModalStack = [];
+let angelModalPopstateInProgress = false;
+
+function angelModalPushHistory(closeCallback) {
+    if (angelModalPopstateInProgress) return;
+    angelModalStack.push(closeCallback);
+    history.pushState({ angelModalDepth: angelModalStack.length }, '');
+}
+
+// Call when a modal is closed via an on-page action (X button, overlay
+// click, "Back to Main" link) — NOT via the physical back button. This
+// removes the matching history entry so a later back-press doesn't need
+// an extra, confusing press just to actually leave the site.
+function angelModalConsumeHistory() {
+    if (angelModalPopstateInProgress) return;
+    if (angelModalStack.length > 0) {
+        angelModalStack.pop();
+        history.back();
+    }
+}
+
+window.addEventListener('popstate', function() {
+    if (angelModalStack.length > 0) {
+        angelModalPopstateInProgress = true;
+        const closeCallback = angelModalStack.pop();
+        try {
+            if (typeof closeCallback === 'function') closeCallback();
+        } finally {
+            angelModalPopstateInProgress = false;
+        }
+    }
+    // else: nothing tracked as open — let the browser leave the page as normal.
+});
+
 function closeQuickViewShield() {
     const modalShield = document.getElementById('quickviewModalShield');
     if (modalShield) modalShield.style.display = "none";
+    angelModalConsumeHistory();
 }
 
 function toggleCartDrawer() {
@@ -2857,12 +2902,14 @@ function toggleCartDrawer() {
     if (drawer.style.right === "0px") {
         drawer.style.right = "-100%";
         if (overlay) overlay.style.display = "none";
+        angelModalConsumeHistory();
     } else {
         const wishlist = document.getElementById('wishlistDrawer');
         if (wishlist) wishlist.style.right = "-100%";
         
         drawer.style.right = "0px";
         if (overlay) overlay.style.display = "block";
+        angelModalPushHistory(forceCloseCartDrawer);
     }
 }
 
@@ -2874,12 +2921,34 @@ function toggleWishlistDrawer() {
     if (drawer.style.right === "0px") {
         drawer.style.right = "-100%";
         if (overlay) overlay.style.display = "none";
+        angelModalConsumeHistory();
     } else {
         const cart = document.getElementById('cartDrawer');
         if (cart) cart.style.right = "-100%";
         
         drawer.style.right = "0px";
         if (overlay) overlay.style.display = "block";
+        angelModalPushHistory(forceCloseWishlistDrawer);
+    }
+}
+
+// Idempotent closers used specifically as back-button callbacks — these
+// check current state before acting, so they can never accidentally
+// re-open a drawer the way blindly re-calling the toggle function could.
+function forceCloseCartDrawer() {
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    if (drawer && drawer.style.right === "0px") {
+        drawer.style.right = "-100%";
+        if (overlay) overlay.style.display = "none";
+    }
+}
+function forceCloseWishlistDrawer() {
+    const drawer = document.getElementById('wishlistDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    if (drawer && drawer.style.right === "0px") {
+        drawer.style.right = "-100%";
+        if (overlay) overlay.style.display = "none";
     }
 }
 
@@ -3315,10 +3384,12 @@ function openInvoiceScreen() {
     }
     
     invoiceOverlay.style.display = 'flex';
+    angelModalPushHistory(closeInvoiceScreen);
 }
 
 function closeInvoiceScreen() {
     document.getElementById('invoiceOverlayScreen').style.display = 'none';
+    angelModalConsumeHistory();
 }
 
 async function initiateRazorpayPaymentProcess(event) {
