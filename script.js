@@ -3572,11 +3572,9 @@ async function executeLiveOrderTrackingSearch() {
 
     statusMsg.style.display = "block";
     statusMsg.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; padding: 15px 0; gap: 10px;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--pink-accent);"></i>
-            <span style="font-size: 0.88rem; font-weight: 600; color: var(--purple-primary);">
-                Retrieving your order portfolio from secure nodes...
-            </span>
+        <div class="tracking-loading-row">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Retrieving your order history...</span>
         </div>
     `;
     container.innerHTML = "";
@@ -3599,20 +3597,15 @@ async function executeLiveOrderTrackingSearch() {
         const customerOrders = await response.json();
 
         if (customerOrders.length === 0) {
-            statusMsg.innerHTML = `
-                <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.9rem;">
-                    ⚠️ No verified records discovered matching that phone number index.
-                </div>`;
+            statusMsg.innerHTML = `<div class="tracking-empty-state">⚠️ No orders found for that phone number.</div>`;
             return;
         }
 
         statusMsg.innerHTML = `
-            <div style="font-family: 'Montserrat', sans-serif; text-align: left;">
-                <p style="margin: 0 0 6px 0; font-size: 0.9rem; color: var(--text-dark-primary); font-weight: 600;">Found <strong>${customerOrders.length}</strong> Orders:</p>
-                <div style="font-size: 0.75rem; color: #77778b; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; background: #fafafa; border: 1px solid #e8e8ef; padding: 6px 12px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 15px;">
-                    <i class="far fa-clock" style="font-size: 0.85rem; color: var(--purple-primary);"></i> 
-                    <span>Cancellation Policy Note: Orders can be cancelled within 24 hours of placement.</span>
-                </div>
+            <p class="tracking-found-count">Found <strong>${customerOrders.length}</strong> order${customerOrders.length === 1 ? '' : 's'}:</p>
+            <div class="tracking-policy-note">
+                <i class="far fa-clock"></i>
+                <span>Orders can be cancelled within 24 hours of placement.</span>
             </div>
         `;
         
@@ -3627,8 +3620,9 @@ async function executeLiveOrderTrackingSearch() {
             if (isCancelled) displayStatus = "Cancelled";
             
             let badgeStyle = "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
-            if (isShipped) badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);";
-            if (isCancelled) badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;";
+            let cardAccentClass = "order-card--pending";
+            if (isShipped) { badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);"; cardAccentClass = "order-card--shipped"; }
+            if (isCancelled) { badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;"; cardAccentClass = "order-card--cancelled"; }
 
             const ordDate = order.created_at ? new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'short' }) : 'N/A';
             const ordTotalAmount = order.total_amount ? (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) : '₹0';
@@ -3644,28 +3638,26 @@ async function executeLiveOrderTrackingSearch() {
             let cancellationControlMarkup = "";
             if (isEligibleToCancel) {
                 cancellationControlMarkup = `
-                    <div style="margin-top: 5px; width: 100%;">
-                        <button onclick="toggleCancellationFormView('${order.id}')" id="cancelTriggerBtn_${order.id}" style="background: #ffffff; color: #d9383a; border: 1px solid #d9383a; padding: 8px 14px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                            <i class="fas fa-times-circle"></i> Cancel Order
-                        </button>
+                    <button onclick="toggleCancellationFormView('${order.id}')" id="cancelTriggerBtn_${order.id}" class="order-action-btn order-action-btn--cancel-toggle">
+                        <i class="fas fa-times-circle"></i> Cancel Order
+                    </button>
 
-                        <div id="cancelFormBlock_${order.id}" style="display: none; margin-top: 12px; background: #fff5f5; border: 1px solid #d9383a; border-radius: 6px; padding: 15px; box-sizing: border-box;">
-                            <h5 style="margin: 0 0 10px 0; font-size: 0.72rem; font-weight: 700; color: #d9383a; text-transform: uppercase; letter-spacing: 0.5px;">Cancellation Specifications</h5>
-                            
-                            <div style="margin-bottom: 10px;">
-                                <label style="display:block; font-size: 0.65rem; font-weight: 700; color: #202c55; text-transform: uppercase; margin-bottom: 4px;">Reason for Cancellation:</label>
-                                <textarea id="cancelReason_${order.id}" placeholder="Please let us know your reason..." style="width: 100%; height: 50px; padding: 8px; font-size: 0.78rem; border: 1px solid #e2e4ed; border-radius: 4px; outline: none; font-family: 'Montserrat'; resize: none; box-sizing: border-box;"></textarea>
-                            </div>
+                    <div id="cancelFormBlock_${order.id}" class="tracking-cancel-form" style="display: none;">
+                        <h5>Cancellation Details</h5>
+                        
+                        <div class="tracking-cancel-field">
+                            <label>Reason for Cancellation:</label>
+                            <textarea id="cancelReason_${order.id}" placeholder="Please let us know your reason..."></textarea>
+                        </div>
 
-                            <div style="margin-bottom: 12px;">
-                                <label style="display:block; font-size: 0.65rem; font-weight: 700; color: #202c55; text-transform: uppercase; margin-bottom: 4px;">PhonePe Number for Refund:</label>
-                                <input type="text" id="cancelPhonePe_${order.id}" maxlength="10" placeholder="e.g. 9876543210" style="width: 100%; padding: 8px; font-size: 0.78rem; border: 1px solid #e2e4ed; border-radius: 4px; outline: none; font-family: 'Montserrat'; box-sizing: border-box;">
-                            </div>
+                        <div class="tracking-cancel-field">
+                            <label>PhonePe Number for Refund:</label>
+                            <input type="text" id="cancelPhonePe_${order.id}" maxlength="10" placeholder="e.g. 9876543210">
+                        </div>
 
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="submitClientCancellationForm(event, ${order.id}, '${ordPaymentId}')" style="flex: 1; background: #d9383a; color: #fff; border: none; padding: 8px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px;">Confirm Cancel</button>
-                                <button onclick="toggleCancellationFormView('${order.id}')" style="background: #ffffff; color: #777; border: 1px solid #e2e4ed; padding: 8px 12px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; text-transform: uppercase;">Keep Order</button>
-                            </div>
+                        <div class="tracking-cancel-actions">
+                            <button onclick="submitClientCancellationForm(event, ${order.id}, '${ordPaymentId}')" class="order-action-btn order-action-btn--refund">Confirm Cancel</button>
+                            <button onclick="toggleCancellationFormView('${order.id}')" class="order-action-btn order-action-btn--ghost">Keep Order</button>
                         </div>
                     </div>
                 `;
@@ -3676,8 +3668,8 @@ async function executeLiveOrderTrackingSearch() {
                 const partner = order.courier || 'Standard Logistics';
                 const trackingNum = order.tracking_number || 'N/A';
                 logisticsMetadataHTML = `
-                    <div style="margin-top: 5px; font-size: 0.75rem; color: var(--purple-primary); font-weight: 600; background: #f4f4f7; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-truck"></i> <span>Waybill (${partner}): <strong>${trackingNum}</strong></span>
+                    <div class="tracking-logistics-pill">
+                        <i class="fas fa-truck"></i> <span>${partner}: <strong>${trackingNum}</strong></span>
                     </div>
                 `;
             }
@@ -3697,54 +3689,38 @@ async function executeLiveOrderTrackingSearch() {
                 const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
 
                 return `
-                    <tr style="border-bottom: 1px solid #f1f1f5;">
-                        <td style="padding: 10px 12px; width: 60px; text-align: center; vertical-align: middle;">
-                            <div style="width: 44px; height: 44px; border-radius: 4px; border: 1px solid #e8e8ef; overflow: hidden; background: #ffffff; display: block; margin: 0 auto;">
-                                <img src="${matchedImgUrl}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/placeholder.png'">
-                            </div>
+                    <tr>
+                        <td class="order-item-thumb-cell">
+                            <img src="${matchedImgUrl}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
                         </td>
-                        <td style="padding: 10px 12px; font-size: 0.88rem; font-weight: 600; color: #111116; text-align: left; vertical-align: middle;">
-                            ${parsedTitle}
-                        </td>
-                        <td style="padding: 10px 12px; font-size: 0.85rem; font-weight: 700; color: var(--purple-primary); text-align: center; vertical-align: middle;">
-                            ${parsedQuantity}
-                        </td>
+                        <td class="order-item-title-cell">${parsedTitle}</td>
+                        <td class="order-item-qty-cell">×${parsedQuantity}</td>
                     </tr>
                 `;
             }).join('');
 
             return `
-            <div style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 16px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.02); text-align: left; margin-bottom: 15px;">
+            <div class="order-card ${cardAccentClass}">
                 
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 14px; gap: 15px;">
-                    <div style="text-align: left; flex: 1;">
-                        <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; font-family: monospace; font-weight: 600; letter-spacing: 0.5px;">
-                            Reference ID: <strong style="color: var(--purple-primary);">#${ordPaymentId}</strong>
-                        </span>
-                        <h4 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); font-family: 'Montserrat', sans-serif;">
-                            ${order.customer_name}
-                        </h4>
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="order-card-txn-id">Ref ID: <strong>#${ordPaymentId}</strong></span>
+                        <h4>${order.customer_name}</h4>
                     </div>
-                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                        <div style="line-height: 1.3; margin-bottom: 2px;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600; text-align: right;">Ordered: ${ordDate}</span>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--purple-primary); display: block; text-align: right;">${ordTotalAmount}</span>
+                    <div class="order-card-header-right">
+                        <div class="order-card-date-amount">
+                            <span class="order-card-date">Ordered: ${ordDate}</span>
+                            <span class="order-card-amount">${ordTotalAmount}</span>
                         </div>
-                        <span style="${badgeStyle} font-size: 0.65rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; text-align: center">
-                            ${displayStatus}
-                        </span>
+                        <span class="order-card-status-badge" style="${badgeStyle}">${displayStatus}</span>
                         ${logisticsMetadataHTML}
                     </div>
                 </div>
 
-                <div style="width: 100%; overflow-x: auto; background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px;">
-                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+                <div class="order-card-items">
+                    <table>
                         <thead>
-                            <tr style="background: #f4f4f7; border-bottom: 1px solid #e8e8ef; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700;">
-                                <th style="padding: 10px 12px; width: 60px; text-align: center; font-weight: 700;">Preview</th>
-                                <th style="padding: 10px 12px; text-align: left; font-weight: 700;">Item Masterpiece</th>
-                                <th style="padding: 10px 12px; width: 80px; text-align: center; font-weight: 700;">Qty</th>
-                            </tr>
+                            <tr><th>Preview</th><th>Item</th><th>Qty</th></tr>
                         </thead>
                         <tbody>
                             ${inventoryRowsHTML}
@@ -3752,12 +3728,14 @@ async function executeLiveOrderTrackingSearch() {
                     </table>
                 </div>
 
-                <div style="background: #fafafa; padding: 12px 16px; border-radius: 6px; border: 1px solid #e8e8ef; font-size: 0.8rem; color: #111116; font-weight: 500; line-height: 1.4;">
-                    <i class="fas fa-map-marker-alt" style="color: var(--pink-accent, #ff1493); margin-right: 4px;"></i>
-                    <span style="color: var(--text-muted); font-weight: 600;">Shipping Destination:</span> ${order.address}
-                </div>
+                <div class="order-card-footer">
+                    <div class="order-card-address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span><strong>Shipping To:</strong> ${order.address}</span>
+                    </div>
 
-                ${cancellationControlMarkup}
+                    ${cancellationControlMarkup}
+                </div>
 
             </div>
             `;
@@ -3765,7 +3743,7 @@ async function executeLiveOrderTrackingSearch() {
 
     } catch (error) {
         console.error("Tracking rendering breakdown caught:", error);
-        statusMsg.innerHTML = `<span style="color:red; font-size:0.85rem;">Tracking server cluster timed out. Please try again shortly.</span>`;
+        statusMsg.innerHTML = `<span style="color:#d9383a; font-size:0.85rem;">Something went wrong loading your orders. Please try again shortly.</span>`;
     }
 }
 

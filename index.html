@@ -742,20 +742,25 @@
         </div>
     </div>
 
-    <div id="trackingScreenOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #ffffff; color: #111116; z-index: 9999; overflow-y: auto; padding: 60px 20px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; align-items: flex-start; justify-content: center;">
-        <div style="max-width: 650px; width: 100%; height: auto; background: #ffffff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 40px; box-shadow: 0 20px 50px rgba(32,44,85,0.06); box-sizing: border-box; margin: 0 auto; text-align: center;">
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; width: 100%;">
-                <button onclick="closeTrackingScreenOverlay()" style="background: none; border: 1px solid #e8e8ef; color: #111116; padding: 8px 16px; cursor: pointer; font-size: 0.75rem; font-weight:600; letter-spacing: 1px; text-transform: uppercase;">✕ Close Desk</button>
+    <div id="trackingScreenOverlay" class="tracking-page-overlay" style="display: none;">
+        <div class="tracking-page-panel">
+            <div class="tracking-page-topbar">
+                <button onclick="closeTrackingScreenOverlay()" class="order-desk-close-btn"><i class="fas fa-times"></i> Close</button>
             </div>
-            <span style="font-size: 0.65rem; color: var(--pink-accent); letter-spacing: 2px; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 10px;">Live Client Ledger</span>
-            <h2 style="font-size: 2rem; font-weight: 600; color: var(--purple-primary); margin: 0 0 15px 0;">Track Your Order</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 450px; margin: 0 auto 30px auto; line-height: 1.5;">Input your registered contact mobile number to compile your secure digital receipt metrics and payment records.</p>
-            <div class="tracking-enter-contact" style="display: flex; gap: 10px; margin-bottom: 25px; box-sizing: border-box; width: 100%;">
-                <input type="tel" id="trackingPhoneInput" placeholder="Enter Contact Number" style="flex: 1; padding: 14px 18px; background: #f9f9fb; border: 1px solid #e8e8ef; color: #111116; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; outline: none;">
-                <button id="trackBtn" onclick="executeLiveOrderTrackingSearch()" style="background: var(--purple-primary); color: #fff; border: none; padding: 14px 28px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer;">Search</button>
+
+            <div class="tracking-page-heading">
+                <span class="tracking-page-eyebrow">Live Client Ledger</span>
+                <h2>Track Your Order</h2>
+                <p>Enter your registered contact number to view your order status and receipts.</p>
             </div>
-            <p id="trackingStatusMessage" style="display: none; font-size: 0.85rem; margin-bottom: 25px; font-weight: 600;"></p>
-            <div id="trackingResultsContainer" style="text-align: left; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; width: 100%;"></div>
+
+            <div class="tracking-search-row">
+                <input type="tel" id="trackingPhoneInput" placeholder="Enter Contact Number">
+                <button id="trackBtn" onclick="executeLiveOrderTrackingSearch()">Search</button>
+            </div>
+
+            <p id="trackingStatusMessage" class="tracking-status-message" style="display: none;"></p>
+            <div id="trackingResultsContainer" class="tracking-results-container"></div>
         </div>
     </div>
 
