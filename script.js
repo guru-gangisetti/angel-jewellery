@@ -5512,12 +5512,14 @@ function selectStyleClusterFilter(clusterKeyword) {
     document.body.style.overflow = "hidden"; 
     
     if (scrollBody) scrollBody.scrollTop = 0;
+    angelModalPushHistory(closeStylePortfolioModal);
 }
 
 function closeStylePortfolioModal() {
     const modal = document.getElementById('stylePortfolioModalShield');
     if (modal) modal.style.display = "none";
     document.body.style.overflow = ""; 
+    angelModalConsumeHistory();
 }
 
 function exportCurrentAdminOrdersToCSV() {
