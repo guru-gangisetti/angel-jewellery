@@ -2894,7 +2894,8 @@ function closeQuickViewShield() {
     angelModalConsumeHistory();
 }
 
-function toggleCartDrawer() {
+function toggleCartDrawer(event) {
+    if (event) event.preventDefault();
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
     if (!drawer) return;
@@ -2913,7 +2914,8 @@ function toggleCartDrawer() {
     }
 }
 
-function toggleWishlistDrawer() {
+function toggleWishlistDrawer(event) {
+    if (event) event.preventDefault();
     const drawer = document.getElementById('wishlistDrawer');
     const overlay = document.getElementById('cartOverlay');
     if (!drawer) return;
