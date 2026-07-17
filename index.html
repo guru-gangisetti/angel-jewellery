@@ -259,10 +259,11 @@
         
         <!-- Authentic Section Headers -->
         <div style="text-align: center; margin-bottom: 10px;">
+            <span style="color: #cca43b; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; display: block; margin-bottom: 6px;">Curated By Craft</span>
             <h2 style="color: var(--purple-primary, #202c55); font-size: 1.6rem; font-weight: 500; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
                 Shop By Style
             </h2>
-            <div style="width: 40px; height: 2px; background: #cca43b; margin: 5px auto 0 auto;"></div>
+            <div style="width: 40px; height: 2px; background: #cca43b; margin: 10px auto 0 auto;"></div>
         </div>
 
         <!-- Asymmetrical Luxury Mosaic Grid Layout -->
@@ -270,14 +271,16 @@
             
             <!-- Tile 1: CZ & Pink Diamond Edit (mini-haram-14.jpeg) -->
             <div class="mosaic-tile tile-large" onclick="selectStyleClusterFilter('CZ')">
+                <span class="tile-index-mark">01</span>
                 <div class="tile-image-wrapper">
                     <img loading="lazy" decoding="async" src="images/mini-haram-14.jpeg" alt="CZ & Silver Polish Sets">
                     <div class="tile-overlay-mask"></div>
                 </div>
                 <div class="tile-content-box">
+                    <span class="tile-eyebrow">Style · <span class="tile-item-count" data-style="cz">–</span> Pieces</span>
                     <h3>CZ & Silver Polish</h3>
                     <p>Brilliant cubic zirconia & soft pastels.</p>
-                    <span class="tile-action-link">Explore Collection <i class="fas fa-arrow-right"></i></span>
+                    <span class="tile-cta-pill">Explore Collection <i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
 
@@ -286,14 +289,16 @@
                 
                 <!-- Tile 2: Antique Nakshi Guttapusalu (necklace-5292026-1225-3.jpg) -->
                 <div class="mosaic-tile tile-wide" onclick="selectStyleClusterFilter('antique')">
+                    <span class="tile-index-mark">02</span>
                     <div class="tile-image-wrapper">
                         <img loading="lazy" decoding="async" src="images/necklace-5292026-1225-3.jpeg" alt="Antique Temple Collection">
                         <div class="tile-overlay-mask"></div>
                     </div>
                     <div class="tile-content-box">
+                        <span class="tile-eyebrow">Style · <span class="tile-item-count" data-style="antique">–</span> Pieces</span>
                         <h3>Antique Temple Craft</h3>
                         <p>Traditional Nakshi art & divine premium kemp work.</p>
-                        <span class="tile-action-link">Explore Collection <i class="fas fa-arrow-right"></i></span>
+                        <span class="tile-cta-pill">Explore Collection <i class="fas fa-arrow-right"></i></span>
                     </div>
                 </div>
 
@@ -302,27 +307,31 @@
                     
                     <!-- Tile 3: Radha Krishna Handcrafted Box (pendent-chains-4.jpeg) -->
                     <div class="mosaic-tile tile-split" onclick="selectStyleClusterFilter('Handcrafted')">
+                        <span class="tile-index-mark">03</span>
                         <div class="tile-image-wrapper">
                             <img loading="lazy" decoding="async" src="images/pendent-chains-4.jpeg" alt="Handcrafted Heritage Devotion">
                             <div class="tile-overlay-mask"></div>
                         </div>
                         <div class="tile-content-box">
+                            <span class="tile-eyebrow">Style · <span class="tile-item-count" data-style="handcrafted">–</span> Pieces</span>
                             <h3>Heritage Devotion</h3>
                             <p>Exquisite Radha-Krishna legacy pendants.</p>
-                            <span class="tile-action-link">View Pieces <i class="fas fa-arrow-right"></i></span>
+                            <span class="tile-cta-pill">View Pieces <i class="fas fa-arrow-right"></i></span>
                         </div>
                     </div>
 
                     <!-- Tile 4: Navratna Multi-Stone String (mini-haram-2.jpeg) -->
                     <div class="mosaic-tile tile-split" onclick="selectStyleClusterFilter('Navratna')">
+                        <span class="tile-index-mark">04</span>
                         <div class="tile-image-wrapper">
                             <img loading="lazy" decoding="async" src="images/mini-haram-2.jpeg" alt="Navratna Multi-Stone Strings">
                             <div class="tile-overlay-mask"></div>
                         </div>
                         <div class="tile-content-box">
+                            <span class="tile-eyebrow">Style · <span class="tile-item-count" data-style="navratna">–</span> Pieces</span>
                             <h3>Navratna & Beads</h3>
                             <p>Vibrant multi-stone strings & premium drops.</p>
-                            <span class="tile-action-link">View Pieces <i class="fas fa-arrow-right"></i></span>
+                            <span class="tile-cta-pill">View Pieces <i class="fas fa-arrow-right"></i></span>
                         </div>
                     </div>
 
@@ -331,33 +340,118 @@
         </div>
     </section>
 
-    <!-- CSS Remains identical to keep the high-end responsive grid layouts perfectly intact -->
     <style>
         .mosaic-style-grid { display: flex; gap: 20px; width: 100%; box-sizing: border-box; }
-        .mosaic-tile { position: relative; border-radius: 6px; overflow: hidden; background: #fafafa; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; box-sizing: border-box; }
+        .mosaic-tile {
+            position: relative; border-radius: 10px; overflow: hidden; background: #fafafa;
+            cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end;
+            box-sizing: border-box; opacity: 0; transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 24px rgba(32,44,85,0.08);
+        }
+        .mosaic-tile.is-revealed { opacity: 1; transform: translateY(0); }
+        .mosaic-tile:hover { box-shadow: 0 18px 40px rgba(32,44,85,0.18); }
+        .mosaic-tile:active { transform: scale(0.98); }
+
         .tile-large { flex: 0 0 40%; height: 520px; }
         .mosaic-right-cluster { flex: 1; display: flex; flex-direction: column; gap: 20px; }
         .tile-wide { width: 100%; height: 250px; }
         .mosaic-split-row { display: flex; gap: 20px; width: 100%; height: 250px; }
         .tile-split { flex: 1; height: 100%; }
+
+        .tile-index-mark {
+            position: absolute; top: 16px; right: 20px; z-index: 4;
+            font-family: var(--font-display, 'Cinzel', serif); font-size: 2.4rem; font-weight: 600;
+            color: rgba(255,255,255,0.35); letter-spacing: 1px; pointer-events: none;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        .tile-split .tile-index-mark { font-size: 1.8rem; top: 12px; right: 14px; }
+
         .tile-image-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .tile-image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
-        .tile-overlay-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(32, 44, 85, 0.85) 0%, rgba(32, 44, 85, 0.2) 60%, rgba(32, 44, 85, 0) 100%); transition: background 0.4s ease; z-index: 2; }
-        .tile-content-box { position: relative; z-index: 3; padding: 30px; color: #ffffff; text-align: left; pointer-events: none; }
-        .tile-content-box h3 { margin: 0 0 6px 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-        .tile-content-box p { margin: 0 0 15px 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.8); font-weight: 400; }
-        .tile-action-link { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #cca43b; display: inline-flex; align-items: center; gap: 6px; transition: color 0.3s ease; }
-        .mosaic-tile:hover .tile-image-wrapper img { transform: scale(1.04); }
-        .mosaic-tile:hover .tile-overlay-mask { background: linear-gradient(to top, rgba(32, 44, 85, 0.95) 0%, rgba(32, 44, 85, 0.3) 60%, rgba(32, 44, 85, 0) 100%); }
-        .mosaic-tile:hover .tile-action-link { color: var(--pink-accent, #ff1493); }
+
+        /* Gradient is meaningfully visible by default now, not just on hover —
+           hover effects are entirely invisible on mobile touch devices, so the
+           resting state has to already look finished on its own. */
+        .tile-overlay-mask {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(20,26,51,0.92) 0%, rgba(32,44,85,0.45) 55%, rgba(32,44,85,0.05) 100%);
+            transition: background 0.4s ease; z-index: 2;
+        }
+        .mosaic-tile:hover .tile-image-wrapper img { transform: scale(1.06); }
+        .mosaic-tile:hover .tile-overlay-mask { background: linear-gradient(to top, rgba(14,18,38,0.95) 0%, rgba(32,44,85,0.55) 55%, rgba(32,44,85,0.1) 100%); }
+
+        .tile-content-box { position: relative; z-index: 3; padding: 28px; color: #ffffff; text-align: left; pointer-events: none; }
+        .tile-split .tile-content-box { padding: 20px; }
+
+        .tile-eyebrow {
+            display: block; font-family: var(--font-body); color: #cca43b; font-size: 0.62rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
+        }
+        .tile-content-box h3 {
+            margin: 0 0 6px 0; font-size: 1.3rem; font-weight: 600; letter-spacing: 0.4px;
+            text-transform: uppercase; font-family: var(--font-body);
+        }
+        .tile-split .tile-content-box h3 { font-size: 1.05rem; }
+        .tile-content-box p {
+            margin: 0 0 16px 0; font-size: 0.78rem; color: rgba(255,255,255,0.82); font-weight: 400;
+            max-width: 320px;
+        }
+
+        .tile-cta-pill {
+            display: inline-flex; align-items: center; gap: 8px; font-size: 0.66rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; color: #ffffff;
+            background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            padding: 9px 16px; border-radius: 30px; transition: all 0.3s ease;
+        }
+        .mosaic-tile:hover .tile-cta-pill { background: #cca43b; border-color: #cca43b; color: #202c55; gap: 11px; }
+
         @media (max-width: 768px) {
             .mosaic-style-grid { flex-direction: column; }
-            .tile-large { width: 100%; height: 320px; }
+            .tile-large { width: 100%; height: 340px; }
             .mosaic-split-row { flex-direction: column; height: auto; }
-            .tile-split { width: 100%; height: 240px; }
-            .tile-content-box { padding: 20px; }
+            .tile-split { width: 100%; height: 260px; }
+            .tile-content-box { padding: 22px; }
+            .tile-content-box h3 { font-size: 1.15rem; }
+            .tile-split .tile-content-box h3 { font-size: 1.05rem; }
         }
     </style>
+
+    <script>
+        // Live item counts per style — computed from the real product
+        // database rather than hardcoded, so these never go stale.
+        function updateMosaicTileItemCounts() {
+            if (typeof productDatabase === 'undefined' || !productDatabase || productDatabase.length === 0) return;
+            document.querySelectorAll('.tile-item-count').forEach(el => {
+                const styleKey = el.dataset.style;
+                const count = productDatabase.filter(p => p && String(p.style || '').trim().toLowerCase() === styleKey).length;
+                el.textContent = count;
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Retry briefly since productDatabase loads asynchronously and may
+            // not be ready the instant the page's DOM finishes parsing.
+            let attempts = 0;
+            const countInterval = setInterval(() => {
+                attempts++;
+                updateMosaicTileItemCounts();
+                if (attempts >= 10) clearInterval(countInterval);
+            }, 500);
+
+            // Gentle scroll-reveal — tiles fade and rise into place as they
+            // enter view, instead of just appearing instantly with the page.
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, idx) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => entry.target.classList.add('is-revealed'), idx * 90);
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.mosaic-tile').forEach(tile => revealObserver.observe(tile));
+        });
+    </script>
 
     <section class="sale-section-wrapper" id="saleSection" style="background: #ffffff; padding: 90px 10px; display: none; font-family: 'Montserrat', sans-serif; position: relative;">
         <div class="container" style="margin-bottom: 0px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px; box-sizing: border-box;">
@@ -816,7 +910,7 @@
                         <i class="fas fa-truck"></i> Shipped <span class="order-desk-tab-count" id="adminShippedCount">0</span>
                     </button>
                     <button id="adminTabCancelledBtn" class="order-desk-tab-btn" onclick="switchAdminConsoleTab('cancelled')">
-                        <i class="fas fa-times-circle"></i> Cancelled <span class="order-desk-tab-count" id="adminCancelledCount">0</span>
+                        <i class="fas fa-times-circle"></i> Cancelled/Refunded <span class="order-desk-tab-count" id="adminCancelledCount">0</span>
                     </button>
                 </div>
 
