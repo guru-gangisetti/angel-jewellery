@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Angel Jewellery | Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #f4f4f7; font-family: var(--font-body); margin: 0; min-height: 100vh; }
+
+        .admin-login-wrapper {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+        }
+        .admin-login-card {
+            background: #ffffff; border-radius: 12px; width: 100%; max-width: 380px;
+            padding: 40px 32px; box-shadow: 0 20px 60px rgba(32,44,85,0.12); box-sizing: border-box;
+        }
+        .admin-login-eyebrow {
+            display: block; text-align: center; font-size: 0.65rem; color: #cca43b; font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px;
+        }
+        .admin-login-title { text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--purple-primary); margin: 0 0 28px; }
+        .admin-login-field { margin-bottom: 16px; }
+        .admin-login-field label {
+            display: block; font-size: 0.66rem; font-weight: 700; color: #8a8da0; text-transform: uppercase;
+            letter-spacing: 0.4px; margin-bottom: 6px;
+        }
+        .admin-login-field input {
+            width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border-subtle); border-radius: 8px;
+            font-size: 0.85rem; box-sizing: border-box; outline: none; font-family: var(--font-body); transition: border-color 0.2s ease;
+        }
+        .admin-login-field input:focus { border-color: var(--purple-primary); }
+        .admin-login-error {
+            display: none; background: rgba(217,56,58,0.08); color: #d9383a; font-size: 0.78rem; font-weight: 600;
+            padding: 10px 14px; border-radius: 6px; margin-bottom: 16px;
+        }
+        .admin-login-submit-btn {
+            width: 100%; height: 46px; background: var(--purple-primary); color: #ffffff; border: none;
+            border-radius: 8px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; margin-top: 6px; transition: background 0.2s ease;
+        }
+        .admin-login-submit-btn:hover { background: #161f3d; }
+        .admin-login-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        #adminDashboardShell { display: none; }
+        
+        @keyframes promoModalSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 680px) {
+            #adminPromoConsoleOverlay > div { width: 95% !important; max-height: 90vh !important; }
+            #adminPromoConsoleOverlay div[style*="display: grid"] { grid-template-columns: 1fr !important; gap: 20px !important; padding: 16px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="adminLoginScreen" class="admin-login-wrapper">
+        <div class="admin-login-card">
+            <span class="admin-login-eyebrow">Angel Jewellery</span>
+            <h2 class="admin-login-title">Admin Access</h2>
+            <form onsubmit="attemptAdminLogin(event)">
+                <div class="admin-login-error" id="adminLoginError"></div>
+                <div class="admin-login-field">
+                    <label for="adminLoginEmail">Email</label>
+                    <input type="email" id="adminLoginEmail" autocomplete="username" required>
+                </div>
+                <div class="admin-login-field">
+                    <label for="adminLoginPassword">Password</label>
+                    <input type="password" id="adminLoginPassword" autocomplete="current-password" required>
+                </div>
+                <button type="submit" id="adminLoginSubmitBtn" class="admin-login-submit-btn">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN EXECUTIVE DASHBOARD SHELL -->
+    <div id="adminDashboardShell">
+        <!-- Sleek Top Header -->
+        <header class="admin-main-header">
+            <div class="admin-brand-tag">
+                <i class="fas fa-gem admin-gem-icon"></i>
+                <div class="admin-brand-text">
+                    <h2>ANGEL JEWELLERY</h2>
+                    <span>Executive Control Center</span>
+                </div>
+            </div>
+
+            <div class="admin-header-actions">
+                <button class="admin-quick-action-btn admin-quick-action-btn--add" onclick="openAdminFormModalForCreation(event)">
+                    <i class="fas fa-plus"></i> <span>Add Product</span>
+                </button>
+                <button class="admin-logout-btn" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i> <span>Sign Out</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="admin-dashboard-container">
+            
+            <!-- Welcome Greeting Banner -->
+            <div class="admin-welcome-banner">
+                <div>
+                    <h1>Welcome back, Swathi ✨</h1>
+                    <p>Here is your real-time store performance and inventory health summary.</p>
+                </div>
+                <div class="admin-live-pulse-badge">
+                    <span class="pulse-dot"></span> Live Store Operations
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="admin-kpi-grid">
+                <div class="admin-kpi-card" onclick="openAdminMasterConsole(event)">
+                    <div class="kpi-icon-wrapper kpi-icon--purple">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Orders Today</span>
+                        <h3 id="dashKpiOrdersToday" class="kpi-value">—</h3>
+                        <span class="kpi-subtext"><i class="fas fa-clock"></i> Pending processing</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card" onclick="openAdminMasterConsole(event)">
+                    <div class="kpi-icon-wrapper kpi-icon--gold">
+                        <i class="fas fa-indian-rupee-sign"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Month Revenue</span>
+                        <h3 id="dashKpiMonthRevenue" class="kpi-value">₹—</h3>
+                        <span class="kpi-subtext" style="color: #2a7b6a;"><i class="fas fa-chart-line"></i> Verified sales</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card" onclick="openInventoryDashboard(event)">
+                    <div class="kpi-icon-wrapper kpi-icon--pink">
+                        <i class="fas fa-boxes-stacked"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total SKUs</span>
+                        <h3 id="dashKpiTotalSkus" class="kpi-value">—</h3>
+                        <span class="kpi-subtext" id="dashKpiLowStockCount" style="color: #d9383a;"><i class="fas fa-triangle-exclamation"></i> Low stock checks</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card" onclick="openAdminPromoConsoleOverlay(event)">
+                    <div class="kpi-icon-wrapper kpi-icon--teal">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Active Promos</span>
+                        <h3 id="dashKpiActivePromos" class="kpi-value">—</h3>
+                        <span class="kpi-subtext"><i class="fas fa-tags"></i> Discount vouchers</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Control Hub Cards -->
+            <h2 class="admin-section-title">Management Workspaces</h2>
+            
+            <div class="admin-tools-grid">
+                <div class="admin-tool-card" onclick="openInventoryDashboard(event)">
+                    <div class="admin-tool-header">
+                        <div class="admin-tool-icon"><i class="fas fa-boxes-stacked"></i></div>
+                        <i class="fas fa-arrow-right admin-tool-arrow"></i>
+                    </div>
+                    <h3>Inventory & Stock Vault</h3>
+                    <p>Manage product pricing, variant color stock levels, low-stock warnings, and bulk restocks.</p>
+                    <span class="admin-tool-pill">Manage Stock</span>
+                </div>
+
+                <div class="admin-tool-card" onclick="openAdminMasterConsole(event)">
+                    <div class="admin-tool-header">
+                        <div class="admin-tool-icon" style="color: var(--pink-accent); background: rgba(255,20,147,0.08);"><i class="fas fa-truck-fast"></i></div>
+                        <i class="fas fa-arrow-right admin-tool-arrow"></i>
+                    </div>
+                    <h3>Master Order Desk</h3>
+                    <p>Track live customer orders, update DTDC/Delhivery tracking numbers, and process refunds.</p>
+                    <span class="admin-tool-pill">Process Orders</span>
+                </div>
+
+                <div class="admin-tool-card" onclick="openAdminPromoConsoleOverlay(event)">
+                    <div class="admin-tool-header">
+                        <div class="admin-tool-icon" style="color: #cca43b; background: rgba(204,164,59,0.1);"><i class="fas fa-ticket-alt"></i></div>
+                        <i class="fas fa-arrow-right admin-tool-arrow"></i>
+                    </div>
+                    <h3>Promo Coupon Control</h3>
+                    <p>Mint new percentage or flat discount coupon keys and monitor active store promotions.</p>
+                    <span class="admin-tool-pill">Manage Coupons</span>
+                </div>
+
+                <div class="admin-tool-card" onclick="openAdminCarouselConsoleOverlay(event)">
+                    <div class="admin-tool-header">
+                        <div class="admin-tool-icon" style="color: #2a7b6a; background: rgba(42,123,106,0.1);"><i class="fas fa-images"></i></div>
+                        <i class="fas fa-arrow-right admin-tool-arrow"></i>
+                    </div>
+                    <h3>Hero Banner Carousel</h3>
+                    <p>Upload new homepage campaign banners with automatic WebP retina-ready compression.</p>
+                    <span class="admin-tool-pill">Edit Banners</span>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 1. ADD / EDIT PRODUCT MODAL VAULT -->
+        <div id="adminPieceVaultModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 26, 54, 0.6); backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'Montserrat', sans-serif;">
+            <div style="background: #ffffff; width: 100%; max-width: 550px; border-radius: 8px; border: 1px solid #202c55; box-shadow: 0 20px 50px rgba(32,44,85,0.3); overflow: hidden; display: flex; flex-direction: column;">
+                
+                <div style="background: #202c55; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="adminFormModalTitle" style="color: #ffffff; margin: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-gem" style="color: #ff1493;"></i> Add New Item
+                    </h3>
+                    <i class="fas fa-times" onclick="closeAdminFormVaultModal()" style="color: #ffffff; cursor: pointer; font-size: 1.2rem; opacity: 0.8; transition: opacity 0.2s;"></i>
+                </div>
+
+                <form id="masterJewelryAdminForm" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: calc(100vh - 120px); box-sizing: border-box; text-align: left;">
+                    <input type="hidden" id="formActionProductId" value="">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Product ID</label>
+                            <input type="number" id="formProductId" placeholder="e.g. 25" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Category</label>
+                            <select id="formProductCategory" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; background: #ffffff;">
+                                <option value="Necklaces">Necklaces</option>
+                                <option value="Chokers">Chokers</option>
+                                <option value="Earrings">Earrings</option>
+                                <option value="Bangles">Bangles</option>
+                                <option value="Rings">Rings</option>
+                                <option value="MiniHaram">MiniHaram</option>
+                                <option value="kada">Kada</option>
+                                <option value="flash">Flash</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Title</label>
+                        <input type="text" id="formProductTitle" placeholder="e.g. The Royal Kundan Haar" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 8px;">Does this product have color variants?</label>
+                        <div class="variant-mode-toggle-group">
+                            <button type="button" id="variantModeToggleNo" class="variant-mode-toggle-btn active" onclick="setProductVariantMode(false)">
+                                <i class="fas fa-cube"></i> No, single item
+                            </button>
+                            <button type="button" id="variantModeToggleYes" class="variant-mode-toggle-btn" onclick="setProductVariantMode(true)">
+                                <i class="fas fa-layer-group"></i> Yes, multiple colors
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="singleItemPriceStockWrapper" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Price</label>
+                            <input type="number" id="formProductPrice" placeholder="18500" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Stock</label>
+                            <input type="number" id="formProductStock" placeholder="5" required style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Badge</label>
+                            <input type="text" id="formProductBadge" placeholder="e.g. New, Sale, Trending, or blank" style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Style</label>
+                            <select id="formProductStyle" style="width: 100%; height: 40px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; background: #ffffff; font-weight: 500; color: #333;">
+                                <option value="">None / Standard</option>
+                                <option value="cz">CZ & Silver Polish</option>
+                                <option value="antique">Antique Temple Craft</option>
+                                <option value="handcrafted">Heritage Devotion</option>
+                                <option value="navratna">Navratna & Beads</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="singleItemImageWrapper" style="margin-bottom: 5px; text-align: left;">
+                        <label style="display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; margin-bottom: 6px;">
+                            <i class="fas fa-camera"></i> Image
+                        </label>
+                        <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
+                            <input type="file" id="formProductImageFilePicker" accept="image/*" style="flex: 1; padding: 8px; border: 1px dashed #cca43b; border-radius: 4px; font-size: 0.8rem; outline: none; box-sizing: border-box; background: #fff;">
+                            <input type="hidden" id="formProductImage" value="">
+                            <div id="adminFormImagePreviewFrame" style="display: none; width: 44px; height: 44px; min-width: 44px; border-radius: 6px; border: 1px solid #e8e8ef; overflow: hidden; background: #fafafa; box-sizing: border-box;">
+                                <img id="adminFormImagePreviewVisual" src="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="variantSectionWrapper" style="border-top: 1px dashed #cca43b; padding-top: 15px; margin-top: 5px; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #202c55; letter-spacing: 0.5px;">
+                                <i class="fas fa-layer-group" style="color: #ff1493;"></i> Inventory Product Variants
+                            </h4>
+                            <button type="button" onclick="appendNewVariantRowToAdminForm()" style="background: transparent; border: 1px dashed #202c55; color: #202c55; padding: 4px 10px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;">
+                                + Add Variant Option
+                            </button>
+                        </div>
+                        <p style="margin: 0 0 12px 0; font-size: 0.7rem; color: #8a8da0; line-height: 1.5;">
+                            <i class="fas fa-circle-info" style="color: #cca43b;"></i>
+                            Price and stock are set per color below instead of above.
+                        </p>
+                        <div id="adminFormDynamicVariantsContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; margin-bottom: 15px; box-sizing: border-box;"></div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Description</label>
+                        <textarea id="formProductDesc" rows="3" placeholder="Describe the gold weights, gemstones, or heritage patterns..." style="width: 100%; padding: 10px 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-family: sans-serif; resize: vertical; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <button type="submit" id="formSubmitActionBtn" style="background: #202c55; color: #ffffff; width: 100%; height: 46px; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-top: 5px; outline: none;">
+                        Add New Item
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. INVENTORY DASHBOARD MODAL -->
+        <div id="inventoryDashboardModal" class="inventory-dashboard-modal" style="display:none;">
+            <div class="inventory-dashboard-panel">
+                <div class="inventory-dashboard-header">
+                    <h2><i class="fas fa-boxes-stacked"></i> Inventory Dashboard</h2>
+                    <button type="button" onclick="closeInventoryDashboard()" class="inventory-dashboard-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="inventory-summary-cards" id="inventorySummaryCards"></div>
+
+                <div class="inventory-toolbar">
+                    <input type="text" id="inventorySearchInput" class="inventory-search-input" placeholder="Search by title or SKU..." oninput="renderInventoryTable()">
+                    <select id="inventoryCategoryFilter" class="inventory-filter-select" onchange="renderInventoryTable()">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select id="inventoryStockFilter" class="inventory-filter-select" onchange="renderInventoryTable()">
+                        <option value="">All Stock Levels</option>
+                        <option value="out">Out of Stock</option>
+                        <option value="low">Low Stock (≤2)</option>
+                        <option value="healthy">In Stock</option>
+                    </select>
+                    <button type="button" onclick="exportInventoryToCsv()" class="inventory-export-btn">
+                        <i class="fas fa-download"></i> Export CSV
+                    </button>
+                </div>
+
+                <div id="inventoryBulkActionsBar" class="inventory-bulk-actions-bar" style="display:none;">
+                    <span id="inventoryBulkSelectedCount" class="inventory-bulk-count"></span>
+                    <input type="number" id="inventoryBulkStockValue" class="inventory-bulk-input" placeholder="Set stock to..." min="0">
+                    <button type="button" onclick="applyBulkRestock()" class="inventory-bulk-btn inventory-bulk-btn--primary">Apply to Selected</button>
+                    <button type="button" onclick="applyBulkSoldOut()" class="inventory-bulk-btn inventory-bulk-btn--danger">Mark Sold Out</button>
+                    <button type="button" onclick="clearInventorySelection()" class="inventory-bulk-btn inventory-bulk-btn--ghost">Clear</button>
+                </div>
+
+                <div class="inventory-table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;"><input type="checkbox" id="inventorySelectAllCheckbox" onchange="toggleSelectAllInventoryRows(this)"></th>
+                                <th>Item</th>
+                                <th>Color</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th style="width:50px;">History</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. STOCK HISTORY MODAL -->
+        <div id="stockHistoryModal" class="stock-history-modal" style="display:none;">
+            <div class="stock-history-panel">
+                <div class="stock-history-header">
+                    <h3 id="stockHistoryModalTitle">Stock History</h3>
+                    <button type="button" onclick="closeStockHistoryModal()" class="stock-history-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="stockHistoryList" class="stock-history-list"></div>
+            </div>
+        </div>
+
+        <!-- 4. MASTER ORDER DESK PANEL OVERLAY -->
+        <div id="adminMasterConsoleOverlay" class="order-desk-overlay" style="display: none;">
+            <div class="order-desk-panel">
+                <div class="order-desk-header">
+                    <div>
+                        <h2>Master Order Desk</h2>
+                        <p>Internal Administration Ledger</p>
+                    </div>
+                    <button onclick="closeAdminMasterConsole()" class="order-desk-close-btn"><i class="fas fa-times"></i> Close</button>
+                </div>
+
+                <div class="order-desk-strip-label">Order Volume</div>
+                <div class="order-desk-analytics-strip" id="adminVolumeStrip">
+                    <div class="order-desk-analytic-card order-desk-analytic-card--purple">
+                        <span>Today</span>
+                        <h3 id="analyticsOrdersToday">0</h3>
+                    </div>
+                    <div class="order-desk-analytic-card order-desk-analytic-card--pink">
+                        <span>This Week</span>
+                        <h3 id="analyticsOrdersThisWeek">0</h3>
+                    </div>
+                    <div class="order-desk-analytic-card order-desk-analytic-card--gold">
+                        <span>This Month</span>
+                        <h3 id="analyticsOrdersThisMonth">0</h3>
+                    </div>
+                </div>
+
+                <div class="order-desk-strip-label">Order Value by Status</div>
+                <div class="order-desk-analytics-strip" id="adminAnalyticsStrip">
+                    <div class="order-desk-analytic-card order-desk-analytic-card--purple">
+                        <span>Pending Value</span>
+                        <h3 id="analyticsPendingValue">₹0</h3>
+                    </div>
+                    <div class="order-desk-analytic-card order-desk-analytic-card--pink">
+                        <span>Shipped Value</span>
+                        <h3 id="analyticsShippedValue">₹0</h3>
+                    </div>
+                    <div class="order-desk-analytic-card order-desk-analytic-card--gold">
+                        <span>Combined Value</span>
+                        <h3 id="analyticsCombinedValue">₹0</h3>
+                    </div>
+                </div>
+
+                <div class="order-desk-toolbar">
+                    <div class="order-desk-tabs" id="adminConsoleTabsWrapper">
+                        <button id="adminTabPendingBtn" class="order-desk-tab-btn is-active" onclick="switchAdminConsoleTab('pending')">
+                            <i class="fas fa-clock"></i> Pending <span class="order-desk-tab-count" id="adminPendingCount">0</span>
+                        </button>
+                        <button id="adminTabShippedBtn" class="order-desk-tab-btn" onclick="switchAdminConsoleTab('shipped')">
+                            <i class="fas fa-truck"></i> Shipped <span class="order-desk-tab-count" id="adminShippedCount">0</span>
+                        </button>
+                        <button id="adminTabCancelledBtn" class="order-desk-tab-btn" onclick="switchAdminConsoleTab('cancelled')">
+                            <i class="fas fa-times-circle"></i> Cancelled/Refunded <span class="order-desk-tab-count" id="adminCancelledCount">0</span>
+                        </button>
+                    </div>
+
+                    <div class="order-desk-toolbar-right">
+                        <div class="order-desk-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="adminConsoleSearchInput" oninput="handleAdminConsoleSearch(this.value)" placeholder="Search name, phone, or Ref ID...">
+                        </div>
+                        <div class="order-desk-view-switcher">
+                            <button type="button" id="adminViewModeCardsBtn" class="is-active" onclick="toggleAdminConsoleLayoutMode('cards')" title="Card view"><i class="fas fa-th-large"></i> Cards</button>
+                            <button type="button" id="adminViewModeTableBtn" onclick="toggleAdminConsoleLayoutMode('table')" title="Table view"><i class="fas fa-table"></i> Table</button>
+                        </div>
+                        <button type="button" onclick="exportCurrentAdminOrdersToCSV()" class="order-desk-export-btn">
+                            <i class="fas fa-file-excel"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <p id="adminConsoleStatus" class="order-desk-status-line"></p>
+                <div id="adminMasterOrdersContainer" class="order-desk-orders-container"></div>
+            </div>
+        </div>
+
+        <!-- 5. PROMO CODE MASTER CONTROL MODAL -->
+        <div id="adminPromoConsoleOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 27, 37, 0.7); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            <div style="background: #ffffff; width: 100%; max-width: 700px; border-radius: 8px; border: 1px solid var(--purple-primary); box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh; animation: promoModalSlideUp 0.3s ease; font-family: 'Montserrat', sans-serif;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5;">
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--purple-primary); letter-spacing: 0.5px; text-transform: uppercase;">
+                        <i class="fas fa-ticket-alt" style="color: #cca43b; margin-right: 6px;"></i> Promo Code Master Control
+                    </h3>
+                    <button onclick="closeAdminPromoConsoleOverlay()" style="background: transparent; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; outline: none;">&times;</button>
+                </div>
+
+                <div style="overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.8px; font-weight: 700;">Active Coupons Vault</h4>
+                        <div id="adminPromoCodeTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 45vh; overflow-y: auto;"></div>
+                    </div>
+
+                    <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content;">
+                        <h4 style="margin: 0 0 14px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.8px; font-weight: 700;">Mint New Promo Key</h4>
+                        
+                        <form id="adminPromoCreatorForm" onsubmit="handleAdminPromoFormSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Promo Coupon Code</label>
+                                <input type="text" id="newPromoCodeInput" placeholder="e.g. JEWEL20" required style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-family: monospace; font-weight: 700; text-transform: uppercase;">
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Discount Scaling Type</label>
+                                <select id="newPromoTypeSelect" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; background: #ffffff; font-weight: 600; color: #333;">
+                                    <option value="percentage">Percentage Off (%)</option>
+                                    <option value="flat">Flat Rate Cash Off (₹)</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Rate / Value Magnitude</label>
+                                <input type="number" id="newPromoValueInput" placeholder="e.g. 15 or 500" required min="1" step="any" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-weight: 600;">
+                            </div>
+
+                            <button type="submit" id="promoFormSubmitBtn" style="margin-top: 6px; background: var(--purple-primary); color: #ffffff; border: none; padding: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
+                                ADD PROMO CODE
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. HERO CAROUSEL BANNER CONTROL MODAL -->
+        <div id="adminCarouselConsoleOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 27, 37, 0.7); backdrop-filter: blur(4px); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            <div style="background: #ffffff; width: 100%; max-width: 750px; border-radius: 8px; border: 1px solid #202c55; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh; animation: promoModalSlideUp 0.3s ease; font-family: 'Montserrat', sans-serif;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5;">
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #202c55; letter-spacing: 0.5px; text-transform: uppercase;">
+                        <i class="fas fa-images" style="color: #cca43b; margin-right: 6px;"></i> Hero Carousel Banner Control
+                    </h3>
+                    <button onclick="closeAdminCarouselConsoleOverlay()" style="background: transparent; border: none; font-size: 1.4rem; color: #777; cursor: pointer; outline: none;">&times;</button>
+                </div>
+
+                <div style="overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: #777; letter-spacing: 0.8px; font-weight: 700;">Active Banner Tracks</h4>
+                        <div id="adminCarouselListTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 45vh; overflow-y: auto;"></div>
+                    </div>
+
+                    <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content;">
+                        <h4 style="margin: 0 0 14px 0; font-size: 0.75rem; text-transform: uppercase; color: #777; letter-spacing: 0.8px; font-weight: 700;">Mint New Entry Slide</h4>
+                        
+                        <form id="adminCarouselCreatorForm" onsubmit="handleAdminCarouselFormSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: #202c55; text-transform: uppercase;">Campaign Title</label>
+                                <input type="text" id="newCarouselTitleInput" placeholder="e.g. Bridal Festive Launch" required style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-family: 'Montserrat'; font-weight: 600;">
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: #202c55; text-transform: uppercase;">Display Sequence Order</label>
+                                <input type="number" id="newCarouselOrderInput" placeholder="e.g. 1" required min="1" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-weight: 600;">
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: #202c55; text-transform: uppercase;">Upload Visual Asset</label>
+                                <input type="file" id="newCarouselFilePicker" accept="image/*" required style="padding: 6px; border: 1px dashed #cca43b; border-radius: 4px; font-size: 0.8rem; background: #fff; cursor: pointer;">
+                            </div>
+
+                            <button type="submit" id="carouselFormSubmitBtn" style="margin-top: 6px; background: #202c55; color: #ffffff; border: none; padding: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
+                                Publish Slide
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

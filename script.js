@@ -5,6 +5,7 @@
 // today. To add a new photo: drop the image into assets/ugc/ and push a
 // new entry into the array below. Keep images square (1:1) for best fit.
 // =========================================================================
+
 const instagramShowcaseFeed = [
     { image: 'assets/ugc/ugc-1.webp', handle: '@priya.wears.gold' },
     { image: 'assets/ugc/ugc-2.webp', handle: '@meera.style' },
@@ -13,7 +14,9 @@ const instagramShowcaseFeed = [
     { image: 'assets/ugc/ugc-5.webp', handle: '@radhika.official' },
     { image: 'assets/ugc/ugc-6.jpeg', handle: '@styledby.sn' }
 ];
+
 const instagramProfileLink = 'https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl';
+
 
 function renderInstagramShowcaseGallery() {
     const grid = document.getElementById('ugcShowcaseGrid');
@@ -28,6 +31,7 @@ function renderInstagramShowcaseGallery() {
         </a>
     `).join('');
 }
+
 
 document.addEventListener('DOMContentLoaded', renderInstagramShowcaseGallery);
 
@@ -246,20 +250,25 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlo
 /* =========================================================================
    ANGEL JEWELLERY — COMPLETE MASTER RUNTIME ENGINE APPLICATIVE LOGIC
    ========================================================================= */
+
 let productDatabase = [];
+
 let shoppingCart = [];       
+
 let wishlistMemory = [];     
-let adminOrdersCache = [];       
-let currentAdminActiveTab = "pending";
+
 let activeDiscount = { code: "", type: "", value: 0 };
-let adminConsoleSearchQueryString = "";
+
 let currentSelectedFilterCategoryKey = "all"; 
+
 let MASTER_LIVE_INVENTORY_CACHE = {};
+
 let carouselRegistryCache = []
+
 
 const FREE_SHIPPING_THRESHOLD = 1000; 
 
-let INTEGRATED_ADMIN_AUTH_STATE = false;
+
 
 // Inject standard button transition/hover utility rules cleanly into the runtime context
 if (typeof document !== 'undefined' && !document.getElementById('angelJewelryButtonHoverStyleTag')) {
@@ -282,6 +291,7 @@ if (typeof document !== 'undefined' && !document.getElementById('angelJewelryBut
 // =========================================================================
 // ANGEL JEWELLERY — HIGH-PERFORMANCE SUPABASE RELATIONAL DATABASE CHANNELS
 // =========================================================================
+
 async function loadProductDatabaseEngine() {
     try {
         console.log("Synchronizing live data matrix cleanly via direct Supabase API connection...");
@@ -350,458 +360,6 @@ async function loadProductDatabaseEngine() {
         console.error('Critical Supabase catalog extraction breakdown caught:', error);
     }
 }
-// =========================================================================
-// ANGEL JEWELLERY — UNIFIED ADMISTRATIVE CLEARANCE ENGINE (LOCK AUTO-HIDE)
-// =========================================================================
-function challengeAdminIdentityGateway(event) {
-    if (event) event.preventDefault();
-    
-    const masterAdminPasskey = ANGEL_STORE_CONFIG.SECURITY.MASTER_ADMIN_PASSKEY;
-    const accessAttempt = prompt("🔒 Administrative Clearance Verification Required.\nPlease enter your Master Access Key:");
-    
-    if (accessAttempt === null) return;
-
-    const carouselLinkNode = document.getElementById('adminCarouselMasterFooterLink');
-        if (carouselLinkNode) {
-            carouselLinkNode.style.display = 'flex'; 
-        }
-
-    if (accessAttempt.trim() === masterAdminPasskey) {
-        INTEGRATED_ADMIN_AUTH_STATE = true;
-        
-        // Inject inline styles to reveal the hidden inline card edit badges
-        let styleNode = document.getElementById('angelJewelryAdminUIControlsStyleTag');
-        if (!styleNode) {
-            styleNode = document.createElement("style");
-            styleNode.id = 'angelJewelryAdminUIControlsStyleTag';
-            document.head.appendChild(styleNode);
-        }
-        styleNode.innerHTML = `
-            .admin-action-inline-trigger { display: inline-flex !important; }
-        `;
-        
-        // Grab the elements from your footer cluster group
-        const lockBtnAnchor = event.currentTarget || document.querySelector('[aria-label="Authenticate Master Identity Link"]');
-        const wrenchBtn = document.getElementById("footerAdminWrenchDeskBtn");
-        const addNewBtn = document.getElementById("footerAdminAddNewPieceFormBtn");
-        
-        // ➔ THE TRANSITION FIX: Hide the lock icon entirely and fade the master tools into view!
-        if (lockBtnAnchor) lockBtnAnchor.style.setProperty("display", "none", "important");
-        if (wrenchBtn) wrenchBtn.style.setProperty("display", "flex", "important");
-        if (addNewBtn) addNewBtn.style.setProperty("display", "flex", "important");
-
-        // Inside your master passcode validation function, right where authentication succeeds:
-        INTEGRATED_ADMIN_AUTH_STATE = true;
-
-        // ➔ THE LOCK SYSTEM REVEAL SECURITY TRIGGER:
-        const promoLinkNode = document.getElementById('adminPromoMasterFooterLink');
-        if (promoLinkNode) {
-            promoLinkNode.style.display = 'flex'; // Reveals link perfectly next to your unlock buttons
-        }
-
-        const inventoryLinkNode = document.getElementById('adminInventoryDashboardFooterLink');
-        if (inventoryLinkNode) {
-            inventoryLinkNode.style.display = 'flex';
-        }
-        
-        // Refresh catalog view grids to render "Edit" inline buttons on product cards
-       if (typeof filterCatalog === "function") {
-            filterCatalog(); 
-        }
-        if (typeof renderFlashVaultShowroom === "function") {
-            renderFlashVaultShowroom();
-        }
-        if (typeof renderVaultSaleSection === "function") {
-            renderVaultSaleSection();
-        }
-        if (typeof renderTrendingSection === "function") {
-            renderTrendingSection();
-        }
-        if (typeof renderNewArrivalsSection === "function") {
-            renderNewArrivalsSection();
-        }
-        if (typeof renderRecentlyViewedSection === "function") {
-            renderRecentlyViewedSection();
-        }
-    } else {
-        alert("❌ Identity Handshake Blocked: Invalid Passcode.");
-    }
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — SINGLE-ITEM vs COLOR-VARIANT MODE TOGGLE
-// Drives which half of the form is shown, and keeps whatever the admin
-// already typed when they switch between the two — nothing gets lost.
-// =========================================================================
-function setProductVariantMode(hasVariants) {
-    const yesBtn = document.getElementById('variantModeToggleYes');
-    const noBtn = document.getElementById('variantModeToggleNo');
-    const variantWrapper = document.getElementById('variantSectionWrapper');
-    const priceStockWrapper = document.getElementById('singleItemPriceStockWrapper');
-    const imageWrapper = document.getElementById('singleItemImageWrapper');
-    const variantsContainer = document.getElementById('adminFormDynamicVariantsContainer');
-    const priceInput = document.getElementById('formProductPrice');
-    const stockInput = document.getElementById('formProductStock');
-    if (!yesBtn || !noBtn || !variantWrapper || !priceStockWrapper) return;
-
-    if (hasVariants) {
-        yesBtn.classList.add('active');
-        noBtn.classList.remove('active');
-        variantWrapper.style.display = 'block';
-        priceStockWrapper.style.display = 'none';
-        if (imageWrapper) imageWrapper.style.display = 'none';
-        if (priceInput) priceInput.required = false;
-        if (stockInput) stockInput.required = false;
-
-        // If there's nothing in the variant list yet, start one row and
-        // carry over anything already typed in the single-item fields
-        // instead of making the admin re-enter it.
-        if (variantsContainer && variantsContainer.children.length === 0) {
-            appendNewVariantRowToAdminForm();
-            const firstRow = variantsContainer.children[0];
-            if (firstRow) {
-                const masterPrice = priceInput ? priceInput.value : '';
-                const masterStock = stockInput ? stockInput.value : '';
-                const masterImage = document.getElementById('formProductImage').value;
-                if (masterPrice) { const f = firstRow.querySelector('.v-price'); if (f) f.value = masterPrice; }
-                if (masterStock) { const f = firstRow.querySelector('.v-stock'); if (f) f.value = masterStock; }
-                if (masterImage) {
-                    const f = firstRow.querySelector('.v-img');
-                    if (f) { f.value = masterImage; refreshVariantImagePreview(f); }
-                }
-            }
-        }
-    } else {
-        noBtn.classList.add('active');
-        yesBtn.classList.remove('active');
-        variantWrapper.style.display = 'none';
-        priceStockWrapper.style.display = 'grid';
-        if (imageWrapper) imageWrapper.style.display = 'block';
-        if (priceInput) priceInput.required = true;
-        if (stockInput) stockInput.required = true;
-
-        // Carry the first variant row's values back into the single-item
-        // fields before the rows disappear, so switching modes both ways
-        // stays non-destructive.
-        if (variantsContainer && variantsContainer.children.length > 0) {
-            const firstRow = variantsContainer.children[0];
-            const vPrice = firstRow.querySelector('.v-price');
-            const vStock = firstRow.querySelector('.v-stock');
-            const vImg = firstRow.querySelector('.v-img');
-            if (vPrice && vPrice.value && priceInput) priceInput.value = vPrice.value;
-            if (vStock && vStock.value && stockInput) stockInput.value = vStock.value;
-            if (vImg && vImg.value) {
-                document.getElementById('formProductImage').value = vImg.value;
-                const previewFrame = document.getElementById('adminFormImagePreviewFrame');
-                const previewVisual = document.getElementById('adminFormImagePreviewVisual');
-                if (previewFrame && previewVisual) {
-                    previewVisual.src = vImg.value;
-                    previewFrame.style.display = 'block';
-                }
-            }
-        }
-
-        // Actually remove the rows — display:none on the wrapper alone
-        // wouldn't stop document.querySelectorAll('.admin-variant-input-row')
-        // from still finding and submitting them at save time.
-        if (variantsContainer) variantsContainer.innerHTML = '';
-    }
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — DYNAMIC INLINE CRUD WRITE OPERATIONS METHODS
-// =========================================================================
-function openAdminFormModalForCreation(event) {
-    if (event) event.preventDefault(); 
-    document.getElementById('masterJewelryAdminForm').reset();
-    document.getElementById('formActionProductId').value = "";
-    document.getElementById('formProductId').disabled = false;
-    
-    const previewFrame = document.getElementById('adminFormImagePreviewFrame');
-    if (previewFrame) previewFrame.style.display = "none";
-    
-    // Empty out any leftover fields from previous edit sessions
-    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
-    if (variantRowsContainer) {
-        variantRowsContainer.innerHTML = ""; 
-    }
-
-    // Default new items to the simpler single-item mode — admin explicitly
-    // opts into color variants rather than always seeing both at once.
-    setProductVariantMode(false);
-
-    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-plus-circle" style="color:#ff1493;"></i> Add New Item`;
-    document.getElementById('formSubmitActionBtn').innerText = "Add New Item";
-    document.getElementById('adminPieceVaultModal').style.display = 'flex';
-}
-
-function openAdminFormModalForEditing(event, id) {
-    if (event) event.stopPropagation();
-    
-    const product = productDatabase.find(p => p.id === parseInt(id));
-    if (!product) return;
-
-    // Reset file picker input selection row cleanly
-    const filePicker = document.getElementById('formProductImageFilePicker');
-    if (filePicker) filePicker.value = "";
-
-    document.getElementById('formActionProductId').value = product.id;
-    document.getElementById('formProductId').value = product.id;
-    document.getElementById('formProductId').disabled = true; // Lock identity column fields
-    document.getElementById('formProductTitle').value = product.title;
-    document.getElementById('formProductCategory').value = product.category;
-    document.getElementById('formProductPrice').value = product.price;
-    
-    const liveCacheData = MASTER_LIVE_INVENTORY_CACHE[product.id];
-    const trueCurrentStock = liveCacheData ? liveCacheData.stock : product.stock;
-    document.getElementById('formProductStock').value = trueCurrentStock;
-    document.getElementById('formProductBadge').value = product.badge === "Sold Out" ? "" : product.badge;
-    document.getElementById('formProductStyle').value = product.style ? String(product.style).trim().toLowerCase() : "";
-    document.getElementById('formProductImage').value = product.image;
-    document.getElementById('formProductDesc').value = product.description;
-
-    const previewFrame = document.getElementById('adminFormImagePreviewFrame');
-    const previewVisual = document.getElementById('adminFormImagePreviewVisual');
-    if (previewFrame && previewVisual && product.image) {
-        previewVisual.src = product.image;
-        previewFrame.style.display = "block"; // Turn on asset visibility layout
-    }
-
-    document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
-    document.getElementById('formSubmitActionBtn').innerText = "Update";
-    document.getElementById('adminPieceVaultModal').style.display = 'flex';
-
-    // ➔ Detect whether this product genuinely uses color variants, or is
-    // just the single automatic "Standard" row every product gets under
-    // the hood — same convention already used by the Quick View modal's
-    // own variant detection, so the two stay consistent.
-    const existingVariants = product.product_variants || [];
-    let hasRealVariants = false;
-    if (existingVariants.length > 1) {
-        hasRealVariants = true;
-    } else if (existingVariants.length === 1) {
-        const onlyColorName = String(existingVariants[0].color_name || '').toLowerCase().trim();
-        hasRealVariants = onlyColorName !== '' && onlyColorName !== 'standard' && onlyColorName !== 'default';
-    }
-
-    const variantRowsContainer = document.getElementById('adminFormDynamicVariantsContainer');
-    if (variantRowsContainer) variantRowsContainer.innerHTML = "";
-
-    // Populate real variant rows BEFORE toggling the mode, so setProductVariantMode's
-    // "container is empty, auto-add a starter row" logic correctly skips —
-    // the container already has the real rows in it by that point.
-    if (hasRealVariants && variantRowsContainer) {
-        existingVariants.forEach(variant => {
-            appendNewVariantRowToAdminForm(variant);
-        });
-    }
-
-    setProductVariantMode(hasRealVariants);
-}
-
-function closeAdminFormVaultModal() {
-    document.getElementById('adminPieceVaultModal').style.display = 'none';
-}
-
-// 2. WRITE & UPDATE CHANNEL: Save or Edit inline catalog rows seamlessly
-document.addEventListener("DOMContentLoaded", () => {
-    // ➔ FINAL BULLETPROOF FORM SUBMISSION ROUTINE (With Integrated File Upload Tracking)
-const adminFormNode = document.getElementById('masterJewelryAdminForm');
-if (adminFormNode) {
-    adminFormNode.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('formSubmitActionBtn');
-        const originalButtonText = submitBtn.innerText;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Assets...`;
-
-        const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-        const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-        const customHeaders = {
-            'apikey': sbKey,
-            'Authorization': `Bearer ${sbKey}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-        };
-
-        try {
-            const editingTargetRowId = document.getElementById('formActionProductId').value;
-            const isEditOperationMode = editingTargetRowId !== "";
-            const assignedProductId = isEditOperationMode ? parseInt(editingTargetRowId) : parseInt(document.getElementById('formProductId').value);
-
-            // ➔ 1. HANDLE FILE PICKER STORAGE UPLOAD FIRST
-            const filePicker = document.getElementById('formProductImageFilePicker');
-            let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
-
-            if (filePicker && filePicker.files.length > 0) {
-                submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image Asset...`;
-                const uploadedFile = filePicker.files[0];
-                // Process, compress to WebP, and upload straight to your storage bucket
-                finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
-                document.getElementById('formProductImage').value = finalCalculatedImageUrl;
-            }
-
-            // Fallback to placeholder identity if absolutely no image asset is available anywhere
-            if (!finalCalculatedImageUrl) {
-                finalCalculatedImageUrl = 'assets/placeholder.png';
-            }
-
-            // Gather values from form input elements
-            const variantRows = document.querySelectorAll('.admin-variant-input-row');
-            let baseCatalogPrice = parseFloat(document.getElementById('formProductPrice').value) || 0;
-            let baseCatalogStock = parseInt(document.getElementById('formProductStock').value) || 0;
-
-            // If explicit variant rows exist, synchronize baseline metrics from the top row item
-            if (variantRows.length > 0) {
-                baseCatalogPrice = parseFloat(variantRows[0].querySelector('.v-price').value) || baseCatalogPrice;
-                baseCatalogStock = parseInt(variantRows[0].querySelector('.v-stock').value) || baseCatalogStock;
-                finalCalculatedImageUrl = variantRows[0].querySelector('.v-img').value.trim() || finalCalculatedImageUrl;
-            }
-
-            const computedStatusFlag = baseCatalogStock <= 0 ? "sold" : "available";
-
-            // --- ENGINE PART A: UPSERT PARENT MASTER PRODUCT ENTRY ---
-            const parentProductPayload = {
-                id: assignedProductId,
-                title: document.getElementById('formProductTitle').value.trim(),
-                category: document.getElementById('formProductCategory').value,
-                badge: baseCatalogStock <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
-                status: computedStatusFlag,
-                description: document.getElementById('formProductDesc').value.trim(),
-                style: document.getElementById('formProductStyle').value
-            };
-
-            let parentRequestUrl = `${sbUrl}/rest/v1/products`;
-            let parentMethod = 'POST';
-
-            if (isEditOperationMode) {
-                parentRequestUrl += `?id=eq.${editingTargetRowId}`;
-                parentMethod = 'PATCH';
-            }
-
-            const parentResponse = await fetch(parentRequestUrl, {
-                method: parentMethod,
-                headers: customHeaders,
-                body: JSON.stringify(parentProductPayload)
-            });
-
-            if (!parentResponse.ok) throw new Error("Supabase master product row registration rejected.");
-            
-            // --- ENGINE PART B: PROCESS AND UPDATE RELATIONAL PRODUCT VARIANTS ---
-            // Snapshot pre-edit stock by color name BEFORE the delete below — this
-            // save flow deletes all variants and reinserts fresh ones (new ids
-            // every time), so variant_id continuity can't be used to track
-            // before/after stock. Matching by color name is a best-effort
-            // approach: it works correctly unless a color is renamed in this
-            // same edit, in which case that specific change won't be logged.
-            const preEditVariantsSnapshot = {};
-            if (isEditOperationMode) {
-                const existingProductRecord = productDatabase.find(p => p.id === assignedProductId);
-                (existingProductRecord?.product_variants || []).forEach(v => {
-                    preEditVariantsSnapshot[v.color_name || 'Standard'] = parseInt(v.stock) || 0;
-                });
-            }
-
-            if (isEditOperationMode) {
-                // Clear old relation rows to maintain clean indexes
-                await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
-                });
-            }
-
-            submitBtn.innerHTML = `<i class="fas fa-layer-group fa-spin"></i> Committing Variant Matrix...`;
-            const variationsBatchPayloadArray = [];
-
-            if (variantRows.length > 0) {
-                // Case A: User explicitly provided dynamic variant options in the row builder list
-                variantRows.forEach(row => {
-                    variationsBatchPayloadArray.push({
-                        product_id: assignedProductId,
-                        color_name: row.querySelector('.v-name').value.trim(),
-                        color_hex: row.querySelector('.v-hex').value,
-                        sku: row.querySelector('.v-sku').value.trim().toUpperCase(),
-                        price: parseFloat(row.querySelector('.v-price').value) || 0,
-                        stock: parseInt(row.querySelector('.v-stock').value) || 0,
-                        image_url: row.querySelector('.v-img').value.trim() || finalCalculatedImageUrl,
-                        status: parseInt(row.querySelector('.v-stock').value) <= 0 ? 'sold' : 'active'
-                    });
-                });
-            } else {
-                // Case B: Standalone Fallback. Generate a single standard row linking your uploaded image and price!
-                variationsBatchPayloadArray.push({
-                    product_id: assignedProductId,
-                    color_name: 'Standard',
-                    color_hex: '#202c55',
-                    sku: `SKU-${assignedProductId}-STD`,
-                    price: baseCatalogPrice,
-                    stock: baseCatalogStock,
-                    image_url: finalCalculatedImageUrl, // Safely links your newly uploaded file picker image!
-                    status: baseCatalogStock <= 0 ? 'sold' : 'active'
-                });
-            }
-
-            const variantResponse = await fetch(`${sbUrl}/rest/v1/product_variants`, {
-                method: 'POST',
-                headers: {
-                    'apikey': sbKey,
-                    'Authorization': `Bearer ${sbKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(variationsBatchPayloadArray)
-            });
-
-            if (!variantResponse.ok) throw new Error("Variant rows population execution failed.");
-
-            // Best-effort history logging: compare the pre-edit snapshot against
-            // what was just saved, matched by color name (see note above on why
-            // variant_id continuity isn't available here).
-            if (isEditOperationMode && typeof logStockHistoryEntry === 'function') {
-                try {
-                    const freshVariantsResponse = await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}&select=*`, {
-                        headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
-                    });
-                    if (freshVariantsResponse.ok) {
-                        const freshVariants = await freshVariantsResponse.json();
-                        const productTitleForLog = document.getElementById('formProductTitle').value.trim();
-                        for (const fv of freshVariants) {
-                            const colorKey = fv.color_name || 'Standard';
-                            const newStockValue = parseInt(fv.stock) || 0;
-                            const previousStockValue = Object.prototype.hasOwnProperty.call(preEditVariantsSnapshot, colorKey)
-                                ? preEditVariantsSnapshot[colorKey]
-                                : 0; // no prior match found — treat as a newly added color variant
-                            if (previousStockValue !== newStockValue) {
-                                await logStockHistoryEntry(fv.id, assignedProductId, productTitleForLog, colorKey, 'manual_edit', previousStockValue, newStockValue);
-                            }
-                        }
-                    }
-                } catch (historyErr) {
-                    console.error('Could not log stock history for this edit (product save itself still succeeded):', historyErr);
-                }
-            }
-
-            alert(`✨ Success! Database sync complete for item reference #${assignedProductId}`);
-            closeAdminFormVaultModal();
-            
-            // Reload local memory array caches and refresh client viewing layers smoothly
-            await loadProductDatabaseEngine();
-            if (typeof filterCatalog === "function") filterCatalog();
-            if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
-
-        } catch (error) {
-            console.error("Administrative multi-tier write pipeline failure:", error);
-            alert("Database write transaction was interrupted.");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalButtonText;
-        }
-    });
-}
-
-});
-
-
 function formatCurrency(amount) {
     return '₹' + amount.toLocaleString('en-IN');
 }
@@ -820,7 +378,9 @@ function formatCurrency(amount) {
 
 // ➔ EDIT THIS whenever you run a real sale with a real end date/time.
 // Example: const SALE_SECTION_END_DATETIME = new Date('2026-07-31T23:59:59');
+
 const SALE_SECTION_END_DATETIME = null;
+
 
 function formatCountdownParts(msRemaining) {
     const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
@@ -830,6 +390,7 @@ function formatCountdownParts(msRemaining) {
     const seconds = totalSeconds % 60;
     return { days, hours, minutes, seconds };
 }
+
 
 function updateSaleCountdown() {
     const badge = document.getElementById('saleCountdownBadge');
@@ -845,6 +406,7 @@ function updateSaleCountdown() {
     badge.innerHTML = `<i class="fas fa-clock"></i> Sale ends in ${dayPrefix}${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
     badge.style.display = 'inline-flex';
 }
+
 
 function updateFlashVaultCountdown() {
     const badge = document.getElementById('flashVaultCountdownBadge');
@@ -864,6 +426,7 @@ setInterval(() => {
     updateFlashVaultCountdown();
 }, 1000);
 
+
 document.addEventListener('DOMContentLoaded', () => {
     updateSaleCountdown();
     updateFlashVaultCountdown();
@@ -877,8 +440,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // value: 10) via your existing admin Promo Codes panel. Without that,
 // this is just a popup with no teeth.
 // =========================================================================
+
 const WELCOME_DISCOUNT_STORAGE_KEY = 'angelJewelleryWelcomeDiscountShown';
+
 const WELCOME_DISCOUNT_CODE = 'WELCOME10';
+
 
 function maybeShowWelcomeDiscountPopup() {
     let alreadyShown = true;
@@ -900,10 +466,12 @@ function maybeShowWelcomeDiscountPopup() {
     }, 2500);
 }
 
+
 function closeWelcomeDiscountModal() {
     const modal = document.getElementById('welcomeDiscountModal');
     if (modal) modal.style.display = 'none';
 }
+
 
 function copyWelcomeDiscountCode() {
     navigator.clipboard.writeText(WELCOME_DISCOUNT_CODE).then(() => {
@@ -915,6 +483,7 @@ function copyWelcomeDiscountCode() {
     }).catch(err => console.error('Clipboard copy failed:', err));
 }
 
+
 document.addEventListener('DOMContentLoaded', maybeShowWelcomeDiscountPopup);
 
 // =========================================================================
@@ -923,186 +492,7 @@ document.addEventListener('DOMContentLoaded', maybeShowWelcomeDiscountPopup);
 // at once, instead of opening each product's Edit form individually.
 // =========================================================================
 
-let inventorySelectedVariantIds = new Set();
 
-function openInventoryDashboard(event) {
-    if (event) event.preventDefault();
-    const modal = document.getElementById('inventoryDashboardModal');
-    if (modal) modal.style.display = 'flex';
-    populateInventoryCategoryFilterOptions();
-    renderInventoryTable();
-}
-
-function closeInventoryDashboard() {
-    const modal = document.getElementById('inventoryDashboardModal');
-    if (modal) modal.style.display = 'none';
-}
-
-// Flattens the nested product -> variants structure into one row per
-// variant, which is what the dashboard actually manages. Prefers the
-// live-synced cache over the initial page-load snapshot, same pattern
-// used everywhere else stock is displayed on the storefront.
-function getFlattenedInventoryRows() {
-    const rows = [];
-    (productDatabase || []).forEach(product => {
-        const variants = product.product_variants || [];
-        variants.forEach(variant => {
-            const liveCacheEntry = MASTER_LIVE_INVENTORY_CACHE[product.id];
-            const liveVariantMatch = liveCacheEntry?.variants?.find(v => v.id === variant.id);
-            const resolvedStock = liveVariantMatch ? parseInt(liveVariantMatch.stock) : parseInt(variant.stock);
-            rows.push({
-                variantId: variant.id,
-                productId: product.id,
-                productTitle: product.title || 'Untitled',
-                colorName: variant.color_name || 'Standard',
-                sku: variant.sku || '',
-                category: product.category || '',
-                price: variant.price,
-                stock: Number.isFinite(resolvedStock) ? resolvedStock : 0,
-                image: variant.image_url || product.image
-            });
-        });
-    });
-    return rows;
-}
-
-function populateInventoryCategoryFilterOptions() {
-    const select = document.getElementById('inventoryCategoryFilter');
-    if (!select) return;
-    const currentValue = select.value;
-    const categories = [...new Set((productDatabase || []).map(p => p.category).filter(Boolean))].sort();
-    select.innerHTML = `<option value="">All Categories</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-    select.value = currentValue;
-}
-
-function renderInventorySummaryCards(allRows) {
-    const container = document.getElementById('inventorySummaryCards');
-    if (!container) return;
-
-    const totalSkus = allRows.length;
-    const totalUnits = allRows.reduce((sum, r) => sum + r.stock, 0);
-    const outOfStockCount = allRows.filter(r => r.stock <= 0).length;
-    const lowStockCount = allRows.filter(r => r.stock > 0 && r.stock <= 2).length;
-
-    container.innerHTML = `
-        <div class="inventory-summary-card">
-            <span class="inventory-summary-value">${totalSkus}</span>
-            <span class="inventory-summary-label">Total SKUs</span>
-        </div>
-        <div class="inventory-summary-card">
-            <span class="inventory-summary-value">${totalUnits}</span>
-            <span class="inventory-summary-label">Units In Stock</span>
-        </div>
-        <div class="inventory-summary-card inventory-summary-card--warning">
-            <span class="inventory-summary-value">${lowStockCount}</span>
-            <span class="inventory-summary-label">Low Stock</span>
-        </div>
-        <div class="inventory-summary-card inventory-summary-card--danger">
-            <span class="inventory-summary-value">${outOfStockCount}</span>
-            <span class="inventory-summary-label">Out of Stock</span>
-        </div>
-    `;
-}
-
-function renderInventoryTable() {
-    const tbody = document.getElementById('inventoryTableBody');
-    if (!tbody) return;
-
-    const allRows = getFlattenedInventoryRows();
-    renderInventorySummaryCards(allRows);
-
-    let rows = allRows;
-    const searchTerm = (document.getElementById('inventorySearchInput')?.value || '').toLowerCase().trim();
-    const categoryFilter = document.getElementById('inventoryCategoryFilter')?.value || '';
-    const stockFilter = document.getElementById('inventoryStockFilter')?.value || '';
-
-    if (searchTerm) {
-        rows = rows.filter(r => r.productTitle.toLowerCase().includes(searchTerm) || (r.sku || '').toLowerCase().includes(searchTerm));
-    }
-    if (categoryFilter) rows = rows.filter(r => r.category === categoryFilter);
-    if (stockFilter === 'out') rows = rows.filter(r => r.stock <= 0);
-    else if (stockFilter === 'low') rows = rows.filter(r => r.stock > 0 && r.stock <= 2);
-    else if (stockFilter === 'healthy') rows = rows.filter(r => r.stock > 2);
-
-    rows = rows.slice().sort((a, b) => a.stock - b.stock);
-
-    if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#8a8da0;">No matching items.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = rows.map(r => {
-        const statusInfo = r.stock <= 0
-            ? { label: 'Out of Stock', className: 'inventory-status-out' }
-            : (r.stock <= 2 ? { label: 'Low Stock', className: 'inventory-status-low' } : { label: 'In Stock', className: 'inventory-status-healthy' });
-
-        const safeLabel = `${r.productTitle} - ${r.colorName}`.replace(/'/g, "\\'");
-
-        return `
-            <tr data-variant-id="${r.variantId}">
-                <td class="inventory-td-checkbox"><input type="checkbox" class="inventory-row-checkbox" value="${r.variantId}" ${inventorySelectedVariantIds.has(r.variantId) ? 'checked' : ''} onchange="toggleInventoryRowSelection(${r.variantId}, this.checked)"></td>
-                <td class="inventory-td-item">
-                    <img src="${r.image || 'assets/placeholder.png'}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
-                    <span>${r.productTitle}</span>
-                </td>
-                <td data-label="Color">${r.colorName}</td>
-                <td class="inventory-td-sku" data-label="SKU">${r.sku || '—'}</td>
-                <td data-label="Category">${r.category || '—'}</td>
-                <td data-label="Price">${formatCurrency(parseFloat(r.price) || 0)}</td>
-                <td data-label="Stock"><input type="number" class="inventory-stock-input" value="${r.stock}" min="0" onchange="handleInventoryStockInlineEdit(${r.variantId}, ${r.productId}, this)"></td>
-                <td data-label="Status"><span class="inventory-status-pill ${statusInfo.className}">${statusInfo.label}</span></td>
-                <td data-label="History"><button type="button" class="inventory-history-btn" onclick="openStockHistoryModal(${r.variantId}, '${safeLabel}')" title="View history"><i class="fas fa-clock-rotate-left"></i></button></td>
-            </tr>
-        `;
-    }).join('');
-
-    // Keeps the bulk actions bar in sync with the actual current selection
-    // every time the table re-renders — previously this only ran when a
-    // checkbox was clicked directly, so clearing the selection via a bulk
-    // action or the Clear button left the bar visibly stuck open even
-    // though nothing was selected anymore.
-    updateInventoryBulkActionsBarVisibility();
-}
-
-// --- Bulk selection ---
-function toggleInventoryRowSelection(variantId, isChecked) {
-    if (isChecked) inventorySelectedVariantIds.add(variantId);
-    else inventorySelectedVariantIds.delete(variantId);
-    updateInventoryBulkActionsBarVisibility();
-}
-
-function toggleSelectAllInventoryRows(checkbox) {
-    document.querySelectorAll('.inventory-row-checkbox').forEach(cb => {
-        cb.checked = checkbox.checked;
-        const variantId = parseInt(cb.value);
-        if (checkbox.checked) inventorySelectedVariantIds.add(variantId);
-        else inventorySelectedVariantIds.delete(variantId);
-    });
-    updateInventoryBulkActionsBarVisibility();
-}
-
-function clearInventorySelection() {
-    inventorySelectedVariantIds.clear();
-    renderInventoryTable();
-}
-
-function updateInventoryBulkActionsBarVisibility() {
-    const bar = document.getElementById('inventoryBulkActionsBar');
-    const countLabel = document.getElementById('inventoryBulkSelectedCount');
-    if (!bar) return;
-    if (inventorySelectedVariantIds.size > 0) {
-        bar.style.display = 'flex';
-        if (countLabel) countLabel.innerText = `${inventorySelectedVariantIds.size} selected`;
-    } else {
-        bar.style.display = 'none';
-    }
-}
-
-// --- Stock history logging ---
-// Called from every point stock actually changes: sales, manual edits in
-// this dashboard, bulk actions, and (best-effort) admin product edits.
-// Failures here are logged but never block the actual stock update —
-// history is a record of what happened, not a gate on whether it can.
 async function logStockHistoryEntry(variantId, productId, productTitle, colorName, changeType, previousStock, newStock, note = '') {
     try {
         const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
@@ -1135,189 +525,6 @@ async function logStockHistoryEntry(variantId, productId, productTitle, colorNam
 }
 
 // --- Inline single-row edit ---
-async function handleInventoryStockInlineEdit(variantId, productId, inputEl) {
-    const newStock = parseInt(inputEl.value);
-    if (!Number.isFinite(newStock) || newStock < 0) {
-        alert('Please enter a valid stock number.');
-        return;
-    }
-
-    const rowData = getFlattenedInventoryRows().find(r => r.variantId === variantId);
-    const previousStock = rowData ? rowData.stock : null;
-
-    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
-
-    try {
-        const response = await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
-            method: 'PATCH',
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stock: newStock, status: newStock <= 0 ? 'sold' : 'active' })
-        });
-        if (!response.ok) throw new Error(`Update failed: ${response.status}`);
-
-        if (previousStock !== null && previousStock !== newStock && rowData) {
-            await logStockHistoryEntry(variantId, productId, rowData.productTitle, rowData.colorName, 'manual_edit', previousStock, newStock);
-        }
-
-        await synchronizeLiveStorefrontInventory();
-        renderInventoryTable();
-    } catch (err) {
-        console.error('Stock update failed:', err);
-        alert('Could not update stock. Please check your connection and try again.');
-    }
-}
-
-// --- Bulk actions ---
-async function applyBulkRestock() {
-    const valueInput = document.getElementById('inventoryBulkStockValue');
-    const newStock = parseInt(valueInput?.value);
-    if (!Number.isFinite(newStock) || newStock < 0) {
-        alert('Enter a valid stock number to apply to the selected items.');
-        return;
-    }
-    if (inventorySelectedVariantIds.size === 0) return;
-    if (!confirm(`Set stock to ${newStock} for ${inventorySelectedVariantIds.size} selected item(s)?`)) return;
-
-    const rows = getFlattenedInventoryRows();
-    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
-
-    for (const variantId of inventorySelectedVariantIds) {
-        const rowData = rows.find(r => r.variantId === variantId);
-        if (!rowData) continue;
-        try {
-            await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
-                method: 'PATCH',
-                headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stock: newStock, status: newStock <= 0 ? 'sold' : 'active' })
-            });
-            if (rowData.stock !== newStock) {
-                await logStockHistoryEntry(variantId, rowData.productId, rowData.productTitle, rowData.colorName, 'bulk_update', rowData.stock, newStock);
-            }
-        } catch (err) {
-            console.error(`Bulk restock failed for variant ${variantId}:`, err);
-        }
-    }
-
-    if (valueInput) valueInput.value = '';
-    inventorySelectedVariantIds.clear();
-    await synchronizeLiveStorefrontInventory();
-    renderInventoryTable();
-}
-
-async function applyBulkSoldOut() {
-    if (inventorySelectedVariantIds.size === 0) return;
-    if (!confirm(`Mark ${inventorySelectedVariantIds.size} selected item(s) as sold out (stock set to 0)?`)) return;
-
-    const rows = getFlattenedInventoryRows();
-    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
-
-    for (const variantId of inventorySelectedVariantIds) {
-        const rowData = rows.find(r => r.variantId === variantId);
-        if (!rowData) continue;
-        try {
-            await fetch(`${sbUrl}/rest/v1/product_variants?id=eq.${variantId}`, {
-                method: 'PATCH',
-                headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stock: 0, status: 'sold' })
-            });
-            if (rowData.stock !== 0) {
-                await logStockHistoryEntry(variantId, rowData.productId, rowData.productTitle, rowData.colorName, 'bulk_update', rowData.stock, 0);
-            }
-        } catch (err) {
-            console.error(`Bulk sold-out failed for variant ${variantId}:`, err);
-        }
-    }
-
-    inventorySelectedVariantIds.clear();
-    await synchronizeLiveStorefrontInventory();
-    renderInventoryTable();
-}
-
-// --- CSV export ---
-function exportInventoryToCsv() {
-    const rows = getFlattenedInventoryRows();
-    const header = ['Product', 'Color', 'SKU', 'Category', 'Price', 'Stock', 'Status'];
-    const csvLines = [header.join(',')];
-
-    rows.forEach(r => {
-        const status = r.stock <= 0 ? 'Out of Stock' : (r.stock <= 2 ? 'Low Stock' : 'In Stock');
-        const escapedTitle = `"${(r.productTitle || '').replace(/"/g, '""')}"`;
-        csvLines.push([escapedTitle, r.colorName, r.sku, r.category, r.price || 0, r.stock, status].join(','));
-    });
-
-    const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `angel-jewellery-inventory-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-// --- Per-variant stock history viewer ---
-async function openStockHistoryModal(variantId, labelText) {
-    const modal = document.getElementById('stockHistoryModal');
-    const titleEl = document.getElementById('stockHistoryModalTitle');
-    const listEl = document.getElementById('stockHistoryList');
-    if (!modal || !listEl) return;
-
-    if (titleEl) titleEl.innerText = `Stock History — ${labelText}`;
-    listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#8a8da0;">Loading...</p>`;
-    modal.style.display = 'flex';
-
-    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
-
-    try {
-        const url = `${sbUrl}/rest/v1/stock_history?variant_id=eq.${variantId}&select=*&order=created_at.desc&limit=50`;
-        const response = await fetch(url, {
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` }
-        });
-        if (!response.ok) throw new Error(`History fetch failed: ${response.status}`);
-
-        const historyRows = await response.json();
-        if (!historyRows || historyRows.length === 0) {
-            listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#8a8da0;">No history recorded yet for this item.</p>`;
-            return;
-        }
-
-        const typeLabels = {
-            sale: { label: 'Sale', icon: 'fa-cart-shopping', color: '#04693a' },
-            manual_edit: { label: 'Manual Edit', icon: 'fa-pen', color: '#202c55' },
-            bulk_update: { label: 'Bulk Update', icon: 'fa-layer-group', color: '#cca43b' },
-            restock: { label: 'Restock', icon: 'fa-box', color: '#04693a' }
-        };
-
-        listEl.innerHTML = historyRows.map(entry => {
-            const typeInfo = typeLabels[entry.change_type] || { label: entry.change_type, icon: 'fa-circle', color: '#8a8da0' };
-            const changeSign = entry.change_amount > 0 ? '+' : '';
-            const dateStr = new Date(entry.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            return `
-                <div class="stock-history-entry">
-                    <div class="stock-history-entry-icon" style="color:${typeInfo.color};"><i class="fas ${typeInfo.icon}"></i></div>
-                    <div class="stock-history-entry-body">
-                        <span class="stock-history-entry-type">${typeInfo.label}</span>
-                        <span class="stock-history-entry-change">${entry.previous_stock} → ${entry.new_stock} (${changeSign}${entry.change_amount})</span>
-                        <span class="stock-history-entry-date">${dateStr}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error('Could not load stock history:', err);
-        listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#d9383a;">Could not load history — make sure the stock_history table has been created in Supabase (see the SQL setup script).</p>`;
-    }
-}
-
-function closeStockHistoryModal() {
-    const modal = document.getElementById('stockHistoryModal');
-    if (modal) modal.style.display = 'none';
-}
 
 function filterCatalog(passedSearchQuery) {
     const productGrid = document.getElementById('productGrid');
@@ -1427,20 +634,6 @@ function filterCatalog(passedSearchQuery) {
                     `;
                 }
 
-                const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
-                    <button type="button" class="admin-action-inline-trigger" 
-                            onclick="openAdminFormModalForEditing(event, ${product.id})" 
-                            style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                        <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
-                    </button>
-                    <button type="button" class="admin-action-inline-trigger" 
-                        onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${safeTitleString}')" 
-                        style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px;  padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
-                        onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
-                        onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-                ` : '';
 
                 const defaultVariantId = cardVariants.length > 0 ? cardVariants[0].id : '';
                     return `<div class="angel-card ${isSoldOut ? 'is-disabled' : ''}" 
@@ -1448,7 +641,6 @@ function filterCatalog(passedSearchQuery) {
                         data-active-variant-id="${defaultVariantId}"
                         onclick="openQuickViewShield(${product.id})">
                         
-                        ${adminEditInlineControlMarkup}
 
                         <div class="angel-card-media">
                             <img id="catalog-card-img-${product.id}" 
@@ -1521,6 +713,7 @@ function filterCatalog(passedSearchQuery) {
 // =========================================================================
 // 2. VAULT SALE SECTION RENDERER (FIXED)
 // =========================================================================
+
 function renderVaultSaleSection() {
     const saleSection = document.getElementById('saleSection');
     const saleGrid = document.getElementById('saleProductGrid');
@@ -1569,14 +762,6 @@ function renderVaultSaleSection() {
         saleCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
         // Admin controls markup safely generated matching your authentication state variables
-        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
-            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
-            </button>
-            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        ` : '';
 
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
         const fallbackOldPrice = product.originalPrice || product.original_price || product.oldPrice;
@@ -1608,7 +793,6 @@ function renderVaultSaleSection() {
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         saleCard.innerHTML = `
-            ${adminEditInlineControlMarkup}
 
             <div class="angel-card-media">
                 <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
@@ -1640,6 +824,7 @@ function renderVaultSaleSection() {
 // =========================================================================
 // 3. TRENDING SECTION RENDERER (FIXED)
 // =========================================================================
+
 function renderTrendingSection() {
     const trendingSection = document.getElementById('trendingSection');
     const trendingGrid = document.getElementById('trendingProductGrid');
@@ -1669,14 +854,6 @@ function renderTrendingSection() {
         trendingCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
         
         // Admin controls markup safely generated matching your authentication state variables
-        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
-            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
-            </button>
-            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        ` : '';
 
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
         const hasDiscount = product.originalPrice && product.originalPrice > product.price;
@@ -1705,7 +882,6 @@ function renderTrendingSection() {
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         trendingCard.innerHTML = `
-            ${adminEditInlineControlMarkup}
 
             <div class="angel-card-media">
                 <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
@@ -1742,6 +918,7 @@ function renderTrendingSection() {
 // honesty principle as the Flash Vault fix: no content pretending to be
 // something it isn't.
 // =========================================================================
+
 function renderNewArrivalsSection() {
     const newArrivalsSection = document.getElementById('newArrivalsSection');
     const newArrivalsGrid = document.getElementById('newArrivalsProductGrid');
@@ -1774,14 +951,6 @@ function renderNewArrivalsSection() {
         newArrivalCard.className = 'angel-card';
         newArrivalCard.setAttribute('onclick', `openQuickViewShield(${product.id})`);
 
-        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
-            <button type="button" onclick="openAdminFormModalForEditing(event, ${product.id})" style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${product.id}
-            </button>
-            <button type="button" onclick="executeAdminItemDeletionPipeline(event, ${product.id}, '${product.title.replace(/'/g, "\\'")}')" style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;" onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        ` : '';
 
         const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
 
@@ -1796,7 +965,6 @@ function renderNewArrivalsSection() {
         const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
         newArrivalCard.innerHTML = `
-            ${adminEditInlineControlMarkup}
 
             <div class="angel-card-media">
                 <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
@@ -1831,8 +999,11 @@ function renderNewArrivalsSection() {
 // and quietly drops any id that no longer matches a real product (e.g.
 // deleted since it was last viewed).
 // =========================================================================
+
 const RECENTLY_VIEWED_STORAGE_KEY = 'angelJewelleryRecentlyViewed';
+
 const RECENTLY_VIEWED_MAX_ITEMS = 10;
+
 
 function recordRecentlyViewedProduct(productId) {
     try {
@@ -1845,6 +1016,7 @@ function recordRecentlyViewedProduct(productId) {
         console.error('Could not save recently viewed history:', err);
     }
 }
+
 
 function renderRecentlyViewedSection() {
     const section = document.getElementById('recentlyViewedSection');
@@ -1921,11 +1093,13 @@ function renderRecentlyViewedSection() {
     });
 }
 
+
 function shareReferralViaWhatsApp() {
     const shareMessage = `Hey! I've been loving pieces from Angel Jewellery ✨ Check them out — mention my name when you message them to order and you'll get ₹100 off: ${window.location.origin}`;
     const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
     window.open(shareUrl, '_blank');
 }
+
 
 function addToCartEngine(productId) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
@@ -2011,6 +1185,7 @@ function addToCartEngine(productId) {
     window.activeVariantSelection = null; 
 }
 
+
 function changeQty(id, delta) {
     const targetItem = shoppingCart.find(item => item.id === id);
     if (!targetItem) return;
@@ -2022,6 +1197,7 @@ function changeQty(id, delta) {
     updateCartUI();
 }
 
+
 function removeFromCart(id) {
     shoppingCart = shoppingCart.filter(item => item.id !== id);
     updateCartUI();
@@ -2030,6 +1206,7 @@ function removeFromCart(id) {
 // =========================================================================
 // ANGEL JEWELLERY — SHOPPING BAG ENGINE WITH VISUAL INLINE HIGHLIGHTS
 // =========================================================================
+
 function updateCartUI() {
     localStorage.setItem('shoppingCart', JSON.stringify(shoppingCart));
     const cartItemsList = document.getElementById('cartItemsList');
@@ -2208,6 +1385,7 @@ function updateCartUI() {
 // =========================================================================
 // ANGEL JEWELLERY — INSTANT WISHLIST TOGGLE ENGINE (OUTLINE TO SOLID FILL)
 // =========================================================================
+
 function toggleWishlistEngine(event, productId, buttonElement) {
     if (event) event.stopPropagation(); // Stops the Quick View modal from opening
 
@@ -2254,6 +1432,7 @@ function toggleWishlistEngine(event, productId, buttonElement) {
 // =========================================================================
 // ANGEL JEWELLERY — WISHLIST UI CARDS RENDERING LOGIC
 // =========================================================================
+
 function updateWishlistUI() {
     const wishlistItemsList = document.getElementById('wishlistItemsList');
     const wishlistCountBadge = document.getElementById('wishlistCountBadge');
@@ -2339,6 +1518,7 @@ function updateWishlistUI() {
 }
 
 // ➔ Helper method added to seamlessly clear specific variant tokens directly from the drawer items list view
+
 function toggleWishlistEngineFromDrawer(wishlistKey) {
     wishlistMemory = wishlistMemory.filter(k => k !== wishlistKey);
     localStorage.setItem('angel_wishlist_cache', JSON.stringify(wishlistMemory));
@@ -2353,9 +1533,11 @@ function toggleWishlistEngineFromDrawer(wishlistKey) {
 // SUPABASE PRODUCTION CHANNEL — PROMO CODES & DISCOUNT LOGIC (CRUD & LIVE VALIDATION)
 // =========================================================================
 
+
 let couponRegistryCache = []; // Dynamic local memory layer replacing hardcoded dictionary
 
 // 1. READ CHANNEL: Fetch active promos from database & render consumer helper tag badges
+
 async function loadLiveCouponDatabaseEngine() {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
@@ -2375,6 +1557,7 @@ async function loadLiveCouponDatabaseEngine() {
         console.error("❌ Failed to synchronize active coupon registry layers:", err);
     }
 }
+
 
 function mountCouponHelperBadges() {
     const helpersGroup = document.getElementById('couponHelpersGroup');
@@ -2397,6 +1580,7 @@ function mountCouponHelperBadges() {
 }
 
 // 2. STOREFRONT CHECKOUT ENGINE: Validates client inputs against database cache
+
 function applyCouponEngineAction() {
     const inputField = document.getElementById('couponInput');
     const statusMsg = document.getElementById('couponStatusMessage');
@@ -2425,137 +1609,6 @@ function applyCouponEngineAction() {
 }
 
 // 3. ADMIN MANAGEMENT PANEL: Generate live interactive grid view for active promos
-function renderAdminPromoConsoleGrid() {
-    const container = document.getElementById('adminPromoCodeTableContainer');
-    if (!container) return;
-
-    if (couponRegistryCache.length === 0) {
-        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No coupon parameters minted yet.</p>`;
-        return;
-    }
-
-    container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
-            <thead>
-                <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
-                    <th style="padding:10px;">Code</th>
-                    <th style="padding:10px;">Type</th>
-                    <th style="padding:10px;">Discount Value</th>
-                    <th style="padding:10px; text-align:center;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${couponRegistryCache.map(promo => `
-                    <tr style="border-bottom:1px solid #f1f1f5;">
-                        <td style="padding:10px; font-weight:700; color:var(--purple-primary); monospace;">${promo.code}</td>
-                        <td style="padding:10px; text-transform:uppercase; font-size:0.75rem;">${promo.type}</td>
-                        <td style="padding:10px; font-weight:600;">${promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}</td>
-                        <td style="padding:10px; text-align:center;">
-                            <button onclick="executeAdminCouponPurgePipeline(event, ${promo.id}, '${promo.code}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Coupon">
-                                <i class="far fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-// 4. WRITE CHANNEL: Add brand new promo codes to Supabase
-async function handleAdminPromoFormSubmit(event) {
-    event.preventDefault();
-    const submitBtn = document.getElementById('promoFormSubmitBtn');
-    if (!submitBtn) return;
-
-    const originalText = submitBtn.innerText;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Minting...`;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-
-    const newPromoPayload = {
-        code: document.getElementById('newPromoCodeInput').value.toUpperCase().trim(),
-        type: document.getElementById('newPromoTypeSelect').value,
-        value: parseFloat(document.getElementById('newPromoValueInput').value) || 0
-    };
-
-    if (!newPromoPayload.code || newPromoPayload.value <= 0) {
-        alert("Please provide valid properties before executing synchronization.");
-        submitBtn.disabled = false; submitBtn.innerText = originalText;
-        return;
-    }
-
-    try {
-        const response = await fetch(`${sbUrl}/rest/v1/Coupons`, {
-            method: 'POST',
-            headers: {
-                'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(newPromoPayload)
-        });
-
-        if (!response.ok) throw new Error("Supabase duplicate entry or structure mismatch constraint broken.");
-
-        alert(`✨ Successfully Generated Coupon Code: ${newPromoPayload.code}`);
-        document.getElementById('adminPromoCreatorForm').reset();
-        
-        await loadLiveCouponDatabaseEngine(); // Re-fetch from DB
-        renderAdminPromoConsoleGrid();        // Re-draw panel grid UI
-        
-    } catch (err) {
-        console.error(err);
-        alert("Pipeline Sync Interrupted: Verify code name uniqueness or structural field formats.");
-    } finally {
-        submitBtn.disabled = false; submitBtn.innerText = originalText;
-    }
-}
-
-// 5. DELETE CHANNEL: Wiping codes instantly via trash icons
-async function executeAdminCouponPurgePipeline(event, couponId, couponCode) {
-    if (event) event.stopPropagation();
-    const verify = confirm(`Are you completely sure you want to permanently delete promotional key "${couponCode}"?`);
-    if (!verify) return;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-
-    try {
-        const response = await fetch(`${sbUrl}/rest/v1/Coupons?id=eq.${couponId}`, {
-            method: 'DELETE',
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error("Deletion execution tracking drop.");
-
-        await loadLiveCouponDatabaseEngine();
-        renderAdminPromoConsoleGrid();
-        
-    } catch (err) {
-        console.error(err);
-        alert("Unable to delete entry row from cloud workspace layer.");
-    }
-}
-
-// 6. UI INTERACTION ROUTINES
-function openAdminPromoConsoleOverlay(event) {
-    if (event) event.preventDefault();
-    if (!INTEGRATED_ADMIN_AUTH_STATE) {
-        alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
-        return;
-    }
-    const overlay = document.getElementById('adminPromoConsoleOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        renderAdminPromoConsoleGrid();
-    }
-}
-
-function closeAdminPromoConsoleOverlay() {
-    const overlay = document.getElementById('adminPromoConsoleOverlay');
-    if (overlay) overlay.style.display = 'none';
-}
 
 function triggerCartNotification(title) {
     const toast = document.createElement('div');
@@ -2577,6 +1630,7 @@ function triggerCartNotification(title) {
         cartBadge.classList.add('cart-badge-pulse');
     }
 }
+
 
 function spawnAddToCartSparkles() {
     const cartIconAnchor = document.getElementById('cartCountBadge');
@@ -2606,6 +1660,7 @@ function spawnAddToCartSparkles() {
 if (typeof window.activeVariantSelection === 'undefined') {
     window.activeVariantSelection = null;
 }
+
 
 function openQuickViewShield(id) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
@@ -2778,6 +1833,7 @@ function openQuickViewShield(id) {
 // it in. Matches same-category items first, tops up with same-style items
 // if there aren't enough, and hides the whole section if nothing matches.
 // =========================================================================
+
 function renderQuickViewPairingRecommendations(currentProduct) {
     const section = document.getElementById('qvPairingRecommendationSection');
     const track = document.getElementById('qvPairingCarouselTrack');
@@ -2829,6 +1885,7 @@ function renderQuickViewPairingRecommendations(currentProduct) {
     section.style.display = 'block';
 }
 
+
 function updateTopRightScarcityBadge(stockCount) {
     const indicator = document.getElementById('qvVaultScarcityIndicator'); 
     if (!indicator) return;
@@ -2854,8 +1911,11 @@ function updateTopRightScarcityBadge(stockCount) {
 // and intercept the back button to close the modal instead of navigating
 // away. If nothing is open, back behaves exactly as it always did.
 // =========================================================================
+
 let angelModalStack = [];
+
 let angelModalPopstateInProgress = false;
+
 
 function angelModalPushHistory(closeCallback) {
     if (angelModalPopstateInProgress) return;
@@ -2867,6 +1927,7 @@ function angelModalPushHistory(closeCallback) {
 // click, "Back to Main" link) — NOT via the physical back button. This
 // removes the matching history entry so a later back-press doesn't need
 // an extra, confusing press just to actually leave the site.
+
 function angelModalConsumeHistory() {
     if (angelModalPopstateInProgress) return;
     if (angelModalStack.length > 0) {
@@ -2874,6 +1935,7 @@ function angelModalConsumeHistory() {
         history.back();
     }
 }
+
 
 window.addEventListener('popstate', function() {
     if (angelModalStack.length > 0) {
@@ -2888,11 +1950,13 @@ window.addEventListener('popstate', function() {
     // else: nothing tracked as open — let the browser leave the page as normal.
 });
 
+
 function closeQuickViewShield() {
     const modalShield = document.getElementById('quickviewModalShield');
     if (modalShield) modalShield.style.display = "none";
     angelModalConsumeHistory();
 }
+
 
 function toggleCartDrawer(event) {
     if (event) event.preventDefault();
@@ -2913,6 +1977,7 @@ function toggleCartDrawer(event) {
         angelModalPushHistory(forceCloseCartDrawer);
     }
 }
+
 
 function toggleWishlistDrawer(event) {
     if (event) event.preventDefault();
@@ -2937,6 +2002,7 @@ function toggleWishlistDrawer(event) {
 // Idempotent closers used specifically as back-button callbacks — these
 // check current state before acting, so they can never accidentally
 // re-open a drawer the way blindly re-calling the toggle function could.
+
 function forceCloseCartDrawer() {
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
@@ -2945,6 +2011,7 @@ function forceCloseCartDrawer() {
         if (overlay) overlay.style.display = "none";
     }
 }
+
 function forceCloseWishlistDrawer() {
     const drawer = document.getElementById('wishlistDrawer');
     const overlay = document.getElementById('cartOverlay');
@@ -2957,6 +2024,7 @@ function forceCloseWishlistDrawer() {
 // =========================================================================
 // ANGEL JEWELLERY — SANITIZED NATURAL SCROLL CONTROLLER
 // =========================================================================
+
 window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
     const backToTopBtn = document.getElementById('backToTopBtn');
@@ -2977,6 +2045,7 @@ window.addEventListener('scroll', () => {
         }
     }
 });
+
 
 window.addEventListener('DOMContentLoaded', () => {
     const storedCartPayload = localStorage.getItem('shoppingCart');
@@ -3269,6 +2338,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
 let globalPayableAmountInPaise = 0; 
 
 // =========================================================================
@@ -3277,7 +2347,9 @@ let globalPayableAmountInPaise = 0;
 // view, even for visitors who never reach checkout. Now it's fetched once,
 // lazily, the moment the invoice/checkout screen actually opens.
 // =========================================================================
+
 let razorpaySDKLoadPromise = null;
+
 function loadRazorpaySDK() {
     if (window.Razorpay) return Promise.resolve();
     if (razorpaySDKLoadPromise) return razorpaySDKLoadPromise;
@@ -3297,6 +2369,7 @@ function loadRazorpaySDK() {
     });
     return razorpaySDKLoadPromise;
 }
+
 
 function openInvoiceScreen() {
     if (shoppingCart.length === 0) return;
@@ -3389,10 +2462,12 @@ function openInvoiceScreen() {
     angelModalPushHistory(closeInvoiceScreen);
 }
 
+
 function closeInvoiceScreen() {
     document.getElementById('invoiceOverlayScreen').style.display = 'none';
     angelModalConsumeHistory();
 }
+
 
 async function initiateRazorpayPaymentProcess(event) {
     event.preventDefault();
@@ -3504,6 +2579,7 @@ async function initiateRazorpayPaymentProcess(event) {
     const razorpayUiEngineInstance = new Razorpay(paymentOptions);
     razorpayUiEngineInstance.open();
 }
+
 
 function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     const confirmationScreen = document.getElementById('confirmationPageScreen');
@@ -3625,6 +2701,7 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     });
 }
 
+
 function exitConfirmationAndReset() {
     document.getElementById('confirmationPageScreen').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3633,6 +2710,7 @@ function exitConfirmationAndReset() {
 // =========================================================================
 // SUPABASE PUBLIC CHANNEL — LIVE CLIENT ORDER VISUAL TRACKER WITH GLOBAL TOP NOTE
 // =========================================================================
+
 async function executeLiveOrderTrackingSearch() {
     const inputPhone = document.getElementById('trackingPhoneInput').value.trim();
     const statusMsg = document.getElementById('trackingStatusMessage');
@@ -3820,6 +2898,7 @@ async function executeLiveOrderTrackingSearch() {
     }
 }
 
+
 function openTrackingScreenOverlay(event) {
     if (event) event.preventDefault(); 
     
@@ -3835,6 +2914,7 @@ function openTrackingScreenOverlay(event) {
     }
 }
 
+
 function applyStrictIndianPhoneValidationRules(inputElementId) {
     const phoneInputField = document.getElementById(inputElementId);
     if (!phoneInputField) return;
@@ -3848,6 +2928,7 @@ function applyStrictIndianPhoneValidationRules(inputElementId) {
     });
 }
 
+
 function closeTrackingScreenOverlay() {
     document.getElementById('trackingScreenOverlay').style.display = 'none';
 }
@@ -3855,237 +2936,6 @@ function closeTrackingScreenOverlay() {
 // =========================================================================
 // SUPABASE SECURE PANEL — SYNCING REAL DATA MATRIX FOR ANALYTICS
 // =========================================================================
-function openAdminMasterConsole(event) {
-    if (event) event.preventDefault();
-
-    if (!INTEGRATED_ADMIN_AUTH_STATE) {
-        alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
-        return;
-    }
-
-    const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
-    const statusMsg = document.getElementById('adminConsoleStatus');
-    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
-    
-    if (!adminOverlay || !statusMsg || !ordersContainer) return;
-    
-    ordersContainer.innerHTML = ""; 
-    adminOverlay.style.display = 'flex';
-    statusMsg.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: left; padding: 10px 0; gap: 10px;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--pink-accent);"></i>
-            <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; color: var(--purple-primary);">
-                Synchronizing Live Supabase Order Matrix...
-            </span>
-        </div>
-    `;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    
-    const targetFetchUrl = `${sbUrl}/rest/v1/Orders?select=*&order=created_at.desc`;
-
-    fetch(targetFetchUrl, {
-        method: "GET",
-        headers: {
-            "apikey": sbKey,
-            "Authorization": `Bearer ${sbKey}`,
-            "Content-Type": "application/json"
-        }
-    })
-    .then(response => {
-        if (!response.ok) throw new Error(`Supabase returned connection status code: ${response.status}`);
-        return response.json();
-    })
-    .then(supabaseOrdersArray => {
-        // ➔ THE CRITICAL ALIGNMENT: Map the true 'total_amount' column safely into your cache variables
-        adminOrdersCache = (supabaseOrdersArray || []).map(order => ({
-            "id": order.id,
-            "payment_id": order.payment_id,
-            "Payment ID": order.payment_id,
-            "Date": order.created_at ? new Date(order.created_at).toLocaleString('en-IN') : 'N/A',
-            "created_at": order.created_at,
-            "customer_name": order.customer_name,
-            "Client Name": order.customer_name,
-            "phone": order.phone,
-            "Phone": order.phone,
-            "address": order.address,
-            "Address": order.address,
-            "order_items": order.order_items,
-            "Order Items": order.order_items,
-            "order_images": order.order_images,
-            "Order Images": order.order_images,
-            "status": order.status || 'Paid',
-            "Status": order.status || 'Paid',
-            "total_amount": order.total_amount,
-            "Total Amount": order.total_amount,
-            "Total Paid": order.total_amount,
-            "Courier": order.courier || 'Standard Logistics',
-            "courier": order.courier || 'Standard Logistics',
-            "Tracking Number": order.tracking_number || 'N/A',
-            "tracking_number": order.tracking_number || 'N/A',
-            "cancel_reason": order.cancel_reason || '',
-            "refund_phonepe": order.refund_phonepe || ''
-        }));
-        
-        statusMsg.innerHTML = "";
-        // Fire your calculation and card layout loops
-        renderSegregatedAdminOrders();
-    })
-    .catch(err => {
-        console.error("Admin dashboard runtime drop:", err);
-        statusMsg.innerText = "Critical security handshake breakdown. Unable to authenticate Supabase tables.";
-    });
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — DUAL DISPLAY ADMINISTRATIVE TRACKING MATRIX STATE CONTROL
-// =========================================================================
-let currentAdminLayoutViewMode = "cards"; // Active display state tracker cache: 'cards' or 'table'
-
-function toggleAdminConsoleLayoutMode(targetViewMode) {
-    if (currentAdminLayoutViewMode === targetViewMode) return;
-    currentAdminLayoutViewMode = targetViewMode;
-
-    const cardsBtn = document.getElementById('adminViewModeCardsBtn');
-    const tableBtn = document.getElementById('adminViewModeTableBtn');
-
-    if (!cardsBtn || !tableBtn) return;
-
-    // Apply high-contrast interactive toggle coloring styles cleanly
-    if (targetViewMode === 'cards') {
-        cardsBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-        tableBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-    } else {
-        tableBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-        cardsBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-    }
-
-    // Trigger full ledger redraw
-    renderSegregatedAdminOrders();
-}
-
-// =========================================================================
-// 1. UPDATED TABULAR RENDERER (ADDED ROW ID AND TIGHT COURIER PANEL)
-// =========================================================================
-function renderTabularSpreadsheetAdminOrders(datasetArray) {
-    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
-    if (!ordersContainer) return;
-
-    ordersContainer.innerHTML = `
-        <div class="order-table-scroller">
-            <table class="order-desk-table">
-                <thead>
-                    <tr>
-                        <th class="col-ref">Reference ID</th>
-                        <th>Client Details</th>
-                        <th>Items</th>
-                        <th class="col-amount">Total</th>
-                        <th class="col-status">Status</th>
-                        <th class="col-tracking">Tracking</th>
-                        <th class="col-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${datasetArray.map(order => {
-                        const ordPaymentId = order.payment_id || 'N/A';
-                        const ordClientName = order.customer_name || 'Anonymous';
-                        const ordPhone = String(order.phone || '').replace(/[^0-9]/g, '');
-                        const ordTotalAmount = order.total_amount ? (typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount) : '₹0';
-                        const ordDate = order['Date'] || order.Date || 'N/A';
-                        
-                        const isShipped = String(order.status).toLowerCase() === 'shipped';
-                        const statusPillClass = isShipped ? 'order-status-pill--shipped' : 'order-status-pill--placed';
-
-                        const itemsSummary = (order.order_items || '').split(',').map(i => i.trim()).join(' | ');
-
-                        const clientMessage = `Hello ${ordClientName},\n\nYour Angel Jewellery order (Ref: ${ordPaymentId}) status update! ✨`;
-                        const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
-
-                        const inlineShipActionHTML = !isShipped 
-                            ? `<button class="table-action-mini-pill table-action-mini-pill--primary" onclick="revealCourierAllocationPanel('${ordPaymentId}')"><i class="fas fa-shipping-fast"></i> Ship</button>`
-                            : `<span class="order-handed-off-label"><i class="fas fa-check-circle"></i> Handed Off</span>`;
-
-                        const partnerCompany = order.Courier || order.courier || 'Standard Logistics';
-                        const trackingWaybillNo = order['Tracking Number'] || order.tracking_number || 'N/A';
-                        const tableTrackingCellHTML = isShipped 
-                            ? `<div class="order-tracking-courier">${partnerCompany}</div>
-                               <div class="order-tracking-waybill">${trackingWaybillNo}</div>`
-                            : `<span class="order-tracking-empty">Not Shipped Yet</span>`;
-
-                        const safeName = ordClientName.replace(/'/g, "\\'");
-                        const safePhone = String(order.phone).replace(/'/g, "\\'");
-                        const safeAddress = String(order.address).replace(/'/g, "\\'").replace(/\n/g, " ");
-
-                        return `
-                            <tr id="order-row-${ordPaymentId}">
-                                <td class="order-td-ref">
-                                    #${ordPaymentId.slice(0, 12)}...
-                                    <span class="order-td-ref-date">${ordDate}</span>
-                                </td>
-                                <td class="order-td-client">
-                                    <div class="order-td-client-name">${ordClientName}</div>
-                                    <div class="order-td-client-address" title="${order.address}">${order.address}</div>
-                                </td>
-                                <td class="order-td-items" title="${itemsSummary}">${itemsSummary}</td>
-                                <td class="order-td-amount">${ordTotalAmount}</td>
-                                <td><span class="order-status-pill ${statusPillClass}">${isShipped ? 'Shipped' : 'Placed'}</span></td>
-                                <td>${tableTrackingCellHTML}</td>
-                                <td class="order-td-actions">
-                                    <div class="order-td-actions-row">
-                                        <button class="table-action-mini-pill" onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" title="Copy Tag"><i class="far fa-copy"></i></button>
-                                        <a href="${whatsappUpdateLink}" target="_blank" class="table-action-mini-pill table-action-mini-pill--chat"><i class="fab fa-whatsapp"></i> Ping</a>
-                                        <div id="shipped-action-slot-${ordPaymentId}" style="display:contents;">${inlineShipActionHTML}</div>
-                                    </div>
-
-                                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel order-table-courier-panel">
-                                        <p>Logistics Partner</p>
-                                        <div class="order-table-courier-options">
-                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="DTDC" checked> DTDC</label>
-                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="Delhivery"> Delhivery</label>
-                                            <label><input type="radio" name="table-courier-${ordPaymentId}" value="Blue Dart"> Blue Dart</label>
-                                        </div>
-                                        <div class="order-table-courier-input-row">
-                                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Waybill No">
-                                            <button onclick="updateShippingStatus('${ordPaymentId}', this)">OK</button>
-                                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')">✕</button>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-    
-
-function switchAdminConsoleTab(targetTabKey) {
-    currentAdminActiveTab = targetTabKey;
-    
-    const pendingBtn = document.getElementById('adminTabPendingBtn');
-    const shippedBtn = document.getElementById('adminTabShippedBtn');
-    const cancelledBtn = document.getElementById('adminTabCancelledBtn'); // Targeted matching button ID
-    
-    // Reset background maps
-    if (pendingBtn) pendingBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    if (shippedBtn) shippedBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    if (cancelledBtn) cancelledBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    
-    // Highlight selected node context rules
-    if (targetTabKey === 'pending' && pendingBtn) pendingBtn.style.setProperty("background", "var(--purple-primary)", "important"), pendingBtn.style.setProperty("color", "#fff", "important");
-    if (targetTabKey === 'shipped' && shippedBtn) shippedBtn.style.setProperty("background", "var(--purple-primary)", "important"), shippedBtn.style.setProperty("color", "#fff", "important");
-    if (targetTabKey === 'cancelled' && cancelledBtn) cancelledBtn.style.setProperty("background", "var(--purple-primary)", "important"), cancelledBtn.style.setProperty("color", "#fff", "important");
-    
-    renderSegregatedAdminOrders();
-}
-
-function handleAdminConsoleSearch(queryValue) {
-    adminConsoleSearchQueryString = queryValue.trim().toLowerCase();
-    renderSegregatedAdminOrders();
-}
 
 function copyShippingLabelToClipboard(name, phone, address, buttonElement) {
     const formattedLabelText = `CONSIGNEE: ${name}\nPHONE: ${phone}\nADDRESS: ${address}`;
@@ -4108,13 +2958,13 @@ function copyShippingLabelToClipboard(name, phone, address, buttonElement) {
 
 
 
-function closeAdminMasterConsole() {
-    document.getElementById('adminMasterConsoleOverlay').style.display = 'none';
-}
 
 let currentCarouselActiveIndex = 0;
+
 let carouselAutoRotationTimerHandle = null;
+
 let isCarouselAutoPlayPaused = false;
+
 
 function initializeLuxuryBannerCarousel() {
     const headerElement = document.getElementById('header');
@@ -4140,6 +2990,7 @@ function initializeLuxuryBannerCarousel() {
     startCarouselAutoPlayCycle(slidesCount);
 }
 
+
 function toggleCarouselAutoPlayEngine() {
     const track = document.getElementById('carouselSliderTrack');
     const pauseIcon = document.getElementById('carouselPauseIcon');
@@ -4161,6 +3012,7 @@ function toggleCarouselAutoPlayEngine() {
     }
 }
 
+
 function startCarouselAutoPlayCycle(totalSlidesCount) {
     if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
     if (isCarouselAutoPlayPaused) return;
@@ -4170,6 +3022,7 @@ function startCarouselAutoPlayCycle(totalSlidesCount) {
         updateCarouselRenderPosition();
     }, 5000);
 }
+
 
 function shiftCarouselSlideDirection(directionStep) {
     const track = document.getElementById('carouselSliderTrack');
@@ -4185,6 +3038,7 @@ function shiftCarouselSlideDirection(directionStep) {
     startCarouselAutoPlayCycle(totalSlides);
 }
 
+
 function jumpToSpecificCarouselSlide(targetIndex) {
     currentCarouselActiveIndex = targetIndex;
     updateCarouselRenderPosition();
@@ -4192,6 +3046,7 @@ function jumpToSpecificCarouselSlide(targetIndex) {
     const track = document.getElementById('carouselSliderTrack');
     if (track) startCarouselAutoPlayCycle(track.children.length);
 }
+
 
 function updateCarouselRenderPosition() {
     const track = document.getElementById('carouselSliderTrack');
@@ -4204,6 +3059,7 @@ function updateCarouselRenderPosition() {
     });
 }
 
+
 document.addEventListener("DOMContentLoaded", () => {
     loadProductDatabaseEngine();
     initializeLuxuryBannerCarousel();
@@ -4212,378 +3068,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================================================================
 // ANGEL JEWELLERY — THREE-TAB RESPONSIVE ADMINISTRATIVE CONSOLE LAYOUT
 // =========================================================================
-function renderSegregatedAdminOrders() {
-    const statusMsg = document.getElementById('adminConsoleStatus');
-    const ordersContainer = document.getElementById('adminMasterOrdersContainer');
-    const pendingCountSpan = document.getElementById('adminPendingCount');
-    const shippedCountSpan = document.getElementById('adminShippedCount');
-    const cancelledCountSpan = document.getElementById('adminCancelledCount');
-    
-    const pendingValueHeading = document.getElementById('analyticsPendingValue');
-    const shippedValueHeading = document.getElementById('analyticsShippedValue');
-    const combinedValueHeading = document.getElementById('analyticsCombinedValue');
 
-    if (!ordersContainer || !adminOrdersCache) return;
-
-    ordersContainer.innerHTML = "";
-
-    let accumulatedPendingSum = 0;
-    let accumulatedShippedSum = 0;
-
-    adminOrdersCache.forEach(order => {
-        const rawTotalPaidString = String(order.total_amount || '0');
-        const numericValue = parseFloat(rawTotalPaidString.replace(/[^0-9.]/g, '')) || 0;
-        const statusStr = String(order.status || '').trim().toLowerCase();
-        
-        if (statusStr === 'shipped') {
-            accumulatedShippedSum += numericValue;
-        } else if (statusStr !== 'cancelled' && statusStr !== 'refunded') {
-            accumulatedPendingSum += numericValue;
-        }
-    });
-
-    const combinedTotalSum = accumulatedPendingSum + accumulatedShippedSum;
-
-    if (pendingValueHeading) pendingValueHeading.innerText = formatCurrency(accumulatedPendingSum);
-    if (shippedValueHeading) shippedValueHeading.innerText = formatCurrency(accumulatedShippedSum);
-    if (combinedValueHeading) combinedValueHeading.innerText = formatCurrency(combinedTotalSum);
-
-    // ➔ Order Volume strip: Today / This Week / This Month, calendar periods
-    // (not rolling windows), counting every order regardless of status —
-    // this answers "how many orders came in", not "how many shipped".
-    const ordersTodayHeading = document.getElementById('analyticsOrdersToday');
-    const ordersThisWeekHeading = document.getElementById('analyticsOrdersThisWeek');
-    const ordersThisMonthHeading = document.getElementById('analyticsOrdersThisMonth');
-
-    if (ordersTodayHeading || ordersThisWeekHeading || ordersThisMonthHeading) {
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        const dayOfWeek = now.getDay(); // 0 = Sunday ... 6 = Saturday
-        const daysSinceMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
-        const startOfWeek = new Date(startOfToday);
-        startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
-
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        let ordersToday = 0, ordersThisWeek = 0, ordersThisMonth = 0;
-        adminOrdersCache.forEach(order => {
-            if (!order.created_at) return;
-            const orderDate = new Date(order.created_at);
-            if (isNaN(orderDate.getTime())) return;
-            if (orderDate >= startOfToday) ordersToday++;
-            if (orderDate >= startOfWeek) ordersThisWeek++;
-            if (orderDate >= startOfMonth) ordersThisMonth++;
-        });
-
-        if (ordersTodayHeading) ordersTodayHeading.innerText = ordersToday;
-        if (ordersThisWeekHeading) ordersThisWeekHeading.innerText = ordersThisWeek;
-        if (ordersThisMonthHeading) ordersThisMonthHeading.innerText = ordersThisMonth;
-    }
-
-    // Segregate cache matrices into 3 distinct operational groups
-    const pendingOrdersList = adminOrdersCache.filter(order => {
-        const s = String(order.status || '').trim().toLowerCase();
-        return s !== 'shipped' && s !== 'cancelled' && s !== 'refunded';
-    });
-    const shippedOrdersList = adminOrdersCache.filter(order => String(order.status || '').trim().toLowerCase() === 'shipped');
-    const cancelledOrdersList = adminOrdersCache.filter(order => {
-        const s = String(order.status || '').trim().toLowerCase();
-        return s === 'cancelled' || s === 'refunded';
-    });
-
-    if (pendingCountSpan) pendingCountSpan.innerText = pendingOrdersList.length;
-    if (shippedCountSpan) shippedCountSpan.innerText = shippedOrdersList.length;
-    if (cancelledCountSpan) cancelledCountSpan.innerText = cancelledOrdersList.length;
-
-    let targetDisplayDataset = pendingOrdersList;
-    if (currentAdminActiveTab === 'shipped') targetDisplayDataset = shippedOrdersList;
-    if (currentAdminActiveTab === 'cancelled') targetDisplayDataset = cancelledOrdersList;
-
-    if (adminConsoleSearchQueryString) {
-        targetDisplayDataset = targetDisplayDataset.filter(order => {
-            const clientName = String(order.customer_name || '').toLowerCase();
-            const phoneNum = String(order.phone || '').toLowerCase();
-            const paymentId = String(order.payment_id || '').toLowerCase();
-            return clientName.includes(adminConsoleSearchQueryString) || phoneNum.includes(adminConsoleSearchQueryString) || paymentId.includes(adminConsoleSearchQueryString);
-        });
-    }
-
-    if (statusMsg) {
-        statusMsg.innerHTML = `Viewing <span style="color:var(--pink-accent); font-weight:700; text-transform:uppercase;">${currentAdminActiveTab}</span> matrix. Total rows matched: <strong>${targetDisplayDataset.length}</strong>`;
-    }
-
-    if (targetDisplayDataset.length === 0) {
-        ordersContainer.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; background:#f9f9fb; border-radius:6px; border:1px dashed var(--border-subtle, #e8e8ef)">
-                No orders match your active filter settings.
-            </div>`;
-        return;
-    }
-
-    const chronologicallyReversedStack = [...targetDisplayDataset].reverse();
-
-    if (currentAdminLayoutViewMode === "table" && typeof renderTabularSpreadsheetAdminOrders === 'function') {
-        renderTabularSpreadsheetAdminOrders(chronologicallyReversedStack);
-    } else {
-        ordersContainer.innerHTML = chronologicallyReversedStack.map(order => {
-            const ordStatus = String(order.status || 'Paid').trim();
-            const ordPaymentId = order.payment_id || 'N/A';
-            const ordClientName = order.customer_name || 'Anonymous';
-            const ordPhone = String(order.phone || '').replace(/[^0-9]/g, '');
-            const ordAddress = order.address || '';
-            const ordDate = order.Date || 'N/A';
-            const ordTotalAmount = typeof order.total_amount === 'number' ? formatCurrency(order.total_amount) : order.total_amount;
-
-            const isShipped = ordStatus.toLowerCase() === 'shipped';
-            const isCancelled = ordStatus.toLowerCase() === 'cancelled';
-            const isRefunded = ordStatus.toLowerCase() === 'refunded';
-
-            // Escape strings for clipboard methods safely
-            const safeName = ordClientName.replace(/'/g, "\\'");
-            const safePhone = ordPhone.trim();
-            const safeAddress = ordAddress.replace(/'/g, "\\'").replace(/\n/g, " ");
-
-            let badgeStyle = "background: rgba(32, 44, 85, 0.08); color: var(--purple-primary);";
-            let cardAccentClass = "order-card--pending";
-            if (isShipped) { badgeStyle = "background: rgba(255, 20, 147, 0.1); color: var(--pink-accent);"; cardAccentClass = "order-card--shipped"; }
-            if (isCancelled) { badgeStyle = "background: rgba(217, 56, 58, 0.1); color: #d9383a;"; cardAccentClass = "order-card--cancelled"; }
-            if (isRefunded) { badgeStyle = "background: rgba(42, 123, 106, 0.1); color: #2a7b6a;"; cardAccentClass = "order-card--refunded"; }
-
-            const clientMessage = `Hello ${ordClientName},\n\nRegarding your Angel Jewellery order portfolio update...`;
-            const whatsappUpdateLink = `https://wa.me/${ordPhone}?text=${encodeURIComponent(clientMessage)}`;
-
-            const chatButtonHTML = `
-                <a href="${whatsappUpdateLink}" target="_blank" class="order-action-btn order-action-btn--chat" title="WhatsApp Client">
-                    <i class="fab fa-whatsapp"></i> Chat
-                </a>
-            `;
-
-            let contextButtonsHTML = chatButtonHTML;
-
-            if (!isShipped && !isCancelled && !isRefunded) {
-                // Pending Tab: Ship + Chat
-                contextButtonsHTML = `
-                    <button onclick="revealCourierAllocationPanel('${ordPaymentId}')" class="order-action-btn order-action-btn--primary">
-                        <i class="fas fa-shipping-fast"></i> Ship
-                    </button>
-                    ${chatButtonHTML}
-                `;
-            } else if (isCancelled) {
-                // Cancelled Tab: Processed Refund + Chat
-                contextButtonsHTML = `
-                    <button onclick="executeAdminOrderRefundPipeline(event, ${order.id})" class="order-action-btn order-action-btn--refund">
-                        <i class="fas fa-hand-holding-usd"></i> Processed Refund
-                    </button>
-                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" class="order-action-btn order-action-btn--outline">
-                        <i class="fas fa-undo-alt"></i> Move Back
-                    </button>
-                    ${chatButtonHTML}
-                `;
-            }else if (isRefunded) {
-                // Refunded Tab: Just allow moving back to Ordered + Chat if adjustment is needed
-                contextButtonsHTML = `
-                    <button onclick="executeAdminReverseCancellationPipeline(event, ${order.id})" class="order-action-btn order-action-btn--outline">
-                        <i class="fas fa-undo-alt"></i> Move Back
-                    </button>
-                    ${chatButtonHTML}
-                `;
-            }
-
-            let cancelDetailsBlockHTML = "";
-            if (isCancelled || isRefunded) {
-                cancelDetailsBlockHTML = `
-                    <div class="order-card-cancel-details">
-                        <div><strong class="order-cancel-label">Cancellation Reason:</strong> ${order.cancel_reason || 'Not Specified'}</div>
-                        <div><strong class="order-refund-label">PhonePe Refund Number:</strong> <span>+91 ${order.refund_phonepe || 'N/A'}</span></div>
-                    </div>
-                `;
-            }
-
-            const itemNamesArray = (order.order_items || '').split(',').map(str => str.trim());
-            const itemImagesArray = (order.order_images || '').split(',').map(str => str.trim());
-
-            const inventoryRowsHTML = itemNamesArray.map((itemString, index) => {
-                if (!itemString) return '';
-                let parsedTitle = itemString;
-                let parsedQuantity = "1";
-                const qtyMatch = itemString.match(/\(x(\d+)\)/);
-                if (qtyMatch) {
-                    parsedTitle = itemString.replace(qtyMatch[0], '').trim();
-                    parsedQuantity = qtyMatch[1];
-                }
-                const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
-
-                return `
-                    <tr>
-                        <td class="order-item-thumb-cell">
-                            <img src="${matchedImgUrl}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
-                        </td>
-                        <td class="order-item-title-cell">${parsedTitle}</td>
-                        <td class="order-item-qty-cell">×${parsedQuantity}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            return `
-            <div class="order-card ${cardAccentClass}">
-                
-                <div class="order-card-header">
-                    <div class="order-card-header-left">
-                        <span class="order-card-txn-id">Txn ID: <strong>${ordPaymentId}</strong></span>
-                        <h4>${ordClientName}</h4>
-                    </div>
-                    <div class="order-card-header-right">
-                        <div class="order-card-date-amount">
-                            <span class="order-card-date">${ordDate}</span>
-                            <span class="order-card-amount">${ordTotalAmount}</span>
-                        </div>
-                        <span id="badge-status-${ordPaymentId}" class="order-card-status-badge" style="${badgeStyle}">
-                            ${order.status || 'Paid'}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="order-card-items">
-                    <table>
-                        <tbody>
-                            ${inventoryRowsHTML}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="order-card-footer">
-                    <div class="order-card-footer-top">
-                        <div class="order-card-address">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span><strong>Ship To:</strong> ${ordAddress}</span>
-                        </div>
-                        
-                        <div class="order-card-actions">
-                            <button onclick="copyShippingLabelToClipboard('${safeName}', '${safePhone}', '${safeAddress}', this)" class="order-action-btn order-action-btn--ghost" title="Copy Address Tag">
-                                <i class="far fa-copy"></i> Label
-                            </button>
-                            
-                            <a href="tel:${ordPhone}" class="order-action-btn order-action-btn--outline" title="Call Client">
-                                <i class="fas fa-phone-alt"></i> Call
-                            </a>
-                            
-                            ${contextButtonsHTML}
-                        </div>
-                    </div>
-
-                    ${cancelDetailsBlockHTML}
-
-                    <div id="courier-panel-${ordPaymentId}" class="courier-allocation-panel order-card-courier-panel">
-                        <p>Assign Logistics Partner &amp; Waybill</p>
-                        <div class="order-card-courier-options">
-                            <label><input type="radio" name="courier-${ordPaymentId}" value="DTDC" checked> DTDC</label>
-                            <label><input type="radio" name="courier-${ordPaymentId}" value="Delhivery"> Delhivery</label>
-                            <label><input type="radio" name="courier-${ordPaymentId}" value="Blue Dart"> Blue Dart</label>
-                        </div>
-                        <div class="order-card-courier-input-row">
-                            <input type="text" id="tracking-input-${ordPaymentId}" placeholder="Tracking Number">
-                            <button onclick="updateShippingStatus('${ordPaymentId}', this)" class="order-courier-confirm-btn">Confirm</button>
-                            <button onclick="hideCourierAllocationPanel('${ordPaymentId}')" class="order-courier-cancel-btn">Cancel</button>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-            `;
-        }).join('');
-    }
-}
-
-// =========================================================================
-// 2. REFRACTORED ACTION SHOW/HIDE PANEL HANDLERS (WITH ROW INTERACTION HIGHLIGHTS)
-// =========================================================================
-function revealCourierAllocationPanel(paymentId) {
-    // A. Close all other open panels first and reset prior highlights
-    document.querySelectorAll('.courier-allocation-panel').forEach(pane => pane.style.display = 'none');
-    document.querySelectorAll('.admin-master-data-table tr').forEach(row => row.classList.remove('active-shipping-row'));
-
-    // B. Open targeted panel
-    const panel = document.getElementById(`courier-panel-${paymentId}`);
-    if (panel) panel.style.display = 'block';
-
-    // C. Add luxury highlight styling to matching table container row element
-    const activeRow = document.getElementById(`order-row-${paymentId}`);
-    if (activeRow) activeRow.classList.add('active-shipping-row');
-}
-
-function hideCourierAllocationPanel(paymentId) {
-    const panel = document.getElementById(`courier-panel-${paymentId}`);
-    if (panel) panel.style.display = 'none';
-
-    // Remove row interaction highlights smoothly
-    const activeRow = document.getElementById(`order-row-${paymentId}`);
-    if (activeRow) activeRow.classList.remove('active-shipping-row');
-}
-
-async function updateShippingStatus(paymentId, btn) {
-    const panel = document.getElementById(`courier-panel-${paymentId}`);
-    const trackingInput = document.getElementById(`tracking-input-${paymentId}`);
-    
-    // Find which courier radio option was selected in the table row context
-    const courierRadio = document.querySelector(`input[name="table-courier-${paymentId}"]:checked`);
-    
-    if (!trackingInput || !trackingInput.value.trim()) {
-        alert("Please enter a valid Waybill / Tracking Number.");
-        return;
-    }
-    
-    const selectedCourier = courierRadio ? courierRadio.value : "Standard Logistics";
-    const trackingNumber = trackingInput.value.trim();
-    
-    // Change button state to show progress
-    const originalBtnText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-    
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const updateUrl = `${sbUrl}/rest/v1/Orders?payment_id=eq.${paymentId}`;
-    
-    try {
-        const response = await fetch(updateUrl, {
-            method: 'PATCH',
-            headers: {
-                'apikey': sbKey,
-                'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-                status: 'shipped',
-                courier: selectedCourier,
-                tracking_number: trackingNumber
-            })
-        });
-        
-        if (!response.ok) throw new Error("Database failed to update shipment routing records.");
-        
-        // Remove tracking panel display & strip out active row highlights safely
-        if (panel) panel.style.display = 'none';
-        const activeRow = document.getElementById(`order-row-${paymentId}`);
-        if (activeRow) activeRow.classList.remove('active-shipping-row');
-        
-        if (typeof openAdminMasterConsole === 'function') {
-            await openAdminMasterConsole(); 
-        }
-        
-    } catch (err) {
-        console.error("Fulfillment sync error:", err);
-        alert("Failed to sync shipment updates to the database. Check console details.");
-        btn.disabled = false;
-        btn.innerHTML = originalBtnText;
-    }
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — DYNAMIC COMPACT SHOWROOM ROUNDED CIRCLE ACCENTS
-// =========================================================================
 function generateDynamicCatalogFilters() {
     let foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
     const mainSectionTitle = document.getElementById('collection-main-title');
@@ -4647,6 +3132,7 @@ function generateDynamicCatalogFilters() {
 // =========================================================================
 // ANGEL JEWELLERY — CATALOG LEVEL VIEW SCREEN NAVIGATION ROUTERS
 // =========================================================================
+
 function selectShowroomCategoryFolder(targetCategoryName) {
     currentSelectedFilterCategoryKey = targetCategoryName;
 
@@ -4681,6 +3167,7 @@ function selectShowroomCategoryFolder(targetCategoryName) {
     }
 }
 
+
 function returnToMainShowroomFolders() {
     currentSelectedFilterCategoryKey = "all";
 
@@ -4712,6 +3199,7 @@ function returnToMainShowroomFolders() {
     }
 }
 
+
 function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
     const baseStyles = `padding: 10px 18px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: inline-block;`;
     if (isCurrentlySelected) {
@@ -4720,6 +3208,7 @@ function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
         buttonNode.style.cssText = baseStyles + `background: #fff; color: var(--text-dark-primary, #111116); border: 1px solid #111116; font-weight: 600;`;
     }
 }
+
 
 function refreshFilterTabStylesAndTriggerRender() {
     const allTabButtons = document.querySelectorAll('.filter-category-tab-btn');
@@ -4731,6 +3220,7 @@ function refreshFilterTabStylesAndTriggerRender() {
     const currentSearchText = liveInputEl ? liveInputEl.value : "";
     filterCatalog(currentSearchText);
 }
+
 function getBadgeCustomStyles(badgeText) {
     const text = String(badgeText || '').trim().toLowerCase();
     let bgColor = 'var(--purple-primary, #202c55)';
@@ -4746,6 +3236,7 @@ function getBadgeCustomStyles(badgeText) {
 // =========================================================================
 // SUPABASE PRODUCTION CHANNEL — LIVE STOCK BACKGROUND SYNCHRONIZATION
 // =========================================================================
+
 async function synchronizeLiveStorefrontInventory() {
     const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
@@ -4822,6 +3313,7 @@ async function synchronizeLiveStorefrontInventory() {
 // =========================================================================
 // SUPABASE LIVE DEDUCTION CHANNELS — DYNAMIC STOCK QUANTITY SYNCHRONIZATION
 // =========================================================================
+
 async function executeSupabaseInventoryDeduction(cartItemsArray) {
     if (!cartItemsArray || cartItemsArray.length === 0) return;
 
@@ -4867,62 +3359,32 @@ async function executeSupabaseInventoryDeduction(cartItemsArray) {
     }
 }
 
+
 document.addEventListener("DOMContentLoaded", () => {
     synchronizeLiveStorefrontInventory();
 });
 
 // 3. DELETE CHANNEL: Instant Row Purging via the Trash can icon
-async function executeAdminItemDeletionPipeline(event, productId, productTitle) {
-    if (event) event.stopPropagation();
-    
-    const userFinalConfirmation = confirm(`⚠️ DANGER ZONE: Are you entirely sure you want to permanently delete "${productTitle}" (ID: #${productId}) from Supabase?\n\nThis action cannot be undone.`);
-    if (!userFinalConfirmation) return;
 
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const cleanPurgeTargetUrl = `${sbUrl}/rest/v1/products?id=eq.${productId}`;
-
-    try {
-        const networkResponse = await fetch(cleanPurgeTargetUrl, {
-            method: 'DELETE',
-            headers: {
-                'apikey': sbKey,
-                'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!networkResponse.ok) throw new Error(`Supabase returned status code: ${networkResponse.status}`);
-        
-        alert(`✨ Successfully Deleted! "${productTitle}" has been cleanly scrubbed from your database rows.`);
-        if (MASTER_LIVE_INVENTORY_CACHE[productId]) delete MASTER_LIVE_INVENTORY_CACHE[productId];
-        await loadProductDatabaseEngine();
-        if (typeof renderFlashVaultShowroom === "function") renderFlashVaultShowroom();
-        if (typeof filterCatalog === "function") filterCatalog();
-
-    } catch (error) {
-        console.error("Critical Supabase row write/purge communication error caught:", error);
-        alert("Pipeline Synchronization Interrupted: Could not wipe item from Supabase database layout.");
-    }
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — AUTOMATED CUSTOMER FEEDBACK & REVIEWS LOGIC
-// =========================================================================
 let currentSelectedFeedbackFormRatingValue = 5;
 
 // =========================================================================
 // SUPABASE TESTIMONIALS ENGINE — LIVE 20 CARD FETCH WITH DOT PAGINATION
 // =========================================================================
 
+
 let MASTER_FEEDBACK_DATASET = []; // Stores up to 20 fetched reviews from Supabase
+
 let feedbackCurrentPage = 0;
+
 const REVIEWS_PER_PAGE_COUNT = 4;
+
 let feedbackSwipeStartX = 0;
 
 // =========================================================================
 // ANGEL JEWELLERY — DYNAMIC INFINITE TEXTIMONIALS MARQUEE CORE ENGINE
 // =========================================================================
+
 async function loadLiveCustomerFeedbackShowroom() {
     const feedbackCanvas = document.getElementById('liveClientFeedbackGridCanvas');
     if (!feedbackCanvas) return;
@@ -4980,6 +3442,7 @@ async function loadLiveCustomerFeedbackShowroom() {
     }
 }
 
+
 function recalculateFeedbackPaginationMetrics() {
     const screenWidth = window.innerWidth;
     let itemsPerPage = REVIEWS_PER_PAGE_COUNT; // 4 per page on desktop windows
@@ -4991,6 +3454,7 @@ function recalculateFeedbackPaginationMetrics() {
     renderFeedbackCarouselPaginationDots(totalPages);
     slideFeedbackCarouselTrack();
 }
+
 
 function renderFeedbackCarouselPaginationDots(totalPages) {
     let dotsBar = document.getElementById('feedbackCarouselPaginationDots');
@@ -5023,12 +3487,14 @@ function renderFeedbackCarouselPaginationDots(totalPages) {
     }
 }
 
+
 function slideFeedbackCarouselTrack() {
     const canvas = document.getElementById('liveClientFeedbackGridCanvas');
     if (!canvas) return;
     const shiftOffset = feedbackCurrentPage * 100;
     canvas.style.transform = `translateX(-${shiftOffset}%)`;
 }
+
 
 function attachFeedbackGestureTracks(trackWindow) {
     if (!trackWindow) return;
@@ -5046,6 +3512,7 @@ function attachFeedbackGestureTracks(trackWindow) {
     }, {passive: true});
 }
 
+
 function handleFeedbackSwipeNavigation(deltaX) {
     const screenWidth = window.innerWidth;
     let itemsPerPage = REVIEWS_PER_PAGE_COUNT;
@@ -5061,6 +3528,7 @@ function handleFeedbackSwipeNavigation(deltaX) {
     }
     recalculateFeedbackPaginationMetrics();
 }
+
 
 
 async function submitCustomerFeedbackPipeline(event) {
@@ -5105,6 +3573,7 @@ async function submitCustomerFeedbackPipeline(event) {
 }
 
 // B. MODAL VISIBILITY TRIGGERS
+
 function openCustomerFeedbackModal(event) {
     if (event) event.preventDefault();
     document.getElementById('angelStoreCustomerFeedbackForm').reset();
@@ -5112,11 +3581,13 @@ function openCustomerFeedbackModal(event) {
     document.getElementById('customerFeedbackSubmissionModal').style.display = 'flex';
 }
 
+
 function closeCustomerFeedbackModal() {
     document.getElementById('customerFeedbackSubmissionModal').style.display = 'none';
 }
 
 // C. STAR SELECTION ENGINE MATHS
+
 function setInteractiveFeedbackFormRating(ratingValue) {
     currentSelectedFeedbackFormRatingValue = ratingValue;
     document.getElementById('feedbackFormRatingValue').value = ratingValue;
@@ -5131,6 +3602,7 @@ function setInteractiveFeedbackFormRating(ratingValue) {
     });
 }
 
+
 function highlightFeedbackFormStarsPreview(previewValue) {
     const stars = document.querySelectorAll('.feedback-star-node');
     stars.forEach((star, idx) => {
@@ -5138,11 +3610,13 @@ function highlightFeedbackFormStarsPreview(previewValue) {
     });
 }
 
+
 function resetFeedbackFormStarsHighlight() {
     setInteractiveFeedbackFormRating(currentSelectedFeedbackFormRatingValue);
 }
 
 // E. LINK INTO DOM CONTENT BOOT STRAPS FOR REAL-TIME LOAD INITIALIZATION
+
 document.addEventListener("DOMContentLoaded", () => {
     loadLiveCustomerFeedbackShowroom();
 });
@@ -5150,6 +3624,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================================================================
 // ANGEL JEWELLERY — STABLE STORE POLICY REGISTRY DATA OVERLAYS
 // =========================================================================
+
 const ANGEL_LEGAL_VAULT_POLICIES = {
     privacy: {
         title: "Privacy Policy",
@@ -5201,6 +3676,7 @@ const ANGEL_LEGAL_VAULT_POLICIES = {
     }
 };
 
+
 function openAngelStorePolicyModal(event, policyKey) {
     if (event) event.preventDefault();
     
@@ -5218,6 +3694,7 @@ function openAngelStorePolicyModal(event, policyKey) {
     }
 }
 
+
 function closeAngelStorePolicyModal() {
     const modalView = document.getElementById('angelStorePolicyModalViewer');
     if (modalView) modalView.style.display = 'none';
@@ -5225,6 +3702,7 @@ function closeAngelStorePolicyModal() {
 // =========================================================================
 // INTERACTIVE FAQ OVERLAY MODAL & ACCORDION SYSTEM UTILITIES
 // =========================================================================
+
 function openFaqSystemModalOverlay(event) {
     if (event) event.preventDefault();
     const overlay = document.getElementById('faqSystemModalOverlay');
@@ -5234,6 +3712,7 @@ function openFaqSystemModalOverlay(event) {
     }
 }
 
+
 function closeFaqSystemModalOverlay() {
     const overlay = document.getElementById('faqSystemModalOverlay');
     if (overlay) {
@@ -5241,6 +3720,7 @@ function closeFaqSystemModalOverlay() {
         document.body.style.overflow = ''; // Unlock background scrolling
     }
 }
+
 
 function toggleFaqAccordionUnit(headerElement) {
     const contentPane = headerElement.nextElementSibling;
@@ -5267,8 +3747,11 @@ function toggleFaqAccordionUnit(headerElement) {
 // =========================================================================
 // ANGEL JEWELLERY — SMART RESPONSIVE FLASH VAULT MODULE
 // =========================================================================
+
 let flashVaultCurrentPage = 0;
+
 const FLASH_VAULT_ITEMS_PER_PAGE = 6; 
+
 
 function renderFlashVaultShowroom() {
     let section = document.getElementById('flashVaultSection');
@@ -5371,24 +3854,9 @@ function renderFlashVaultShowroom() {
         const safeTitle = item.title.replace(/'/g, "\\'");
 
         // Admin Edit Inline Controls mirrored perfectly from the primary filter catalog engine
-        const adminEditInlineControlMarkup = INTEGRATED_ADMIN_AUTH_STATE ? `
-            <button type="button" 
-                    onclick="openAdminFormModalForEditing(event, ${item.id})" 
-                    style="position: absolute; top: 0px; left: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #202c55; border: 2px solid #202c55; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; outline:none;">
-                <i class="fas fa-edit" style="font-size:0.65rem; color:#cca43b;"></i> #${item.id}
-            </button>
-            <button type="button" 
-                    onclick="executeAdminItemDeletionPipeline(event, ${item.id}, '${safeTitle}')" 
-                    style="position: absolute; top: 0px; right: 0px; z-index: 10 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 6px 14px; background: #ffffff; color: #d9383a; border: 2px solid #d9383a; border-radius: 6px; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(217,56,58,0.15); cursor: pointer; transition: all 0.2s; outline:none;"
-                    onmouseover="this.style.background='#d9383a'; this.style.color='#ffffff';"
-                    onmouseout="this.style.background='#ffffff'; this.style.color='#d9383a';">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        ` : '';
         return `
             <div class="angel-card angel-card--flash ${isClaimed ? 'is-disabled' : ''}" onclick="openQuickViewShield(${item.id})">
                 
-                ${adminEditInlineControlMarkup}
 
                 <div class="angel-card-media">
                     <img src="${item.image}" loading="lazy" decoding="async" alt="${item.title}">
@@ -5422,16 +3890,7 @@ function renderFlashVaultShowroom() {
 }
 
 // Global modal overlay backdrop click tracking dismissals
-window.addEventListener('click', (e) => {
-    const overlay = document.getElementById('faqSystemModalOverlay');
-    if (e.target === overlay) {
-        closeFaqSystemModalOverlay();
-    }
-});
 
-// =========================================================================
-// ANGEL JEWELLERY — STYLE CLUSTER MODAL HUB (CLEAN-CUT 2-COLUMN UNIFORM OVERHAUL)
-// =========================================================================
 function selectStyleClusterFilter(clusterKeyword) {
     const modal = document.getElementById('stylePortfolioModalShield');
     const grid = document.getElementById('portfolioModalProductsGrid');
@@ -5517,6 +3976,7 @@ function selectStyleClusterFilter(clusterKeyword) {
     angelModalPushHistory(closeStylePortfolioModal);
 }
 
+
 function closeStylePortfolioModal() {
     const modal = document.getElementById('stylePortfolioModalShield');
     if (modal) modal.style.display = "none";
@@ -5524,49 +3984,7 @@ function closeStylePortfolioModal() {
     angelModalConsumeHistory();
 }
 
-function exportCurrentAdminOrdersToCSV() {
-    // Target the same filtered data array currently being displayed
-    if (!adminOrdersCache || adminOrdersCache.length === 0) {
-        alert("No transaction rows available to export.");
-        return;
-    }
-    
-    // Create the spreadsheet header structure
-    const csvHeaders = ["Payment Reference ID", "Client Name", "Phone No", "Delivery Address", "Items Purchased", "Total Bill Amt", "Status", "Date Matrix"];
-    
-    const csvRows = [csvHeaders.join(",")];
-    
-    adminOrdersCache.forEach(order => {
-        const itemsCleaned = `"${(order.order_items || '').replace(/"/g, '""')}"`;
-        const addressCleaned = `"${(order.address || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
-        
-        const rowData = [
-            order.payment_id || 'N/A',
-            `"${(order.customer_name || 'Anonymous').replace(/"/g, '""')}"`,
-            order.phone || 'N/A',
-            addressCleaned,
-            itemsCleaned,
-            order.total_amount || 0,
-            order.status || 'Paid',
-            `"${order.Date || 'N/A'}"`
-        ];
-        csvRows.push(rowData.join(","));
-    });
-    
-    // Trigger download sequence seamlessly via standard Blob architecture
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", encodedUri);
-    downloadAnchor.setAttribute("download", `Angel_Jewellery_Orders_Ledger_${new Date().toLocaleDateString('en-IN')}.csv`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    document.body.removeChild(downloadAnchor);
-}
 
-// =========================================================================
-// 💎 ANGEL JEWELLERY — FLASH VAULT PAGINATION NAVIGATION CORE ENGINE (FIXED)
-// =========================================================================
 function shiftFlashVaultPage(directionOrPage) {
     // 1. Fallback initialization for current page tracking if not declared globally
     if (typeof flashVaultCurrentPage === 'undefined') {
@@ -5595,6 +4013,7 @@ function shiftFlashVaultPage(directionOrPage) {
 }
 
 // Global modal overlay backdrop click tracking dismissals
+
 window.addEventListener('click', (e) => {
     const overlay = document.getElementById('faqSystemModalOverlay');
     const portfolioOverlay = document.getElementById('stylePortfolioModalShield');
@@ -5609,6 +4028,7 @@ window.addEventListener('click', (e) => {
 // =========================================================================
 // SUPABASE API CHANNEL — SECURE ONLINE TRANSACTION CANCELLATION ENGINE
 // =========================================================================
+
 async function executeClientOrderCancellationPipeline(event, id, paymentId) {
     if (event) event.preventDefault();
     
@@ -5657,6 +4077,7 @@ async function executeClientOrderCancellationPipeline(event, id, paymentId) {
 // =========================================================================
 // ➔ INLINE VIEW TOGGLER FOR CANCELLATION METRICS PANEL
 // =========================================================================
+
 function toggleCancellationFormView(orderId) {
     const triggerBtn = document.getElementById(`cancelTriggerBtn_${orderId}`);
     const formPanel = document.getElementById(`cancelFormBlock_${orderId}`);
@@ -5674,6 +4095,7 @@ function toggleCancellationFormView(orderId) {
 // =========================================================================
 // SUPABASE API CHANNEL — SUBMIT CANCEL DETAILS TO INDEPENDENT COLUMNS
 // =========================================================================
+
 async function submitClientCancellationForm(event, id, paymentId) {
     if (event) event.preventDefault();
 
@@ -5737,109 +4159,15 @@ async function submitClientCancellationForm(event, id, paymentId) {
 // =========================================================================
 // SUPABASE SECURE CHANNEL — TRANSITION CANCELLED ROW STATUS TO REFUNDED
 // =========================================================================
-async function executeAdminOrderRefundPipeline(event, databaseRowId) {
-    if (event) event.preventDefault();
 
-    const doubleCheck = confirm("Mark Refund Completed?\nThis updates status metrics into your final tracking profiles.");
-    if (!doubleCheck) return;
-
-    const actionBtn = event.currentTarget;
-    actionBtn.disabled = true;
-    actionBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${databaseRowId}`;
-
-    try {
-        const response = await fetch(patchTargetUrl, {
-            method: 'PATCH',
-            headers: {
-                'apikey': sbKey,
-                'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-                status: 'Refunded' // Updates the transaction value to your clean completion state
-            })
-        });
-
-        if (!response.ok) throw new Error(`Database rejected status transition code: ${response.status}`);
-        
-        alert("✨ Status set successfully! Transaction row marked as Refunded.");
-        
-        // Refresh local cache matrices and redraw panel cards view row grids instantly
-        if (typeof openAdminMasterConsole === 'function') {
-            await openAdminMasterConsole();
-        }
-
-    } catch (err) {
-        console.error("Fulfillment adjustment trace error:", err);
-        alert("Sync interrupted: Unable to modify server rows.");
-        actionBtn.disabled = false;
-        actionBtn.innerHTML = `<i class="fas fa-hand-holding-usd"></i> Processed Refund`;
-    }
-}
-// =========================================================================
-// SUPABASE SECURE CHANNEL — REVERSE CANCELLATION & FLIP STATUS BACK TO ORDERED
-// =========================================================================
-async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
-    if (event) event.preventDefault();
-
-    const doubleCheck = confirm("⚠️ Reverse Cancellation Confirmation:\nAre you sure you want to move this order back to active status?\n\nThis will wipe out stored cancel reasons and PhonePe details.");
-    if (!doubleCheck) return;
-
-    const reverseBtn = event.currentTarget;
-    reverseBtn.disabled = true;
-    reverseBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Reversing...`;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const patchTargetUrl = `${sbUrl}/rest/v1/Orders?id=eq.${databaseRowId}`;
-
-    try {
-        const response = await fetch(patchTargetUrl, {
-            method: 'PATCH',
-            headers: {
-                'apikey': sbKey,
-                'Authorization': `Bearer ${sbKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-                status: 'Paid',          // Returns status cleanly back to the active order pool
-                cancel_reason: null,     // Wipes cancel reason column clear
-                refund_phonepe: null     // Wipes phonepe entry column clear
-            })
-        });
-
-        if (!response.ok) throw new Error(`Database rejected operation update: ${response.status}`);
-        
-        alert("✨ Order restored successfully! Row shifted back to active Pending fulfillment queue.");
-        
-        // Refresh local master dashboard arrays and redraw layouts instantly
-        if (typeof openAdminMasterConsole === 'function') {
-            await openAdminMasterConsole();
-        }
-
-    } catch (err) {
-        console.error("Reversal database adjustment execution failure caught:", err);
-        alert("Sync Error: Unable to re-route tracking metrics. Check your network link.");
-        reverseBtn.disabled = false;
-        reverseBtn.innerHTML = `<i class="fas fa-undo-alt"></i> Move Back to Ordered`;
-    }
-}
-
-// =========================================================================
-// ANGEL JEWELLERY GLOBAL SHIPPING METRICS CONFIGURATION ENGINE
-// =========================================================================
 let currentCalculatedShippingFeeValue = 0;
+
 let userShippingZipCodeVerified = false;
 
 // =========================================================================
 // ANGEL JEWELLERY GLOBAL SHIPPING METRICS CONFIGURATION ENGINE
 // =========================================================================
+
 function evaluateShippingEligibilityState(currentCartSubtotalAmount) {
     const shippingBlock = document.getElementById('checkoutShippingCalcBlock');
     if (!shippingBlock) return;
@@ -5858,6 +4186,7 @@ function evaluateShippingEligibilityState(currentCartSubtotalAmount) {
 /**
  * Distance Calculation Engine mapping Indian Postal Codes from Hyderabad
  */
+
 function executeCheckoutShippingCalculationPipeline() {
     const zipInput = document.getElementById('checkoutShippingZipInput').value.trim();
     const msgNode = document.getElementById('checkoutShippingStatusMessage');
@@ -5918,310 +4247,6 @@ function executeCheckoutShippingCalculationPipeline() {
 // =========================================================================
 // 🔄 DYNAMIC HIGH-FIDELITY COMPRESSION & RETINA-READY WEBP CONVERSION ENGINE
 // =========================================================================
-function convertImageFileToWebP(fileObject) {
-    return new Promise((resolve, reject) => {
-        if (fileObject.type === 'image/webp') {
-            return resolve(fileObject);
-        }
-
-        const imageFileReader = new FileReader();
-        imageFileReader.readAsDataURL(fileObject);
-        
-        imageFileReader.onload = (event) => {
-            const tempImgNode = new Image();
-            tempImgNode.src = event.target.result;
-            
-            tempImgNode.onload = () => {
-                const offScreenCanvas = document.createElement('canvas');
-                const canvasContext = offScreenCanvas.getContext('2d');
-                
-                const MAX_IMAGE_DIMENSION_LIMIT = 1920; 
-                let targetWidth = tempImgNode.width;
-                let targetHeight = tempImgNode.height;
-
-                if (targetWidth > MAX_IMAGE_DIMENSION_LIMIT || targetHeight > MAX_IMAGE_DIMENSION_LIMIT) {
-                    if (targetWidth > targetHeight) {
-                        targetHeight = Math.round((targetHeight * MAX_IMAGE_DIMENSION_LIMIT) / targetWidth);
-                        targetWidth = MAX_IMAGE_DIMENSION_LIMIT;
-                    } else {
-                        targetWidth = Math.round((targetWidth * MAX_IMAGE_DIMENSION_LIMIT) / targetHeight);
-                        targetHeight = MAX_IMAGE_DIMENSION_LIMIT;
-                    }
-                }
-                
-                offScreenCanvas.width = targetWidth;
-                offScreenCanvas.height = targetHeight;
-                
-                // Enforce sharp pixel mapping over vector resizes
-                canvasContext.imageSmoothingEnabled = true;
-                canvasContext.imageSmoothingQuality = 'high';
-                
-                canvasContext.drawImage(tempImgNode, 0, 0, targetWidth, targetHeight);
-                
-                // ➔ LUXURY PREMIUM COMPRESSION: Bumped to 0.90 to preserve fine texture details and text sharp edges
-                offScreenCanvas.toBlob((webpBlobBinary) => {
-                    if (!webpBlobBinary) {
-                        return reject(new Error("Image graphic compression pipeline failed."));
-                    }
-                    
-                    const cleanFileName = fileObject.name.substring(0, fileObject.name.lastIndexOf('.')) || 'product_asset';
-                    const compressedWebPFile = new File([webpBlobBinary], `${cleanFileName}.webp`, {
-                        type: 'image/webp',
-                        lastModified: Date.now()
-                    });
-                    
-                    console.log(`💎 High-Fi Optimization! Original: ${(fileObject.size / 1024).toFixed(1)}KB -> WebP: ${(compressedWebPFile.size / 1024).toFixed(1)}KB`);
-                    resolve(compressedWebPFile);
-                }, 'image/webp', 0.90); 
-            };
-            
-            tempImgNode.onerror = (err) => reject(err);
-        };
-        imageFileReader.onerror = (err) => reject(err);
-    });
-}
-
-// =========================================================================
-// SUPABASE STORAGE COMPONENT — SECURE CLOUD FILE UPLOADER PIPELINE (WEBP PATCHED)
-// =========================================================================
-async function uploadProductImageToSupabaseStorage(fileObject) {
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    
-    // ➔ INTERCEPT PIPELINE: Convert image file binary properties cleanly to webp format on-the-fly
-    let processedFileAsset = fileObject;
-    try {
-        processedFileAsset = await convertImageFileToWebP(fileObject);
-    } catch (compressionError) {
-        console.warn("⚠️ Canvas compression failed, falling back to original source asset layout formatting:", compressionError);
-    }
-
-    // Clean spaces and special characters from the filename to prevent URL parsing errors
-    const safeBaseName = processedFileAsset.name.replace(/[^a-zA-Z0-9.]/g, '_');
-    const uniqueFileSignature = `${Date.now()}_${safeBaseName}`;
-    
-    // Encode the path accurately
-    const encodedSignature = encodeURIComponent(uniqueFileSignature);
-    const storageTargetBucketUrl = `${sbUrl}/storage/v1/object/product-images/${encodedSignature}`;
-
-    console.log(`📤 Initializing direct upload to bucket for: ${uniqueFileSignature}`);
-
-    const uploadResponse = await fetch(storageTargetBucketUrl, {
-        method: 'POST',
-        headers: {
-            'apikey': sbKey,
-            'Authorization': `Bearer ${sbKey}`,
-            'Content-Type': processedFileAsset.type,
-            'x-upsert': 'true'
-        },
-        body: processedFileAsset
-    });
-
-    if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error("❌ Supabase Storage Error Payload:", errorText);
-        throw new Error(`Storage upload rejected by server nodes: ${uploadResponse.status} - ${errorText}`);
-    }
-
-    // Return the clean public entry channel link URL
-    return `${sbUrl}/storage/v1/object/public/product-images/${encodedSignature}`;
-}
-
-// =========================================================================
-// SUPABASE INTERACTION LAYER — DYNAMIC LUXURY HERO CAROUSEL ENGINE
-// =========================================================================
-async function loadLiveCarouselDatabaseEngine() {
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-    const targetUrl = `${sbUrl}/rest/v1/Carousel?select=*&order=display_order.asc`;
-    const track = document.getElementById('carouselSliderTrack');
-
-    try {
-        const response = await fetch(targetUrl, {
-            method: 'GET',
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
-        
-        carouselRegistryCache = await response.json();
-        
-        if (!track) return;
-        
-        if (carouselRegistryCache.length === 0) {
-            // Fallback default slide asset track layout if nothing is minted in database lines yet
-            track.innerHTML = `
-                <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; border-radius:8px; overflow:hidden;">
-                    <img src="assets/carousel/slide-1.png" style="width:100%; height:100%; object-fit:cover; display:block;">
-                </div>`;
-            return;
-        }
-
-        // Hydrate slider track window element nodes dynamically!
-        track.innerHTML = carouselRegistryCache.map(slide => `
-            <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
-                <img src="${slide.image_url}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title}">
-            </div>
-        `).join('');
-
-        // Re-initialize boundaries and active indicator dots pagination arrays cleanly
-        if (typeof initializeLuxuryBannerCarousel === 'function') {
-            window.currentCarouselActiveIndex = 0;
-            initializeLuxuryBannerCarousel();
-        }
-
-    } catch (err) {
-        console.error("❌ Failed to synchronize active carousel registry layers:", err);
-    }
-}
-
-// =========================================================================
-// 🎥 ADMIN CAROUSEL WRITE PIPELINE — CONVERT TO WEBP & SUBMIT TO DATABASE
-// =========================================================================
-async function handleAdminCarouselFormSubmit(event) {
-    event.preventDefault();
-    const submitBtn = document.getElementById('carouselFormSubmitBtn');
-    if (!submitBtn) return;
-
-    const originalText = submitBtn.innerText;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-
-    try {
-        const filePicker = document.getElementById('newCarouselFilePicker');
-        if (!filePicker || filePicker.files.length === 0) {
-            alert("Please select a campaign banner photo file asset.");
-            submitBtn.disabled = false; 
-            submitBtn.innerText = originalText;
-            return;
-        }
-
-        submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Processing & Compressing...`;
-        const chosenFile = filePicker.files[0];
-        
-        // ➔ THE WEBP CAPTURE TRIGGER: Routes directly through the browser canvas compressor
-        const finalWebpUrl = await uploadProductImageToSupabaseStorage(chosenFile);
-
-        const newSlidePayload = {
-            title: document.getElementById('newCarouselTitleInput').value.trim(),
-            display_order: parseInt(document.getElementById('newCarouselOrderInput').value) || 1,
-            image_url: finalWebpUrl // Inserts the clean, light .webp CDN link into the table row data
-        };
-
-        submitBtn.innerHTML = `<i class="fas fa-database fa-spin"></i> Saving Slide...`;
-        const response = await fetch(`${sbUrl}/rest/v1/Carousel`, {
-            method: 'POST',
-            headers: { 
-                'apikey': sbKey, 
-                'Authorization': `Bearer ${sbKey}`, 
-                'Content-Type': 'application/json', 
-                'Prefer': 'return=minimal' 
-            },
-            body: JSON.stringify(newSlidePayload)
-        });
-
-        if (!response.ok) throw new Error("Supabase rejected payload object validation matrix parameters.");
-
-        alert(`✨ Campaign slide successfully posted as WebP: ${newSlidePayload.title}`);
-        document.getElementById('adminCarouselCreatorForm').reset();
-        
-        await loadLiveCarouselDatabaseEngine(); // Reload storefront track frame visuals instantly
-        renderAdminCarouselConsoleGrid();       // Refresh active overlay lists data template
-        
-    } catch (err) {
-        console.error(err);
-        alert("Pipeline Sync Interrupted: Verify your data transmission links.");
-    } finally {
-        submitBtn.disabled = false; 
-        submitBtn.innerText = originalText;
-    }
-}
-// 3. ADMIN GRID COMPILER: Re-draw card rows inside management drawer overlay
-function renderAdminCarouselConsoleGrid() {
-    const container = document.getElementById('adminCarouselListTableContainer');
-    if (!container) return;
-
-    if (carouselRegistryCache.length === 0) {
-        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No carousel slide tracks minted yet.</p>`;
-        return;
-    }
-
-    container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
-            <thead>
-                <tr style="background:#f4f4f7; color:#777; font-weight:700; border-bottom:1px solid #e8e8ef;">
-                    <th style="padding:10px; width:60px;">Preview</th>
-                    <th style="padding:10px;">Campaign Title</th>
-                    <th style="padding:10px; width:60px; text-align:center;">Seq</th>
-                    <th style="padding:10px; text-align:center; width:60px;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${carouselRegistryCache.map(slide => `
-                    <tr style="border-bottom:1px solid #f1f1f5;">
-                        <td style="padding:10px; text-align:center; vertical-align:middle;">
-                            <img src="${slide.image_url}" style="width:40px; height:25px; object-fit:cover; border-radius:2px; border:1px solid #e8e8ef;">
-                        </td>
-                        <td style="padding:10px; font-weight:600; color:#202c55; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${slide.title}</td>
-                        <td style="padding:10px; text-align:center; font-weight:700; color:#ff1493;">${slide.display_order}</td>
-                        <td style="padding:10px; text-align:center; vertical-align:middle;">
-                            <button onclick="executeAdminCarouselPurgePipeline(event, ${slide.id}, '${slide.title}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; padding:4px;" title="Delete Campaign Slide">
-                                <i class="far fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-// 5. DELETE CHANNEL: Remove campaign graphics instantly via trash can triggers
-async function executeAdminCarouselPurgePipeline(event, slideId, slideTitle) {
-    if (event) event.stopPropagation();
-    const verify = confirm(`Are you absolutely sure you want to permanently delete campaign banner: "${slideTitle}"?`);
-    if (!verify) return;
-
-    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
-    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
-
-    try {
-        const response = await fetch(`${sbUrl}/rest/v1/Carousel?id=eq.${slideId}`, {
-            method: 'DELETE',
-            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error("Deletion execution tracking drop.");
-
-        await loadLiveCarouselDatabaseEngine();
-        renderAdminCarouselConsoleGrid();
-        
-    } catch (err) {
-        console.error(err);
-        alert("Unable to delete slide element entry row.");
-    }
-}
-
-// Overlay Toggle Methods
-function openAdminCarouselConsoleOverlay(event) {
-    if (event) event.preventDefault();
-    const overlay = document.getElementById('adminCarouselConsoleOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        renderAdminCarouselConsoleGrid();
-    }
-}
-
-function closeAdminCarouselConsoleOverlay() {
-    const overlay = document.getElementById('adminCarouselConsoleOverlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// Trigger database load right along with database initialization loops
-document.addEventListener("DOMContentLoaded", () => {
-    loadLiveCarouselDatabaseEngine();
-});
 
 function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
@@ -6328,6 +4353,7 @@ function handleCatalogCardDotClick(event, productId, variantId, variantIdx) {
 }
 
 // ➔ Routes the main card "Add to Cart" button clicks through the active color state
+
 function handleCatalogCardAddToCart(productId, safeTitle) {
     const cardEl = document.getElementById(`catalog-card-${productId}`);
     if (!cardEl) {
@@ -6351,6 +4377,7 @@ function handleCatalogCardAddToCart(productId, safeTitle) {
     addToCartEngine(productId);
 }
 
+
 function changeQtyExplicit(cartLineId, delta) {
     const targetItem = shoppingCart.find(item => item.cartLineId === cartLineId);
     if (!targetItem) return;
@@ -6363,155 +4390,13 @@ function changeQtyExplicit(cartLineId, delta) {
 }
 
 // ➔ Replace your old removeFromCart(id) function with this:
+
 function removeFromCartExplicit(cartLineId) {
     shoppingCart = shoppingCart.filter(item => item.cartLineId !== cartLineId);
     updateCartUI();
 }
 // ➔ FRESH, EXTRA-SAFE ROW BUILDER (Completely isolated to prevent loops)
-function appendNewVariantRowToAdminForm(existingData = null) {
-    const container = document.getElementById('adminFormDynamicVariantsContainer');
-    if (!container) return;
 
-    const uniqueRowId = 'var-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-    const rowDiv = document.createElement('div');
-    rowDiv.id = uniqueRowId;
-    rowDiv.className = "admin-variant-input-row admin-variant-card";
-
-    // Previously every new row defaulted to this site's own navy brand
-    // color (#202c55). If the color name got typed in but the swatch
-    // itself never got clicked — easy to miss — every variant silently
-    // saved with the same identical color_hex. Cycling new rows through
-    // a small jewelry-tone palette means an untouched swatch is at least
-    // visibly distinct from the row next to it, not an invisible trap.
-    const NEW_VARIANT_DEFAULT_COLOR_PALETTE = ['#D4AF37', '#B76E79', '#C0C0C0', '#8C7853', '#9B111E', '#0F52BA', '#046307', '#F0EAD6'];
-    const existingRowCount = container.children.length;
-
-    // Fallbacks for Edit mode hydration profiles
-    const colorName = existingData ? (existingData.color_name || '') : '';
-    const colorHex = existingData 
-        ? (existingData.color_hex || '#202c55') 
-        : NEW_VARIANT_DEFAULT_COLOR_PALETTE[existingRowCount % NEW_VARIANT_DEFAULT_COLOR_PALETTE.length];
-    const sku = existingData ? (existingData.sku || '') : '';
-    const price = existingData ? (existingData.price || '') : '';
-    const stock = existingData ? (existingData.stock || '0') : '0';
-    const imgUrl = existingData ? (existingData.image_url || existingData.image || '') : '';
-    const variantDatabaseId = existingData ? (existingData.id || '') : ''; 
-
-    rowDiv.innerHTML = `
-        <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
-        <div class="admin-variant-card-header">
-            <input type="color" class="v-hex admin-variant-swatch-input" value="${colorHex}" title="Pick the swatch color shown as the storefront color dot">
-            <span class="admin-variant-card-label">Color Variant <span class="variant-field-hint">(tap the circle to set its swatch)</span></span>
-            <button type="button" class="admin-variant-remove-btn" onclick="document.getElementById('${uniqueRowId}').remove()" title="Remove this variant option">
-                <i class="fas fa-trash-alt"></i> Remove
-            </button>
-        </div>
-        <div class="admin-variant-fields-grid">
-            <div class="variant-field">
-                <label>Color Name</label>
-                <input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required>
-            </div>
-            <div class="variant-field">
-                <label>SKU</label>
-                <input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required>
-            </div>
-            <div class="variant-field">
-                <label>Price (₹)</label>
-                <input type="number" class="v-price" value="${price}" placeholder="4500" required>
-            </div>
-            <div class="variant-field">
-                <label>Stock Qty</label>
-                <input type="number" class="v-stock" value="${stock}" placeholder="5" required>
-            </div>
-            <div class="variant-field variant-field-wide">
-                <label>Product Image <span class="variant-field-hint">(upload a photo, or paste a URL)</span></label>
-                <div class="variant-image-upload-row">
-                    <div class="variant-image-preview">
-                        ${imgUrl ? `<img src="${imgUrl}" alt="Variant preview">` : `<i class="fas fa-image"></i>`}
-                    </div>
-                    <div class="variant-image-upload-inputs">
-                        <input type="text" class="v-img" value="${imgUrl}" placeholder="Paste a URL, or upload a photo" oninput="refreshVariantImagePreview(this)">
-                        <button type="button" class="variant-image-upload-btn" onclick="document.getElementById('${uniqueRowId}-file').click()">
-                            <i class="fas fa-cloud-upload-alt"></i> <span class="variant-image-upload-label">Upload Photo</span>
-                        </button>
-                        <input type="file" accept="image/*" id="${uniqueRowId}-file" class="variant-image-file-input" onchange="handleVariantImageFileSelected(event, '${uniqueRowId}')">
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    container.appendChild(rowDiv);
-}
-
-// =========================================================================
-// ANGEL JEWELLERY — VARIANT IMAGE UPLOAD
-// Reuses your existing uploadProductImageToSupabaseStorage() pipeline
-// (already used by the main product image and carousel uploads) instead
-// of re-implementing WebP conversion + Storage upload a third time.
-// =========================================================================
-
-// Live-updates the little thumbnail as someone types/pastes a URL manually
-function refreshVariantImagePreview(inputEl) {
-    const card = inputEl.closest('.admin-variant-card');
-    if (!card) return;
-    const preview = card.querySelector('.variant-image-preview');
-    if (!preview) return;
-
-    const url = inputEl.value.trim();
-    if (!url) {
-        preview.innerHTML = `<i class="fas fa-image"></i>`;
-        return;
-    }
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = 'Variant preview';
-    img.onerror = () => { preview.innerHTML = `<i class="fas fa-image"></i>`; };
-    preview.innerHTML = '';
-    preview.appendChild(img);
-}
-
-// Wires the file input's change event to your existing upload pipeline
-// (uploadProductImageToSupabaseStorage already handles WebP conversion,
-// downsizing large photos to 1920px max, and the Storage upload itself —
-// this just reuses it instead of re-implementing the same thing twice).
-async function handleVariantImageFileSelected(event, rowId) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-        alert('Please select an image file.');
-        event.target.value = '';
-        return;
-    }
-
-    const row = document.getElementById(rowId);
-    if (!row) return;
-    const urlInput = row.querySelector('.v-img');
-    const uploadBtn = row.querySelector('.variant-image-upload-btn');
-    const uploadLabel = row.querySelector('.variant-image-upload-label');
-    const originalLabelText = uploadLabel ? uploadLabel.textContent : 'Upload Photo';
-
-    if (uploadBtn) uploadBtn.disabled = true;
-
-    try {
-        if (uploadLabel) uploadLabel.textContent = 'Uploading...';
-        const publicUrl = await uploadProductImageToSupabaseStorage(file);
-
-        if (urlInput) {
-            urlInput.value = publicUrl;
-            refreshVariantImagePreview(urlInput);
-        }
-    } catch (err) {
-        console.error('Variant image upload failed:', err);
-        alert(`Image upload failed: ${err.message}\n\nYou can paste an image URL manually instead.`);
-    } finally {
-        if (uploadBtn) uploadBtn.disabled = false;
-        if (uploadLabel) uploadLabel.textContent = originalLabelText;
-        event.target.value = '';
-    }
-}
-// ➔ Controls for the Footer "Why Angel" Trust Modal Window
 function openWhyAngelModal(event) {
     if (event) event.preventDefault();
     const modal = document.getElementById('whyAngelTrustModal');
@@ -6519,6 +4404,7 @@ function openWhyAngelModal(event) {
         modal.style.display = 'flex';
     }
 }
+
 
 function closeWhyAngelModal() {
     const modal = document.getElementById('whyAngelTrustModal');
@@ -6528,6 +4414,7 @@ function closeWhyAngelModal() {
 }
 
 // Close the modal instantly if the user clicks anywhere outside the card frame box
+
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('whyAngelTrustModal');
     if (e.target === modal) {
@@ -6538,6 +4425,7 @@ window.addEventListener('click', function(e) {
 // =========================================================================
 // ANGEL JEWELLERY — CATALOG LAYOUT SWITCHER ENGINE
 // =========================================================================
+
 function switchCatalogLayout(layoutType) {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -6564,9 +4452,70 @@ function switchCatalogLayout(layoutType) {
 }
 
 // 5. Automatically apply the saved layout on page load
+
 document.addEventListener('DOMContentLoaded', () => {
     const savedLayout = localStorage.getItem('angelJewelleryLayoutPref');
     if (savedLayout) {
         switchCatalogLayout(savedLayout);
     }
-});
+});
+
+// =========================================================================
+// ANGEL JEWELLERY — LIVE HERO CAROUSEL LOADER FOR STOREFRONT
+// =========================================================================
+async function loadLiveCarouselDatabaseEngine() {
+    const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+    if (!sbUrl || !sbKey) return;
+
+    const targetUrl = `${sbUrl}/rest/v1/Carousel?select=*&order=display_order.asc`;
+    const track = document.getElementById('carouselSliderTrack');
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: { 
+                'apikey': sbKey, 
+                'Authorization': `Bearer ${sbKey}`, 
+                'Content-Type': 'application/json' 
+            }
+        });
+
+        if (!response.ok) throw new Error(`Supabase Carousel fetch status: ${response.status}`);
+        
+        carouselRegistryCache = await response.json();
+        if (!track) return;
+
+        if (carouselRegistryCache.length === 0) {
+            track.innerHTML = `
+                <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; border-radius:8px; overflow:hidden;">
+                    <img src="assets/carousel/slide-1.png" style="width:100%; height:100%; object-fit:cover; display:block;">
+                </div>`;
+            return;
+        }
+
+        // Render live slides dynamically into the track
+        track.innerHTML = carouselRegistryCache.map(slide => `
+            <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
+                <img src="${slide.image_url}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title || 'Campaign Banner'}">
+            </div>
+        `).join('');
+
+        // Re-initialize indicator dots & rotation loop after slides populate the DOM
+        if (typeof initializeLuxuryBannerCarousel === 'function') {
+            initializeLuxuryBannerCarousel();
+        }
+
+    } catch (err) {
+        console.error("❌ Failed to load live storefront carousel banners:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Fetch live carousel slides from Supabase table
+    await loadLiveCarouselDatabaseEngine();
+
+    // 2. Load catalog & coupons
+    loadProductDatabaseEngine();
+    loadLiveCouponDatabaseEngine();
+});
