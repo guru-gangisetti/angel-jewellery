@@ -1,7 +1,6 @@
 // =========================================================================
 // ANGEL JEWELLERY — ADMIN.JS
-// Loaded exclusively by admin.html, a completely separate page from the
-// customer storefront (index.html).
+// Loaded exclusively by admin.html. Self-contained runtime engine.
 // =========================================================================
 
 let adminSessionAccessToken = null;
@@ -57,7 +56,7 @@ async function attemptAdminLogin(event) {
                 expires_at: Date.now() + (data.expires_in * 1000)
             }));
         } catch (storageErr) {
-            console.error('Could not persist admin session — you will need to log in again after a refresh:', storageErr);
+            console.error('Could not persist admin session:', storageErr);
         }
 
         await revealAdminDashboardAfterLogin();
@@ -204,7 +203,7 @@ let carouselRegistryCache = [];
 let couponRegistryCache = [];
 
 function formatCurrency(amount) {
-    return '₹' + amount.toLocaleString('en-IN');
+    return '₹' + (amount || 0).toLocaleString('en-IN');
 }
 
 async function loadProductDatabaseEngine() {
@@ -447,7 +446,18 @@ function openAdminFormModalForCreation(event) {
     if (btnEl) btnEl.innerText = "Add New Item";
 
     const modal = document.getElementById('adminPieceVaultModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeAdminFormVaultModal() {
+    const modal = document.getElementById('adminPieceVaultModal');
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
 }
 
 function openAdminFormModalForEditing(event, id) {
@@ -483,7 +493,12 @@ function openAdminFormModalForEditing(event, id) {
 
     document.getElementById('adminFormModalTitle').innerHTML = `<i class="fas fa-edit" style="color:#ffd700;"></i> Edit Product #${product.id}`;
     document.getElementById('formSubmitActionBtn').innerText = "Update";
-    document.getElementById('adminPieceVaultModal').style.display = 'flex';
+    
+    const modal = document.getElementById('adminPieceVaultModal');
+    if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
 
     const existingVariants = product.product_variants || [];
     let hasRealVariants = false;
@@ -506,23 +521,25 @@ function openAdminFormModalForEditing(event, id) {
     setProductVariantMode(hasRealVariants);
 }
 
-function closeAdminFormVaultModal() {
-    document.getElementById('adminPieceVaultModal').style.display = 'none';
-}
-
 let inventorySelectedVariantIds = new Set();
 
 function openInventoryDashboard(event) {
     if (event) event.preventDefault();
     const modal = document.getElementById('inventoryDashboardModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
     populateInventoryCategoryFilterOptions();
     renderInventoryTable();
 }
 
 function closeInventoryDashboard() {
     const modal = document.getElementById('inventoryDashboardModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
 }
 
 function getFlattenedInventoryRows() {
@@ -805,7 +822,9 @@ async function openStockHistoryModal(variantId, labelText) {
 
     if (titleEl) titleEl.innerText = `Stock History — ${labelText}`;
     listEl.innerHTML = `<p style="text-align:center; padding:20px; color:#8a8da0;">Loading...</p>`;
-    modal.style.display = 'flex';
+    
+    modal.style.setProperty('display', 'flex', 'important');
+    document.body.style.overflow = 'hidden';
 
     const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
@@ -853,7 +872,10 @@ async function openStockHistoryModal(variantId, labelText) {
 
 function closeStockHistoryModal() {
     const modal = document.getElementById('stockHistoryModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
 }
 
 function renderAdminPromoConsoleGrid() {
@@ -969,20 +991,20 @@ async function executeAdminCouponPurgePipeline(event, couponId, couponCode) {
 
 function openAdminPromoConsoleOverlay(event) {
     if (event) event.preventDefault();
-    if (!isAdminAuthenticated) {
-        alert("🔒 Access Denied. Please unlock the master system using the Lock icon first.");
-        return;
-    }
     const overlay = document.getElementById('adminPromoConsoleOverlay');
     if (overlay) {
         overlay.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
         renderAdminPromoConsoleGrid();
     }
 }
 
 function closeAdminPromoConsoleOverlay() {
     const overlay = document.getElementById('adminPromoConsoleOverlay');
-    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+    if (overlay) {
+        overlay.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
 }
 
 function openAdminMasterConsole(event) {
@@ -998,10 +1020,8 @@ function openAdminMasterConsole(event) {
     }
     
     ordersContainer.innerHTML = ""; 
-    
-    // Safely reveal overlay without wiping out background/z-index rules
     adminOverlay.style.setProperty('display', 'flex', 'important');
-    document.body.style.overflow = 'hidden'; // Prevents dashboard from scrolling behind modal
+    document.body.style.overflow = 'hidden';
     
     statusMsg.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: left; padding: 10px 0; gap: 10px;">
@@ -1073,7 +1093,7 @@ function closeAdminMasterConsole() {
     if (adminOverlay) {
         adminOverlay.style.setProperty('display', 'none', 'important');
     }
-    document.body.style.overflow = ''; // Restore page scrolling
+    document.body.style.overflow = '';
 }
 
 let currentAdminLayoutViewMode = "cards"; 
@@ -1088,11 +1108,11 @@ function toggleAdminConsoleLayoutMode(targetViewMode) {
     if (!cardsBtn || !tableBtn) return;
 
     if (targetViewMode === 'cards') {
-        cardsBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-        tableBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+        cardsBtn.classList.add('is-active');
+        tableBtn.classList.remove('is-active');
     } else {
-        tableBtn.style.cssText = "background: var(--purple-primary, #202c55); color: #ffffff; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
-        cardsBtn.style.cssText = "background: transparent; color: #8a8da0; border: none; padding: 6px 14px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; outline: none;";
+        tableBtn.classList.add('is-active');
+        cardsBtn.classList.remove('is-active');
     }
 
     renderSegregatedAdminOrders();
@@ -1198,13 +1218,13 @@ function switchAdminConsoleTab(targetTabKey) {
     const shippedBtn = document.getElementById('adminTabShippedBtn');
     const cancelledBtn = document.getElementById('adminTabCancelledBtn');
     
-    if (pendingBtn) pendingBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    if (shippedBtn) shippedBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    if (cancelledBtn) cancelledBtn.style.cssText = "background: #f9f9fb; color: var(--text-muted); border: 1px solid #e8e8ef; padding: 10px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer;";
-    
-    if (targetTabKey === 'pending' && pendingBtn) pendingBtn.style.setProperty("background", "var(--purple-primary)", "important"), pendingBtn.style.setProperty("color", "#fff", "important");
-    if (targetTabKey === 'shipped' && shippedBtn) shippedBtn.style.setProperty("background", "var(--purple-primary)", "important"), shippedBtn.style.setProperty("color", "#fff", "important");
-    if (targetTabKey === 'cancelled' && cancelledBtn) cancelledBtn.style.setProperty("background", "var(--purple-primary)", "important"), cancelledBtn.style.setProperty("color", "#fff", "important");
+    [pendingBtn, shippedBtn, cancelledBtn].forEach(btn => {
+        if (btn) btn.classList.remove('is-active');
+    });
+
+    if (targetTabKey === 'pending' && pendingBtn) pendingBtn.classList.add('is-active');
+    if (targetTabKey === 'shipped' && shippedBtn) shippedBtn.classList.add('is-active');
+    if (targetTabKey === 'cancelled' && cancelledBtn) cancelledBtn.classList.add('is-active');
     
     renderSegregatedAdminOrders();
 }
@@ -1212,13 +1232,6 @@ function switchAdminConsoleTab(targetTabKey) {
 function handleAdminConsoleSearch(queryValue) {
     adminConsoleSearchQueryString = queryValue.trim().toLowerCase();
     renderSegregatedAdminOrders();
-}
-
-function closeAdminMasterConsole() {
-    const adminOverlay = document.getElementById('adminMasterConsoleOverlay');
-    if (adminOverlay) {
-        adminOverlay.style.cssText = "display: none !important;";
-    }
 }
 
 function renderSegregatedAdminOrders() {
@@ -1519,8 +1532,7 @@ function hideCourierAllocationPanel(paymentId) {
 async function updateShippingStatus(paymentId, btn) {
     const panel = document.getElementById(`courier-panel-${paymentId}`);
     const trackingInput = document.getElementById(`tracking-input-${paymentId}`);
-    
-    const courierRadio = document.querySelector(`input[name="table-courier-${paymentId}"]:checked`);
+    const courierRadio = document.querySelector(`input[name="courier-${paymentId}"]:checked`) || document.querySelector(`input[name="table-courier-${paymentId}"]:checked`);
     
     if (!trackingInput || !trackingInput.value.trim()) {
         alert("Please enter a valid Waybill / Tracking Number.");
@@ -1557,8 +1569,6 @@ async function updateShippingStatus(paymentId, btn) {
         if (!response.ok) throw new Error("Database failed to update shipment routing records.");
         
         if (panel) panel.style.display = 'none';
-        const activeRow = document.getElementById(`order-row-${paymentId}`);
-        if (activeRow) activeRow.classList.remove('active-shipping-row');
         
         if (typeof openAdminMasterConsole === 'function') {
             await openAdminMasterConsole(); 
@@ -1566,7 +1576,7 @@ async function updateShippingStatus(paymentId, btn) {
         
     } catch (err) {
         console.error("Fulfillment sync error:", err);
-        alert("Failed to sync shipment updates to the database. Check console details.");
+        alert("Failed to sync shipment updates to the database.");
         btn.disabled = false;
         btn.innerHTML = originalBtnText;
     }
@@ -1594,13 +1604,13 @@ async function executeAdminItemDeletionPipeline(event, productId, productTitle) 
 
         if (!networkResponse.ok) throw new Error(`Supabase returned status code: ${networkResponse.status}`);
         
-        alert(`✨ Successfully Deleted! "${productTitle}" has been cleanly scrubbed from your database rows.`);
+        alert(`✨ Successfully Deleted! "${productTitle}" has been cleanly scrubbed.`);
         if (MASTER_LIVE_INVENTORY_CACHE[productId]) delete MASTER_LIVE_INVENTORY_CACHE[productId];
         await loadProductDatabaseEngine();
 
     } catch (error) {
-        console.error("Critical Supabase row write/purge communication error caught:", error);
-        alert("Pipeline Synchronization Interrupted: Could not wipe item from Supabase database layout.");
+        console.error("Critical Supabase row write/purge error:", error);
+        alert("Pipeline Synchronization Interrupted: Could not wipe item from Supabase.");
     }
 }
 
@@ -1663,21 +1673,16 @@ async function executeAdminOrderRefundPipeline(event, databaseRowId) {
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal'
             },
-            body: JSON.stringify({
-                status: 'Refunded'
-            })
+            body: JSON.stringify({ status: 'Refunded' })
         });
 
-        if (!response.ok) throw new Error(`Database rejected status transition code: ${response.status}`);
+        if (!response.ok) throw new Error(`Database rejected status transition: ${response.status}`);
         
-        alert("✨ Status set successfully! Transaction row marked as Refunded.");
-        
-        if (typeof openAdminMasterConsole === 'function') {
-            await openAdminMasterConsole();
-        }
+        alert("✨ Transaction row marked as Refunded.");
+        if (typeof openAdminMasterConsole === 'function') await openAdminMasterConsole();
 
     } catch (err) {
-        console.error("Fulfillment adjustment trace error:", err);
+        console.error("Fulfillment adjustment error:", err);
         alert("Sync interrupted: Unable to modify server rows.");
         actionBtn.disabled = false;
         actionBtn.innerHTML = `<i class="fas fa-hand-holding-usd"></i> Processed Refund`;
@@ -1687,7 +1692,7 @@ async function executeAdminOrderRefundPipeline(event, databaseRowId) {
 async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
     if (event) event.preventDefault();
 
-    const doubleCheck = confirm("⚠️ Reverse Cancellation Confirmation:\nAre you sure you want to move this order back to active status?\n\nThis will wipe out stored cancel reasons and PhonePe details.");
+    const doubleCheck = confirm("⚠️ Reverse Cancellation Confirmation:\nAre you sure you want to move this order back to active status?");
     if (!doubleCheck) return;
 
     const reverseBtn = event.currentTarget;
@@ -1714,17 +1719,14 @@ async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
             })
         });
 
-        if (!response.ok) throw new Error(`Database rejected operation update: ${response.status}`);
+        if (!response.ok) throw new Error(`Database operation update rejected: ${response.status}`);
         
-        alert("✨ Order restored successfully! Row shifted back to active Pending fulfillment queue.");
-        
-        if (typeof openAdminMasterConsole === 'function') {
-            await openAdminMasterConsole();
-        }
+        alert("✨ Order restored to active queue.");
+        if (typeof openAdminMasterConsole === 'function') await openAdminMasterConsole();
 
     } catch (err) {
-        console.error("Reversal database adjustment execution failure caught:", err);
-        alert("Sync Error: Unable to re-route tracking metrics. Check your network link.");
+        console.error("Reversal failure:", err);
+        alert("Sync Error: Unable to update server rows.");
         reverseBtn.disabled = false;
         reverseBtn.innerHTML = `<i class="fas fa-undo-alt"></i> Move Back to Ordered`;
     }
@@ -1732,9 +1734,7 @@ async function executeAdminReverseCancellationPipeline(event, databaseRowId) {
 
 function convertImageFileToWebP(fileObject) {
     return new Promise((resolve, reject) => {
-        if (fileObject.type === 'image/webp') {
-            return resolve(fileObject);
-        }
+        if (fileObject.type === 'image/webp') return resolve(fileObject);
 
         const imageFileReader = new FileReader();
         imageFileReader.readAsDataURL(fileObject);
@@ -1747,43 +1747,33 @@ function convertImageFileToWebP(fileObject) {
                 const offScreenCanvas = document.createElement('canvas');
                 const canvasContext = offScreenCanvas.getContext('2d');
                 
-                const MAX_IMAGE_DIMENSION_LIMIT = 1920; 
+                const MAX_LIMIT = 1920; 
                 let targetWidth = tempImgNode.width;
                 let targetHeight = tempImgNode.height;
 
-                if (targetWidth > MAX_IMAGE_DIMENSION_LIMIT || targetHeight > MAX_IMAGE_DIMENSION_LIMIT) {
+                if (targetWidth > MAX_LIMIT || targetHeight > MAX_LIMIT) {
                     if (targetWidth > targetHeight) {
-                        targetHeight = Math.round((targetHeight * MAX_IMAGE_DIMENSION_LIMIT) / targetWidth);
-                        targetWidth = MAX_IMAGE_DIMENSION_LIMIT;
+                        targetHeight = Math.round((targetHeight * MAX_LIMIT) / targetWidth);
+                        targetWidth = MAX_LIMIT;
                     } else {
-                        targetWidth = Math.round((targetWidth * MAX_IMAGE_DIMENSION_LIMIT) / targetHeight);
-                        targetHeight = MAX_IMAGE_DIMENSION_LIMIT;
+                        targetWidth = Math.round((targetWidth * MAX_LIMIT) / targetHeight);
+                        targetHeight = MAX_LIMIT;
                     }
                 }
                 
                 offScreenCanvas.width = targetWidth;
                 offScreenCanvas.height = targetHeight;
-                
                 canvasContext.imageSmoothingEnabled = true;
                 canvasContext.imageSmoothingQuality = 'high';
-                
                 canvasContext.drawImage(tempImgNode, 0, 0, targetWidth, targetHeight);
                 
                 offScreenCanvas.toBlob((webpBlobBinary) => {
-                    if (!webpBlobBinary) {
-                        return reject(new Error("Image graphic compression pipeline failed."));
-                    }
-                    
+                    if (!webpBlobBinary) return reject(new Error("Compression failed."));
                     const cleanFileName = fileObject.name.substring(0, fileObject.name.lastIndexOf('.')) || 'product_asset';
-                    const compressedWebPFile = new File([webpBlobBinary], `${cleanFileName}.webp`, {
-                        type: 'image/webp',
-                        lastModified: Date.now()
-                    });
-                    
-                    resolve(compressedWebPFile);
+                    const compressedFile = new File([webpBlobBinary], `${cleanFileName}.webp`, { type: 'image/webp', lastModified: Date.now() });
+                    resolve(compressedFile);
                 }, 'image/webp', 0.90); 
             };
-            
             tempImgNode.onerror = (err) => reject(err);
         };
         imageFileReader.onerror = (err) => reject(err);
@@ -1798,7 +1788,7 @@ async function uploadProductImageToSupabaseStorage(fileObject) {
     try {
         processedFileAsset = await convertImageFileToWebP(fileObject);
     } catch (compressionError) {
-        console.warn("⚠️ Canvas compression failed, falling back to original source asset format:", compressionError);
+        console.warn("⚠️ Compression fallback:", compressionError);
     }
 
     const safeBaseName = processedFileAsset.name.replace(/[^a-zA-Z0-9.]/g, '_');
@@ -1829,7 +1819,6 @@ async function loadLiveCarouselDatabaseEngine() {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
     const targetUrl = `${sbUrl}/rest/v1/Carousel?select=*&order=display_order.asc`;
-    const track = document.getElementById('carouselSliderTrack');
 
     try {
         const response = await fetch(targetUrl, {
@@ -1837,27 +1826,9 @@ async function loadLiveCarouselDatabaseEngine() {
             headers: { 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`, 'Content-Type': 'application/json' }
         });
         if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
-        
         carouselRegistryCache = await response.json();
-        
-        if (!track) return;
-        
-        if (carouselRegistryCache.length === 0) {
-            track.innerHTML = `
-                <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; border-radius:8px; overflow:hidden;">
-                    <img src="assets/carousel/slide-1.png" style="width:100%; height:100%; object-fit:cover; display:block;">
-                </div>`;
-            return;
-        }
-
-        track.innerHTML = carouselRegistryCache.map(slide => `
-            <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
-                <img src="${slide.image_url}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title}">
-            </div>
-        `).join('');
-
     } catch (err) {
-        console.error("❌ Failed to synchronize active carousel registry layers:", err);
+        console.error("❌ Failed to load carousel registry:", err);
     }
 }
 
@@ -1882,7 +1853,6 @@ async function handleAdminCarouselFormSubmit(event) {
             return;
         }
 
-        submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Processing & Compressing...`;
         const chosenFile = filePicker.files[0];
         const finalWebpUrl = await uploadProductImageToSupabaseStorage(chosenFile);
 
@@ -1892,7 +1862,6 @@ async function handleAdminCarouselFormSubmit(event) {
             image_url: finalWebpUrl
         };
 
-        submitBtn.innerHTML = `<i class="fas fa-database fa-spin"></i> Saving Slide...`;
         const response = await fetch(`${sbUrl}/rest/v1/Carousel`, {
             method: 'POST',
             headers: { 
@@ -1906,15 +1875,14 @@ async function handleAdminCarouselFormSubmit(event) {
 
         if (!response.ok) throw new Error("Supabase rejected payload object.");
 
-        alert(`✨ Campaign slide successfully posted as WebP: ${newSlidePayload.title}`);
+        alert(`✨ Campaign slide posted as WebP: ${newSlidePayload.title}`);
         document.getElementById('adminCarouselCreatorForm').reset();
-        
         await loadLiveCarouselDatabaseEngine(); 
         renderAdminCarouselConsoleGrid();       
         
     } catch (err) {
         console.error(err);
-        alert("Pipeline Sync Interrupted: Verify your data transmission links.");
+        alert("Pipeline Sync Interrupted: Verify network links.");
     } finally {
         submitBtn.disabled = false; 
         submitBtn.innerText = originalText;
@@ -1926,7 +1894,7 @@ function renderAdminCarouselConsoleGrid() {
     if (!container) return;
 
     if (carouselRegistryCache.length === 0) {
-        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No carousel slide tracks minted yet.</p>`;
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No carousel slides created yet.</p>`;
         return;
     }
 
@@ -1962,7 +1930,7 @@ function renderAdminCarouselConsoleGrid() {
 
 async function executeAdminCarouselPurgePipeline(event, slideId, slideTitle) {
     if (event) event.stopPropagation();
-    const verify = confirm(`Are you absolutely sure you want to permanently delete campaign banner: "${slideTitle}"?`);
+    const verify = confirm(`Are you absolutely sure you want to delete campaign banner: "${slideTitle}"?`);
     if (!verify) return;
 
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
@@ -1973,14 +1941,13 @@ async function executeAdminCarouselPurgePipeline(event, slideId, slideTitle) {
             method: 'DELETE',
             headers: { 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`, 'Content-Type': 'application/json' }
         });
-        if (!response.ok) throw new Error("Deletion execution tracking drop.");
+        if (!response.ok) throw new Error("Deletion failed.");
 
         await loadLiveCarouselDatabaseEngine();
         renderAdminCarouselConsoleGrid();
-        
     } catch (err) {
         console.error(err);
-        alert("Unable to delete slide element entry row.");
+        alert("Unable to delete slide entry.");
     }
 }
 
@@ -1989,13 +1956,17 @@ function openAdminCarouselConsoleOverlay(event) {
     const overlay = document.getElementById('adminCarouselConsoleOverlay');
     if (overlay) {
         overlay.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
         renderAdminCarouselConsoleGrid();
     }
 }
 
 function closeAdminCarouselConsoleOverlay() {
     const overlay = document.getElementById('adminCarouselConsoleOverlay');
-    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+    if (overlay) {
+        overlay.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
 }
 
 function appendNewVariantRowToAdminForm(existingData = null) {
@@ -2022,45 +1993,19 @@ function appendNewVariantRowToAdminForm(existingData = null) {
 
     rowDiv.innerHTML = `
         <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
-        <div class="admin-variant-card-header">
-            <input type="color" class="v-hex admin-variant-swatch-input" value="${colorHex}" title="Pick the swatch color shown as the storefront color dot">
-            <span class="admin-variant-card-label">Color Variant <span class="variant-field-hint">(tap the circle to set its swatch)</span></span>
-            <button type="button" class="admin-variant-remove-btn" onclick="document.getElementById('${uniqueRowId}').remove()" title="Remove this variant option">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <input type="color" class="v-hex" value="${colorHex}" style="width:28px; height:28px; border:none; border-radius:50%; cursor:pointer;">
+            <span style="font-size:0.75rem; font-weight:700; color:var(--purple-primary); text-transform:uppercase;">Color Variant</span>
+            <button type="button" onclick="document.getElementById('${uniqueRowId}').remove()" style="margin-left:auto; background:transparent; border:none; color:#d9383a; font-size:0.72rem; font-weight:700; cursor:pointer;">
                 <i class="fas fa-trash-alt"></i> Remove
             </button>
         </div>
-        <div class="admin-variant-fields-grid">
-            <div class="variant-field">
-                <label>Color Name</label>
-                <input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required>
-            </div>
-            <div class="variant-field">
-                <label>SKU</label>
-                <input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required>
-            </div>
-            <div class="variant-field">
-                <label>Price (₹)</label>
-                <input type="number" class="v-price" value="${price}" placeholder="4500" required>
-            </div>
-            <div class="variant-field">
-                <label>Stock Qty</label>
-                <input type="number" class="v-stock" value="${stock}" placeholder="5" required>
-            </div>
-            <div class="variant-field variant-field-wide">
-                <label>Product Image <span class="variant-field-hint">(upload a photo, or paste a URL)</span></label>
-                <div class="variant-image-upload-row">
-                    <div class="variant-image-preview">
-                        ${imgUrl ? `<img src="${imgUrl}" alt="Variant preview">` : `<i class="fas fa-image"></i>`}
-                    </div>
-                    <div class="variant-image-upload-inputs">
-                        <input type="text" class="v-img" value="${imgUrl}" placeholder="Paste a URL, or upload a photo" oninput="refreshVariantImagePreview(this)">
-                        <button type="button" class="variant-image-upload-btn" onclick="document.getElementById('${uniqueRowId}-file').click()">
-                            <i class="fas fa-cloud-upload-alt"></i> <span class="variant-image-upload-label">Upload Photo</span>
-                        </button>
-                        <input type="file" accept="image/*" id="${uniqueRowId}-file" class="variant-image-file-input" onchange="handleVariantImageFileSelected(event, '${uniqueRowId}')">
-                    </div>
-                </div>
-            </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Color Name</label><input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
+            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">SKU</label><input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
+            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Price (₹)</label><input type="number" class="v-price" value="${price}" placeholder="4500" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
+            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Stock Qty</label><input type="number" class="v-stock" value="${stock}" placeholder="5" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
+            <div style="grid-column: 1 / -1;"><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Image URL</label><input type="text" class="v-img" value="${imgUrl}" placeholder="Paste Image URL" oninput="refreshVariantImagePreview(this)" style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
         </div>
     `;
 
@@ -2068,59 +2013,15 @@ function appendNewVariantRowToAdminForm(existingData = null) {
 }
 
 function refreshVariantImagePreview(inputEl) {
-    const card = inputEl.closest('.admin-variant-card');
-    if (!card) return;
-    const preview = card.querySelector('.variant-image-preview');
+    const preview = inputEl.closest('.admin-variant-card')?.querySelector('.variant-image-preview');
     if (!preview) return;
-
     const url = inputEl.value.trim();
-    if (!url) {
-        preview.innerHTML = `<i class="fas fa-image"></i>`;
-        return;
-    }
+    if (!url) { preview.innerHTML = `<i class="fas fa-image"></i>`; return; }
     const img = document.createElement('img');
     img.src = url;
-    img.alt = 'Variant preview';
     img.onerror = () => { preview.innerHTML = `<i class="fas fa-image"></i>`; };
     preview.innerHTML = '';
     preview.appendChild(img);
-}
-
-async function handleVariantImageFileSelected(event, rowId) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-        alert('Please select an image file.');
-        event.target.value = '';
-        return;
-    }
-
-    const row = document.getElementById(rowId);
-    if (!row) return;
-    const urlInput = row.querySelector('.v-img');
-    const uploadBtn = row.querySelector('.variant-image-upload-btn');
-    const uploadLabel = row.querySelector('.variant-image-upload-label');
-    const originalLabelText = uploadLabel ? uploadLabel.textContent : 'Upload Photo';
-
-    if (uploadBtn) uploadBtn.disabled = true;
-
-    try {
-        if (uploadLabel) uploadLabel.textContent = 'Uploading...';
-        const publicUrl = await uploadProductImageToSupabaseStorage(file);
-
-        if (urlInput) {
-            urlInput.value = publicUrl;
-            refreshVariantImagePreview(urlInput);
-        }
-    } catch (err) {
-        console.error('Variant image upload failed:', err);
-        alert(`Image upload failed: ${err.message}\n\nYou can paste an image URL manually instead.`);
-    } finally {
-        if (uploadBtn) uploadBtn.disabled = false;
-        if (uploadLabel) uploadLabel.textContent = originalLabelText;
-        event.target.value = '';
-    }
 }
 
 function runAdminOnlyPageSetup() {
@@ -2132,7 +2033,7 @@ function runAdminOnlyPageSetup() {
             const submitBtn = document.getElementById('formSubmitActionBtn');
             const originalButtonText = submitBtn.innerText;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing Assets...`;
+            submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing...`;
 
             const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
             const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
@@ -2152,7 +2053,7 @@ function runAdminOnlyPageSetup() {
                 let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
 
                 if (filePicker && filePicker.files.length > 0) {
-                    submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image Asset...`;
+                    submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image...`;
                     const uploadedFile = filePicker.files[0];
                     finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
                     document.getElementById('formProductImage').value = finalCalculatedImageUrl;
@@ -2198,15 +2099,7 @@ function runAdminOnlyPageSetup() {
                     body: JSON.stringify(parentProductPayload)
                 });
 
-                if (!parentResponse.ok) throw new Error("Supabase master product row registration rejected.");
-                
-                const preEditVariantsSnapshot = {};
-                if (isEditOperationMode) {
-                    const existingProductRecord = productDatabase.find(p => p.id === assignedProductId);
-                    (existingProductRecord?.product_variants || []).forEach(v => {
-                        preEditVariantsSnapshot[v.color_name || 'Standard'] = parseInt(v.stock) || 0;
-                    });
-                }
+                if (!parentResponse.ok) throw new Error("Supabase master product registration rejected.");
 
                 if (isEditOperationMode) {
                     await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}`, {
@@ -2215,7 +2108,6 @@ function runAdminOnlyPageSetup() {
                     });
                 }
 
-                submitBtn.innerHTML = `<i class="fas fa-layer-group fa-spin"></i> Committing Variant Matrix...`;
                 const variationsBatchPayloadArray = [];
 
                 if (variantRows.length > 0) {
@@ -2256,38 +2148,13 @@ function runAdminOnlyPageSetup() {
 
                 if (!variantResponse.ok) throw new Error("Variant rows population execution failed.");
 
-                if (isEditOperationMode && typeof logStockHistoryEntry === 'function') {
-                    try {
-                        const freshVariantsResponse = await fetch(`${sbUrl}/rest/v1/product_variants?product_id=eq.${assignedProductId}&select=*`, {
-                            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}` }
-                        });
-                        if (freshVariantsResponse.ok) {
-                            const freshVariants = await freshVariantsResponse.json();
-                            const productTitleForLog = document.getElementById('formProductTitle').value.trim();
-                            for (const fv of freshVariants) {
-                                const colorKey = fv.color_name || 'Standard';
-                                const newStockValue = parseInt(fv.stock) || 0;
-                                const previousStockValue = Object.prototype.hasOwnProperty.call(preEditVariantsSnapshot, colorKey)
-                                    ? preEditVariantsSnapshot[colorKey]
-                                    : 0;
-                                if (previousStockValue !== newStockValue) {
-                                    await logStockHistoryEntry(fv.id, assignedProductId, productTitleForLog, colorKey, 'manual_edit', previousStockValue, newStockValue);
-                                }
-                            }
-                        }
-                    } catch (historyErr) {
-                        console.error('Could not log stock history:', historyErr);
-                    }
-                }
-
-                alert(`✨ Success! Database sync complete for item reference #${assignedProductId}`);
+                alert(`✨ Database sync complete for item #${assignedProductId}`);
                 closeAdminFormVaultModal();
-                
                 await loadProductDatabaseEngine();
 
             } catch (error) {
-                console.error("Administrative multi-tier write pipeline failure:", error);
-                alert("Database write transaction was interrupted.");
+                console.error("Write error:", error);
+                alert("Database transaction was interrupted.");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalButtonText;

@@ -3434,3 +3434,172 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     }
 }
 
+/* =========================================================================
+   ANGEL JEWELLERY — ADD / EDIT PRODUCT VAULT MODAL STYLES
+   ========================================================================= */
+
+/* Backdrop overlay */
+#adminPieceVaultModal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(17, 26, 54, 0.75) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 9999999 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Modal Inner Panel */
+.admin-modal-card-panel {
+    background: #ffffff !important;
+    width: 100% !important;
+    max-width: 580px !important;
+    max-height: 90vh !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--purple-primary) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    font-family: var(--font-body);
+}
+
+/* Modal Header */
+.admin-modal-header {
+    background: var(--purple-primary);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-modal-header h3 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-modal-header i.close-icon {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.admin-modal-header i.close-icon:hover {
+    opacity: 1;
+}
+
+/* Form Body */
+.admin-vault-form {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-height: calc(90vh - 70px);
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.admin-vault-form label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--purple-primary);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.admin-vault-form input[type="text"],
+.admin-vault-form input[type="number"],
+.admin-vault-form select,
+.admin-vault-form textarea {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+    font-family: var(--font-body);
+    box-sizing: border-box;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-vault-form textarea {
+    height: auto;
+    padding: 10px 14px;
+    resize: vertical;
+}
+
+.admin-vault-form input:focus,
+.admin-vault-form select:focus,
+.admin-vault-form textarea:focus {
+    border-color: var(--purple-primary);
+    box-shadow: 0 0 0 3px rgba(32, 44, 85, 0.08);
+}
+
+.form-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+
+/* File Upload Row */
+.admin-file-upload-box {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+}
+
+.admin-file-upload-box input[type="file"] {
+    flex: 1;
+    padding: 8px;
+    border: 1.5px dashed #cca43b;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: #fafafa;
+    cursor: pointer;
+}
+
+/* Responsive Scaling (< 680px) */
+@media (max-width: 680px) {
+    #adminPieceVaultModal {
+        padding: 0 !important;
+    }
+    
+    .admin-modal-card-panel {
+        max-height: 100vh !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    .admin-vault-form {
+        padding: 18px 16px !important;
+        max-height: calc(100vh - 60px) !important;
+    }
+
+    .form-grid-2col {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
+
