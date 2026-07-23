@@ -245,42 +245,11 @@
         }
 
         /* --- MASTER ORDER DESK PANEL --- */
-        .order-desk-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; margin-bottom: 18px; }
-        .order-desk-header h2 { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--purple-primary); }
-        .order-desk-header p { margin: 3px 0 0 0; font-size: 0.8rem; color: #8a8da0; }
-        .order-desk-close-btn { background: #f4f4f7; border: 1px solid var(--border-subtle); padding: 8px 16px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--purple-primary); cursor: pointer; }
-        .order-desk-close-btn:hover { background: #d9383a; color: #ffffff; border-color: #d9383a; }
 
-        .order-desk-strip-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #8a8da0; letter-spacing: 1px; margin: 16px 0 8px; }
-        .order-desk-analytics-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
-        .order-desk-analytic-card { padding: 14px 18px; border-radius: 10px; background: #fafafa; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; }
-        .order-desk-analytic-card--purple { border-left: 4px solid var(--purple-primary); }
-        .order-desk-analytic-card--pink { border-left: 4px solid var(--pink-accent); }
-        .order-desk-analytic-card--gold { border-left: 4px solid #cca43b; }
-        .order-desk-analytic-card span { font-size: 0.68rem; text-transform: uppercase; color: #8a8da0; font-weight: 700; letter-spacing: 0.5px; }
-        .order-desk-analytic-card h3 { margin: 4px 0 0 0; font-size: 1.3rem; font-weight: 700; color: var(--purple-primary); }
 
-        .order-desk-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0 16px; background: #fafafa; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-subtle); }
-        .order-desk-tabs { display: flex; gap: 8px; align-items: center; }
-        .order-desk-tab-btn {
-            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-subtle); background: #ffffff;
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; cursor: pointer; color: #6e6d7a;
-            display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;
-        }
-        .order-desk-tab-btn.is-active { background: var(--purple-primary) !important; color: #ffffff !important; border-color: var(--purple-primary) !important; }
-        .order-desk-tab-count { background: rgba(0, 0, 0, 0.08); padding: 2px 7px; border-radius: 10px; font-size: 0.68rem; }
-        .order-desk-tab-btn.is-active .order-desk-tab-count { background: rgba(255, 255, 255, 0.22); color: #ffffff; }
 
-        .order-desk-toolbar-right { display: flex; gap: 10px; align-items: center; }
-        .order-desk-search-wrap { position: relative; display: flex; align-items: center; }
-        .order-desk-search-wrap i { position: absolute; left: 12px; color: #8a8da0; font-size: 0.82rem; }
-        .order-desk-search-wrap input { height: 36px; padding: 0 12px 0 34px; border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.82rem; outline: none; font-family: var(--font-body); background: #ffffff; width: 210px; }
         
-        .order-desk-view-switcher { display: flex; gap: 4px; background: #ffffff; padding: 3px; border: 1px solid var(--border-subtle); border-radius: 8px; }
-        .order-desk-view-switcher button { padding: 6px 12px; border: none; background: transparent; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer; color: #8a8da0; display: inline-flex; align-items: center; gap: 5px; }
-        .order-desk-view-switcher button.is-active { background: var(--purple-primary); color: #ffffff; }
 
-        .order-desk-export-btn { height: 36px; background: #04693a; color: #ffffff; border: none; padding: 0 16px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 
         /* --- RESPONSIVE BREAKPOINTS --- */
         @media (max-width: 960px) {
@@ -297,15 +266,6 @@
 
             .admin-modal-overlay { padding: 0 !important; }
             .admin-modal-panel { max-height: 100vh !important; height: 100vh !important; border-radius: 0 !important; padding: 16px 12px !important; }
-            .order-desk-analytics-strip { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-            .order-desk-toolbar { flex-direction: column !important; align-items: stretch !important; padding: 10px !important; }
-            .order-desk-tabs { width: 100% !important; display: flex !important; gap: 4px !important; }
-            .order-desk-tab-btn { flex: 1 !important; padding: 8px 4px !important; font-size: 0.64rem !important; justify-content: center !important; }
-            .order-desk-toolbar-right { width: 100% !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
-            .order-desk-search-wrap input { width: 100% !important; box-sizing: border-box !important; }
-            .order-desk-view-switcher { width: 100% !important; }
-            .order-desk-view-switcher button { flex: 1 !important; justify-content: center !important; }
-            .order-desk-export-btn { width: 100% !important; justify-content: center !important; }
             .form-grid-2col { grid-template-columns: 1fr !important; gap: 12px !important; }
         }
         /* --- VARIANT MODE TOGGLE BUTTONS --- */
@@ -398,114 +358,249 @@
                 ANGEL JEWELLERY — STOCK HISTORY MODAL LUXURY STYLES
                 ========================================================================= */
 
-                .stock-history-header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding-bottom: 14px;
-                    margin-bottom: 18px;
-                    border-bottom: 1px solid var(--border-subtle, #e8e8ef);
-                }
 
-                .stock-history-header h3 {
-                    margin: 0;
-                    font-size: 1.05rem;
-                    font-weight: 700;
-                    color: var(--purple-primary, #202c55);
-                    line-height: 1.35;
-                    padding-right: 12px;
-                }
 
-                .stock-history-close-btn {
-                    background: #f4f4f7;
-                    border: 1px solid var(--border-subtle, #e8e8ef);
-                    width: 32px;
-                    height: 32px;
-                    min-width: 32px;
-                    border-radius: 50%;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    color: #6e6d7a;
-                    font-size: 0.9rem;
-                    transition: all 0.2s ease;
-                    outline: none;
-                }
 
-                .stock-history-close-btn:hover {
-                    background: #d9383a;
-                    color: #ffffff;
-                    border-color: #d9383a;
-                }
 
-                .stock-history-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                    max-height: 60vh;
-                    overflow-y: auto;
-                    padding-right: 4px;
-                }
 
-                .stock-history-entry {
-                    display: flex;
-                    align-items: center;
-                    gap: 14px;
-                    padding: 12px 16px;
-                    background: #fafafa;
-                    border: 1px solid var(--border-subtle, #e8e8ef);
-                    border-radius: 10px;
-                    transition: all 0.2s ease;
-                }
 
-                .stock-history-entry:hover {
-                    background: #ffffff;
-                    border-color: rgba(32, 44, 85, 0.2);
-                    box-shadow: 0 4px 12px rgba(32, 44, 85, 0.05);
-                }
 
-                .stock-history-entry-icon {
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 8px;
-                    background: #ffffff;
-                    border: 1px solid var(--border-subtle, #e8e8ef);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1rem;
-                    flex-shrink: 0;
-                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-                }
 
-                .stock-history-entry-body {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2px;
-                    flex: 1;
-                    text-align: left;
-                }
 
-                .stock-history-entry-type {
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    color: var(--purple-primary, #202c55);
-                }
 
-                .stock-history-entry-change {
-                    font-size: 0.88rem;
-                    font-weight: 700;
-                    color: #111116;
-                }
 
-                .stock-history-entry-date {
-                    font-size: 0.7rem;
-                    font-weight: 500;
-                    color: #8a8da0;
-                }
+
+        /* =====================================================================
+           ANGEL JEWELLERY — INVENTORY DASHBOARD, MASTER ORDER DESK, STOCK
+           HISTORY (consolidated, single source — previously scattered across
+           style.css and this file with conflicting duplicate definitions,
+           some using !important against each other, which produced
+           inconsistent results depending on which rule happened to win the
+           cascade. This is now the only definition for these classes.)
+           ===================================================================== */
+
+        /* --- Shared modal chrome --- */
+        .inventory-dashboard-modal, .order-desk-overlay, .stock-history-modal {
+            display: none; position: fixed; inset: 0; z-index: 9997;
+            background: rgba(17,17,22,0.55); align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        .inventory-dashboard-panel, .order-desk-panel {
+            background: #ffffff; border-radius: 12px; width: 100%; max-width: 1100px;
+            max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        }
+        .stock-history-panel {
+            background: #ffffff; border-radius: 12px; width: 100%; max-width: 480px;
+            max-height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        }
+
+        /* --- Inventory Dashboard --- */
+        .inventory-dashboard-header, .order-desk-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 26px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+        }
+        .inventory-dashboard-header h2, .order-desk-header h2 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--purple-primary); display: flex; align-items: center; gap: 10px; }
+        .order-desk-header p { margin: 3px 0 0; font-size: 0.68rem; font-weight: 700; color: #8a8da0; text-transform: uppercase; letter-spacing: 1px; }
+        .inventory-dashboard-close-btn, .order-desk-close-btn, .stock-history-close-btn {
+            background: transparent; border: 1px solid var(--border-subtle); color: #8a8da0;
+            font-size: 1rem; cursor: pointer; padding: 6px 14px; border-radius: 6px;
+        }
+        .inventory-dashboard-close-btn:hover, .order-desk-close-btn:hover, .stock-history-close-btn:hover { color: var(--purple-primary); border-color: var(--purple-primary); }
+
+        .inventory-summary-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 20px 26px 0; }
+        .inventory-summary-card { background: #fafafa; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 3px; text-align: center; }
+        .inventory-summary-value { font-size: 1.4rem; font-weight: 800; color: var(--purple-primary); }
+        .inventory-summary-label { font-size: 0.68rem; font-weight: 600; color: #8a8da0; text-transform: uppercase; letter-spacing: 0.4px; }
+        .inventory-summary-card--warning .inventory-summary-value { color: #b8862a; }
+        .inventory-summary-card--danger .inventory-summary-value { color: #d9383a; }
+
+        .inventory-toolbar { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 26px; align-items: center; }
+        .inventory-search-input, .inventory-filter-select { height: 38px; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0 12px; font-size: 0.78rem; font-family: var(--font-body); outline: none; }
+        .inventory-search-input { flex: 1; min-width: 180px; }
+        .inventory-export-btn { height: 38px; display: inline-flex; align-items: center; gap: 7px; background: var(--purple-primary); color: #fff; border: none; padding: 0 16px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+        .inventory-export-btn:hover { background: #161f3d; }
+
+        .inventory-bulk-actions-bar { display: flex; align-items: center; gap: 10px; padding: 10px 26px; background: rgba(32,44,85,0.05); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; }
+        .inventory-bulk-count { font-size: 0.75rem; font-weight: 700; color: var(--purple-primary); }
+        .inventory-bulk-input { height: 34px; width: 130px; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0 10px; font-size: 0.75rem; }
+        .inventory-bulk-btn { height: 34px; border: none; border-radius: 6px; padding: 0 14px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+        .inventory-bulk-btn--primary { background: var(--purple-primary); color: #fff; }
+        .inventory-bulk-btn--danger { background: #d9383a; color: #fff; }
+        .inventory-bulk-btn--ghost { background: transparent; border: 1px solid var(--border-subtle); color: #8a8da0; }
+
+        .inventory-table-wrapper { flex: 1; overflow: auto; padding: 0 26px 20px; }
+        .inventory-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .inventory-table thead th { text-align: left; padding: 10px 8px; background: #fafafa; color: #8a8da0; font-weight: 700; font-size: 0.66rem; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; }
+        .inventory-table tbody td { padding: 8px; border-bottom: 1px solid #f1f1f5; vertical-align: middle; }
+        .inventory-td-item { display: flex; align-items: center; gap: 10px; }
+        .inventory-td-item img { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+        .inventory-td-sku { font-family: monospace; font-size: 0.72rem; color: #6e6d7a; }
+        .inventory-stock-input { width: 60px; height: 32px; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0 8px; font-size: 0.78rem; text-align: center; }
+        .inventory-status-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; }
+        .inventory-status-out { background: rgba(217,56,58,0.1); color: #d9383a; }
+        .inventory-status-low { background: rgba(255,20,147,0.08); color: var(--pink-accent); }
+        .inventory-status-healthy { background: rgba(4,105,58,0.09); color: #04693a; }
+        .inventory-history-btn { background: transparent; border: 1px solid var(--border-subtle); border-radius: 6px; width: 30px; height: 30px; color: #8a8da0; cursor: pointer; }
+        .inventory-history-btn:hover { border-color: var(--purple-primary); color: var(--purple-primary); }
+
+        @media (max-width: 768px) {
+            .inventory-summary-cards { grid-template-columns: repeat(2,1fr); }
+            .inventory-dashboard-panel { max-height: 95vh; }
+        }
+
+        /* --- Master Order Desk --- */
+        .order-desk-analytics-strip { display: flex; gap: 12px; padding: 18px 26px 0; flex-shrink: 0; }
+        .order-desk-analytic-card { flex: 1; background: #fafafa; border-radius: 8px; padding: 12px 16px; border-left: 4px solid var(--purple-primary); }
+        .order-desk-analytic-card--pink { border-left-color: var(--pink-accent); }
+        .order-desk-analytic-card--gold { border-left-color: #cca43b; }
+        .order-desk-analytic-card span { font-size: 0.64rem; text-transform: uppercase; color: #8a8da0; font-weight: 700; }
+        .order-desk-analytic-card h3 { margin: 4px 0 0; font-size: 1.2rem; font-weight: 800; color: var(--purple-primary); }
+        .order-desk-analytic-card--pink h3 { color: var(--pink-accent); }
+        .order-desk-analytic-card--gold h3 { color: #cca43b; }
+        .order-desk-strip-label { margin: 16px 26px 0; font-size: 0.64rem; font-weight: 700; color: #8a8da0; text-transform: uppercase; flex-shrink: 0; }
+
+        .order-desk-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 26px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+        .order-desk-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .order-desk-tab-btn { display: inline-flex; align-items: center; gap: 7px; background: #fafafa; color: #8a8da0; border: 1px solid var(--border-subtle); padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .order-desk-tab-btn:hover { border-color: var(--purple-primary); color: var(--purple-primary); }
+        .order-desk-tab-btn.is-active { background: var(--purple-primary); border-color: var(--purple-primary); color: #ffffff; }
+        .order-desk-tab-count { background: rgba(32,44,85,0.08); border-radius: 20px; padding: 1px 8px; font-size: 0.66rem; }
+        .order-desk-tab-btn.is-active .order-desk-tab-count { background: rgba(255,255,255,0.25); }
+
+        .order-desk-toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .order-desk-search-wrap { position: relative; min-width: 220px; }
+        .order-desk-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #b0b2bd; font-size: 0.8rem; }
+        .order-desk-search-wrap input { width: 100%; height: 38px; padding: 0 12px 0 32px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.78rem; box-sizing: border-box; }
+        .order-desk-view-switcher { display: inline-flex; background: #fafafa; padding: 4px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+        .order-desk-view-switcher button { background: transparent; color: #8a8da0; border: none; padding: 7px 14px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
+        .order-desk-view-switcher button.is-active { background: var(--purple-primary); color: #ffffff; }
+        .order-desk-export-btn { height: 38px; display: inline-flex; align-items: center; gap: 7px; background: #ffffff; color: #25d366; border: 1px solid #25d366; padding: 0 16px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .order-desk-export-btn:hover { background: #25d366; color: #ffffff; }
+
+        .order-desk-status-line { margin: 14px 26px 0; font-size: 0.8rem; font-weight: 600; color: var(--purple-primary); flex-shrink: 0; }
+        .order-desk-orders-container { display: flex; flex-direction: column; gap: 18px; padding: 14px 26px 26px; overflow-y: auto; flex: 1 1 auto; min-height: 0; background: #fafafa; }
+
+        /* --- Order cards --- */
+        .order-card { background: #ffffff; border: 1px solid #e2e4ed; border-left: 4px solid var(--purple-primary); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 3px 14px rgba(32,44,85,0.07); }
+        .order-card:hover { box-shadow: 0 10px 26px rgba(32,44,85,0.12); }
+        .order-card--pending { border-left-color: var(--purple-primary); }
+        .order-card--shipped { border-left-color: var(--pink-accent); }
+        .order-card--cancelled { border-left-color: #d9383a; }
+        .order-card--refunded { border-left-color: #2a7b6a; }
+
+        .order-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f1f5; padding-bottom: 12px; gap: 12px; }
+        .order-card-header-left { flex: 1; min-width: 0; }
+        .order-card-txn-id { font-size: 0.66rem; color: #8a8da0; text-transform: uppercase; display: block; margin-bottom: 3px; font-family: monospace; font-weight: 600; }
+        .order-card-txn-id strong { color: var(--purple-primary); }
+        .order-card-header-left h4 { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--purple-primary); }
+        .order-card-header-right { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .order-card-date-amount { line-height: 1.3; text-align: right; }
+        .order-card-date { font-size: 0.7rem; color: #8a8da0; display: block; font-weight: 600; }
+        .order-card-amount { font-size: 1.02rem; font-weight: 700; color: var(--purple-primary); display: block; }
+        .order-card-status-badge { font-size: 0.62rem; padding: 5px 11px; border-radius: 20px; font-weight: 700; text-transform: uppercase; display: inline-block; white-space: nowrap; }
+
+        .order-card-items { width: 100%; overflow-x: auto; background: #fafafa; border: 1px solid #f1f1f5; border-radius: 8px; }
+        .order-card-items table { width: 100%; border-collapse: collapse; }
+        .order-card-items tr { border-bottom: 1px solid #f1f1f5; }
+        .order-item-thumb-cell { padding: 8px 10px; width: 50px; }
+        .order-item-thumb-cell img { width: 38px; height: 38px; border-radius: 6px; border: 1px solid var(--border-subtle); object-fit: cover; display: block; }
+        .order-item-title-cell { padding: 8px 10px; font-size: 0.8rem; font-weight: 600; color: #111116; }
+        .order-item-qty-cell { padding: 8px 10px; font-size: 0.76rem; font-weight: 700; color: var(--purple-primary); text-align: right; }
+
+        .order-card-footer { background: #fafafa; border: 1px solid #f1f1f5; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+        .order-card-footer-top { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .order-card-address { font-size: 0.78rem; color: #111116; line-height: 1.45; flex: 1; min-width: 200px; }
+        .order-card-address i { color: var(--pink-accent); margin-right: 4px; }
+
+        .order-card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .order-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 13px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; border: 1px solid transparent; }
+        .order-action-btn--ghost { background: #ffffff; color: #111116; border-color: var(--border-subtle); }
+        .order-action-btn--ghost:hover { border-color: var(--purple-primary); color: var(--purple-primary); }
+        .order-action-btn--outline { background: #ffffff; color: var(--purple-primary); border-color: var(--purple-primary); }
+        .order-action-btn--outline:hover { background: var(--purple-primary); color: #ffffff; }
+        .order-action-btn--primary { background: var(--purple-primary); color: #ffffff; }
+        .order-action-btn--primary:hover { background: #161f3d; }
+        .order-action-btn--refund { background: #2a7b6a; color: #ffffff; }
+        .order-action-btn--chat { background: #ffffff; color: #25d366; border-color: #25d366; }
+        .order-action-btn--chat:hover { background: #25d366; color: #ffffff; }
+        .order-action-btn--cancel-toggle { background: #ffffff; color: #d9383a; border-color: #d9383a; }
+
+        .order-card-cancel-details { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; font-size: 0.78rem; line-height: 1.6; }
+        .courier-allocation-panel { display: none; }
+        .order-card-courier-panel, .order-table-courier-panel { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; }
+        .order-card-courier-panel p, .order-table-courier-panel p { margin: 0 0 10px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--purple-primary); }
+        .order-card-courier-options, .order-table-courier-options { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.78rem; font-weight: 600; }
+        .order-card-courier-input-row, .order-table-courier-input-row { display: flex; gap: 8px; }
+        .order-card-courier-input-row input, .order-table-courier-input-row input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.78rem; }
+        .order-courier-confirm-btn { background: #25d366; color: #ffffff; border: none; padding: 0 16px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; }
+        .order-courier-cancel-btn { background: transparent; color: #8a8da0; border: 1px solid var(--border-subtle); padding: 0 12px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; }
+        .order-table-courier-panel { position: absolute; box-shadow: 0 12px 30px rgba(0,0,0,0.15); margin-top: 8px; right: 0; z-index: 100; width: 240px; text-align: left; }
+
+        @media (max-width: 640px) {
+            .order-card-header { flex-direction: column; }
+            .order-card-header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; align-items: flex-start; }
+            .order-card-date-amount { text-align: left; }
+            .order-card-footer-top { flex-direction: column; align-items: stretch; }
+            .order-action-btn { flex: 1 1 calc(50% - 4px); }
+        }
+
+        /* --- Order Desk table view --- */
+        .order-table-scroller { width: 100%; overflow-x: auto; background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 8px; }
+        .order-desk-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 900px; }
+        .order-desk-table th { background: #fafafa; color: #8a8da0; font-weight: 700; padding: 12px 14px; border-bottom: 2px solid var(--border-subtle); text-transform: uppercase; font-size: 0.64rem; text-align: left; white-space: nowrap; }
+        .order-desk-table td { padding: 12px 14px; border-bottom: 1px solid #f1f1f5; color: #111116; vertical-align: middle; }
+        .order-desk-table tr:hover td { background: #fafafa; }
+        .order-desk-table tr.active-shipping-row td { background: #fff9e6 !important; border-top: 1px solid #cca43b; border-bottom: 1px solid #cca43b; }
+        .order-td-ref { font-family: monospace; font-weight: 700; color: var(--purple-primary); }
+        .order-td-ref-date { display: block; font-size: 0.64rem; color: #b0b2bd; margin-top: 2px; }
+        .order-td-client-name { font-weight: 700; }
+        .order-td-client-address { font-size: 0.7rem; color: #8a8da0; margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .order-td-items { font-size: 0.76rem; color: #4a4a5a; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .order-td-amount { font-weight: 700; color: var(--purple-primary); }
+        .order-status-pill { font-size: 0.6rem; padding: 4px 9px; border-radius: 12px; text-transform: uppercase; display: inline-block; font-weight: 700; }
+        .order-status-pill--shipped { background: rgba(255,20,147,0.08); color: var(--pink-accent); }
+        .order-status-pill--placed { background: rgba(32,44,85,0.06); color: var(--purple-primary); }
+        .order-tracking-courier { font-weight: 700; color: var(--purple-primary); font-size: 0.74rem; }
+        .order-tracking-waybill { font-family: monospace; font-size: 0.7rem; color: #8a8da0; margin-top: 2px; }
+        .order-tracking-empty { color: #b0b2bd; font-style: italic; font-size: 0.74rem; }
+        .order-handed-off-label { font-size: 0.7rem; color: #8a8da0; font-weight: 600; }
+        .order-td-actions { text-align: center; position: relative; }
+        .order-td-actions-row { display: flex; gap: 6px; justify-content: center; align-items: center; }
+        .table-action-mini-pill { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; border-radius: 5px; text-decoration: none; cursor: pointer; white-space: nowrap; height: 27px; background: transparent; border: 1px solid var(--border-subtle); color: #111116; }
+        .table-action-mini-pill--primary { background: var(--purple-primary); color: #ffffff; border: none; }
+        .table-action-mini-pill--chat { border-color: #25d366; color: #25d366; }
+        .table-action-mini-pill--chat:hover { background: #25d366; color: #ffffff; }
+
+        @media (max-width: 768px) {
+            .order-desk-overlay { padding: 0; }
+            .order-desk-panel { max-height: 100vh; height: 100vh; border-radius: 0; overflow-y: auto; }
+            .order-desk-header { padding: 14px 16px; flex-shrink: 0; }
+            .order-desk-header h2 { font-size: 1.05rem; }
+            .order-desk-analytics-strip { display: grid; grid-template-columns: repeat(3,1fr); padding: 8px 12px 0; gap: 8px; }
+            .order-desk-analytic-card { padding: 8px; text-align: center; }
+            .order-desk-analytic-card h3 { font-size: 0.85rem; }
+            .order-desk-toolbar { padding: 12px; flex-direction: column; align-items: stretch; }
+            .order-desk-tabs { display: grid; grid-template-columns: repeat(3,1fr); width: 100%; gap: 6px; }
+            .order-desk-tab-btn { flex-direction: column; gap: 4px; padding: 8px 4px; font-size: 0.58rem; text-align: center; white-space: normal; }
+            .order-desk-status-line { margin: 12px; font-size: 0.72rem; }
+            .order-desk-orders-container { padding: 12px; }
+            .order-table-scroller { padding: 0; }
+            .order-desk-table { font-size: 0.74rem; }
+        }
+
+        /* --- Stock History viewer --- */
+        .stock-history-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border-subtle); }
+        .stock-history-header h3 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--purple-primary); }
+        .stock-history-list { flex: 1; overflow-y: auto; padding: 10px 22px 20px; }
+        .stock-history-entry { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f1f5; }
+        .stock-history-entry-icon { width: 32px; height: 32px; border-radius: 50%; background: #fafafa; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.8rem; }
+        .stock-history-entry-body { display: flex; flex-direction: column; gap: 2px; }
+        .stock-history-entry-type { font-size: 0.78rem; font-weight: 700; color: #111116; }
+        .stock-history-entry-change { font-size: 0.75rem; color: #6e6d7a; }
+        .stock-history-entry-date { font-size: 0.66rem; color: #b0b2bd; }
+
     </style>
 </head>
 <body>
@@ -1012,4 +1107,4 @@
     <script src="config.js"></script>
     <script src="admin.js"></script>
 </body>
-</html>
+</html>
