@@ -2516,11 +2516,13 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .inventory-status-low {
     background: rgba(204, 164, 59, 0.15);
     color: #8c7017;
+    text-align: center;
 }
 
 .inventory-status-out {
     background: rgba(217, 56, 58, 0.1);
     color: #d9383a;
+    text-align: center;
 }
 
 .inventory-history-btn {
