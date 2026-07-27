@@ -1841,7 +1841,7 @@ function openQuickViewShield(id) {
    
 
     // Core Text Node Assignments
-    document.getElementById('qvImage').src = (window.activeVariantSelection && (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl)) ? (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl) : product.image; 
+    // document.getElementById('qvImage').src = (window.activeVariantSelection && (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl)) ? (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl) : product.image; 
     document.getElementById('qvTitle').innerText = product.title; 
     document.getElementById('qvCategory').innerText = String(product.category || '').toUpperCase(); 
     document.getElementById('qvPrice').innerText = formatCurrency(window.activeVariantSelection ? window.activeVariantSelection.price : product.price); 
@@ -1864,8 +1864,8 @@ function openQuickViewShield(id) {
         };
     }
 
-    renderQuickViewPairingRecommendations(product);
     renderQuickViewGallery(product);
+    renderQuickViewPairingRecommendations(product);
     document.getElementById('quickviewModalShield').style.display = "flex"; 
     angelModalPushHistory(closeQuickViewShield);
     
