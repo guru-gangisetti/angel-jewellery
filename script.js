@@ -1761,23 +1761,23 @@ function openQuickViewShield(id) {
         initialImg = firstVariant.image_url || firstVariant.imageUrl || initialImg;
     }
 
-    // 1. Clean up any previous dynamic rows to prevent rendering duplicate blocks
+   // 1. Clean up old variant blocks if they exist
     const oldMobileBlock = document.getElementById('qvMobileVariantWrapperBlock');
     if (oldMobileBlock) oldMobileBlock.remove();
     const oldDesktopBlock = document.getElementById('qvDesktopVariantWrapperBlock');
     if (oldDesktopBlock) oldDesktopBlock.remove();
-    const oldDynamicBlock = document.getElementById('qvDynamicVariantWrapperBlock');
-    if (oldDynamicBlock) oldDynamicBlock.remove();
 
-    // ➔ 2. CONDITIONAL INJECTION: Only build the HTML if there are actual valid variants to show
-    if (modalVariants.length > 0) {
+    const dynamicVariantContainer = document.getElementById('qvDynamicVariantWrapperBlock');
+    if (dynamicVariantContainer) dynamicVariantContainer.innerHTML = '';
+
+    // 2. Render variant color buttons cleanly inside qvDynamicVariantWrapperBlock
+    if (modalVariants.length > 0 && dynamicVariantContainer) {
         window.activeVariantSelection = modalVariants[0];
 
-        const generatePaletteHTML = (isMobileInstance) => {
-            const suffix = isMobileInstance ? '-mob' : '-desk';
-            return `
-                <p class="qv-variant-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #77778b; margin-bottom: 10px; padding:0; text-align: ${isMobileInstance ? 'center' : 'left'};">Select Color Profile:</p>
-                <div class="qv-variant-flex-row" style="display: flex !important; flex-wrap: wrap !important; gap: 10px !important; width: 100% !important; justify-content: ${isMobileInstance ? 'center' : 'flex-start'} !important;">
+        dynamicVariantContainer.innerHTML = `
+            <div id="qvUnifiedVariantWrapper" style="margin: 15px 0; width: 100%; box-sizing: border-box;">
+                <p style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #77778b; margin-bottom: 8px; padding:0; text-align: left;">Select Color Profile:</p>
+                <div style="display: flex !important; flex-wrap: wrap !important; gap: 8px !important; width: 100% !important; justify-content: flex-start !important;">
                     ${modalVariants.map((variant, idx) => {
                         const variantStock = variant.stock !== undefined ? variant.stock : (variant.stock_level || 0);
                         const isSoldOut = parseInt(variantStock) <= 0;
@@ -1792,9 +1792,9 @@ function openQuickViewShield(id) {
 
                         return `
                             <button type="button"
-                                    class="qv-new-variant-pill${suffix}" 
+                                    class="qv-variant-pill-btn" 
                                     data-variant-id="${variant.id}"
-                                    style="display: inline-flex !important; align-items: center !important; gap: 8px !important; padding: 8px 14px !important; border: 1px solid !important; border-radius: 20px !important; cursor: pointer !important; font-size: 0.78rem !important; font-weight: 600 !important; font-family: 'Montserrat', sans-serif !important; transition: all 0.2s !important; ${activeStyle} ${disabledStyle}"
+                                    style="display: inline-flex !items-center !important; gap: 8px !important; padding: 8px 14px !important; border: 1px solid !important; border-radius: 20px !important; cursor: pointer !important; font-size: 0.78rem !important; font-weight: 600 !important; font-family: 'Montserrat', sans-serif !important; transition: all 0.2s !important; ${activeStyle} ${disabledStyle}"
                                     ${isSoldOut ? 'disabled' : ''}>
                                 <span style="width: 10px !important; height: 10px !important; border-radius: 50% !important; background: ${colorHex} !important; display: inline-block !important; border: 1px solid rgba(0,0,0,0.1) !important;"></span>
                                 <span>${colorName}</span>
@@ -1802,70 +1802,43 @@ function openQuickViewShield(id) {
                         `;
                     }).join('')}
                 </div>
-            `;
-        };
+            </div>
+        `;
 
-        // POSITION 1: Mobile Palette sits inside the Left column right after the Image
-        const imgElement = document.getElementById('qvImage');
-        if (imgElement) {
-            const mobileWrapper = document.createElement('div');
-            mobileWrapper.id = 'qvMobileVariantWrapperBlock';
-            mobileWrapper.className = 'qv-variant-mobile-only-container';
-            mobileWrapper.style.cssText = "margin-top: 15px; width: 100%; box-sizing: border-box; clear: both;";
-            mobileWrapper.innerHTML = generatePaletteHTML(true);
-            imgElement.parentNode.insertBefore(mobileWrapper, imgElement.nextSibling);
-        }
+        // 3. Attach click listeners to update active variant, media gallery, price & stock
+        document.querySelectorAll('.qv-variant-pill-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const chosenVariantId = parseInt(this.getAttribute('data-variant-id'));
+                const matchedVariant = modalVariants.find(v => v.id === chosenVariantId);
+                
+                if (!matchedVariant) return;
+                window.activeVariantSelection = matchedVariant;
 
-        // POSITION 2: Desktop Palette sits in the Right column right above the Price field
-        const priceBlock = document.getElementById('qvPrice');
-        if (priceBlock) {
-            const desktopWrapper = document.createElement('div');
-            desktopWrapper.id = 'qvDesktopVariantWrapperBlock';
-            desktopWrapper.className = 'qv-variant-desktop-only-container';
-            desktopWrapper.style.cssText = "margin: 15px 0; width: 100%; box-sizing: border-box; clear: both;";
-            desktopWrapper.innerHTML = generatePaletteHTML(false);
-            priceBlock.parentNode.insertBefore(desktopWrapper, priceBlock);
-        }
-
-        // Synchronize Click Listeners across both element trees
-        const setupSyncListeners = (selectorClass) => {
-            document.querySelectorAll(selectorClass).forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const chosenVariantId = parseInt(this.getAttribute('data-variant-id'));
-                    const matchedVariant = modalVariants.find(v => v.id === chosenVariantId);
-                    
-                    if (!matchedVariant) return;
-                    window.activeVariantSelection = matchedVariant;
-
-                    // 1. Highlight active pill button UI
-                    document.querySelectorAll('.qv-new-variant-pill-mob, .qv-new-variant-pill-desk').forEach(b => {
-                        const bId = parseInt(b.getAttribute('data-variant-id'));
-                        if (bId === chosenVariantId) {
-                            b.style.background = "#202c55"; b.style.color = "#ffffff"; b.style.borderColor = "#202c55";
-                        } else {
-                            b.style.background = "#ffffff"; b.style.color = "#111116"; b.style.borderColor = "#e8e8ef";
-                        }
-                    });
-
-                    // 2. Update price and scarcity badge
-                    if (matchedVariant.price) document.getElementById('qvPrice').innerText = formatCurrency(matchedVariant.price);
-                    
-                    const variantStock = matchedVariant.stock !== undefined ? matchedVariant.stock : (matchedVariant.stock_level || 0);
-                    updateTopRightScarcityBadge(variantStock);
-
-                    // 3. CRITICAL FIX: Re-render thumbnail gallery track for the selected color variant!
-                    renderQuickViewGallery(product);
+                // Highlight active button
+                document.querySelectorAll('.qv-variant-pill-btn').forEach(b => {
+                    const bId = parseInt(b.getAttribute('data-variant-id'));
+                    if (bId === chosenVariantId) {
+                        b.style.background = "#202c55"; b.style.color = "#ffffff"; b.style.borderColor = "#202c55";
+                    } else {
+                        b.style.background = "#ffffff"; b.style.color = "#111116"; b.style.borderColor = "#e8e8ef";
+                    }
                 });
-            });
-        };
 
-        setupSyncListeners('.qv-new-variant-pill-mob');
-        setupSyncListeners('.qv-new-variant-pill-desk');
+                // Update price and stock scarcity badge
+                if (matchedVariant.price) document.getElementById('qvPrice').innerText = formatCurrency(matchedVariant.price);
+                
+                const variantStock = matchedVariant.stock !== undefined ? matchedVariant.stock : (matchedVariant.stock_level || 0);
+                updateTopRightScarcityBadge(variantStock);
+
+                // Update thumbnail gallery and main media frame for selected color
+                renderQuickViewGallery(product);
+            });
+        });
 
     } else {
-        // Safe reset if no color mapping profiles are found
         window.activeVariantSelection = (rawVariants.length > 0) ? rawVariants[0] : null;
     }
+   
 
     // Core Text Node Assignments
     document.getElementById('qvImage').src = (window.activeVariantSelection && (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl)) ? (window.activeVariantSelection.image_url || window.activeVariantSelection.imageUrl) : product.image; 
