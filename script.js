@@ -1661,6 +1661,74 @@ if (typeof window.activeVariantSelection === 'undefined') {
     window.activeVariantSelection = null;
 }
 
+function renderQuickViewGallery(product) {
+    const mainFrame = document.getElementById('qvMainMediaFrame');
+    const thumbTrack = document.getElementById('qvThumbnailTrack');
+    if (!mainFrame || !thumbTrack) return;
+
+    // Read active variant media gallery first
+    const activeVariant = window.activeVariantSelection;
+    
+    let mediaList = [];
+
+    if (activeVariant && activeVariant.gallery_media && activeVariant.gallery_media.length > 0) {
+        mediaList = activeVariant.gallery_media;
+    } else if (product && product.gallery_media && product.gallery_media.length > 0) {
+        mediaList = product.gallery_media;
+    }
+
+    // Fallback if no gallery array is defined for the variant
+    if (!mediaList || mediaList.length === 0) {
+        const fallbackUrl = (activeVariant ? (activeVariant.image_url || activeVariant.image) : product.image) || 'assets/placeholder.png';
+        mediaList = [{ type: 'image', url: fallbackUrl }];
+    }
+
+    thumbTrack.innerHTML = '';
+
+    // Function to swap the main preview box
+    const switchMainView = (mediaItem) => {
+        if (mediaItem.type === 'video') {
+            mainFrame.innerHTML = `
+                <video src="${mediaItem.url}" autoplay loop muted playsinline controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;"></video>
+            `;
+        } else {
+            mainFrame.innerHTML = `
+                <img id="qvImage" src="${mediaItem.url}" alt="${product ? product.title : 'Jewelry piece'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+            `;
+        }
+    };
+
+    // Render cover media item immediately
+    switchMainView(mediaList[0]);
+
+    // Build thumbnails if more than 1 item exists
+    if (mediaList.length > 1) {
+        thumbTrack.style.display = 'flex';
+        mediaList.forEach((item, idx) => {
+            const thumb = document.createElement('div');
+            thumb.style.cssText = `width: 50px; height: 50px; min-width: 50px; border-radius: 4px; overflow: hidden; border: 2px solid ${idx === 0 ? 'var(--purple-primary, #202c55)' : '#e8e8ef'}; cursor: pointer; position: relative; background: #fafafa;`;
+
+            if (item.type === 'video') {
+                thumb.innerHTML = `
+                    <video src="${item.url}#t=0.5" preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>
+                    <i class="fas fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:0.65rem; background:rgba(0,0,0,0.5); padding:4px; border-radius:50%;"></i>
+                `;
+            } else {
+                thumb.innerHTML = `<img src="${item.url}" style="width:100%; height:100%; object-fit:cover;">`;
+            }
+
+            thumb.onclick = () => {
+                Array.from(thumbTrack.children).forEach(t => t.style.borderColor = '#e8e8ef');
+                thumb.style.borderColor = 'var(--purple-primary, #202c55)';
+                switchMainView(item);
+            };
+
+            thumbTrack.appendChild(thumb);
+        });
+    } else {
+        thumbTrack.style.display = 'none';
+    }
+}
 
 function openQuickViewShield(id) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
@@ -1769,6 +1837,7 @@ function openQuickViewShield(id) {
                     if (!matchedVariant) return;
                     window.activeVariantSelection = matchedVariant;
 
+                    // 1. Highlight active pill button UI
                     document.querySelectorAll('.qv-new-variant-pill-mob, .qv-new-variant-pill-desk').forEach(b => {
                         const bId = parseInt(b.getAttribute('data-variant-id'));
                         if (bId === chosenVariantId) {
@@ -1778,12 +1847,14 @@ function openQuickViewShield(id) {
                         }
                     });
 
-                    const variantImg = matchedVariant.image_url || matchedVariant.imageUrl;
-                    if (variantImg) document.getElementById('qvImage').src = variantImg;
+                    // 2. Update price and scarcity badge
                     if (matchedVariant.price) document.getElementById('qvPrice').innerText = formatCurrency(matchedVariant.price);
                     
                     const variantStock = matchedVariant.stock !== undefined ? matchedVariant.stock : (matchedVariant.stock_level || 0);
                     updateTopRightScarcityBadge(variantStock);
+
+                    // 3. CRITICAL FIX: Re-render thumbnail gallery track for the selected color variant!
+                    renderQuickViewGallery(product);
                 });
             });
         };
@@ -1821,9 +1892,10 @@ function openQuickViewShield(id) {
     }
 
     renderQuickViewPairingRecommendations(product);
-
+    renderQuickViewGallery(product);
     document.getElementById('quickviewModalShield').style.display = "flex"; 
     angelModalPushHistory(closeQuickViewShield);
+    
 }
 
 // =========================================================================

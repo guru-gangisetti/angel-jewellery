@@ -359,10 +359,10 @@ function setProductVariantMode(hasVariants) {
     const noBtn = document.getElementById('variantModeToggleNo');
     const variantWrapper = document.getElementById('variantSectionWrapper');
     const priceStockWrapper = document.getElementById('singleItemPriceStockWrapper');
-    const imageWrapper = document.getElementById('singleItemImageWrapper');
-    const variantsContainer = document.getElementById('adminFormDynamicVariantsContainer');
+    const mainGalleryWrapper = document.getElementById('mainMediaGalleryWrapper'); // Main gallery wrapper
     const priceInput = document.getElementById('formProductPrice');
     const stockInput = document.getElementById('formProductStock');
+    
     if (!yesBtn || !noBtn || !variantWrapper || !priceStockWrapper) return;
 
     if (hasVariants) {
@@ -370,52 +370,23 @@ function setProductVariantMode(hasVariants) {
         noBtn.classList.remove('active');
         variantWrapper.style.display = 'block';
         priceStockWrapper.style.display = 'none';
-        if (imageWrapper) imageWrapper.style.display = 'none';
+        
+        // HIDE main image gallery when variants are active
+        if (mainGalleryWrapper) mainGalleryWrapper.style.display = 'none';
+        
         if (priceInput) priceInput.required = false;
         if (stockInput) stockInput.required = false;
-
-        if (variantsContainer && variantsContainer.children.length === 0) {
-            appendNewVariantRowToAdminForm();
-            const firstRow = variantsContainer.children[0];
-            if (firstRow) {
-                const masterPrice = priceInput ? priceInput.value : '';
-                const masterStock = stockInput ? stockInput.value : '';
-                const masterImage = document.getElementById('formProductImage').value;
-                if (masterPrice) { const f = firstRow.querySelector('.v-price'); if (f) f.value = masterPrice; }
-                if (masterStock) { const f = firstRow.querySelector('.v-stock'); if (f) f.value = masterStock; }
-                if (masterImage) {
-                    const f = firstRow.querySelector('.v-img');
-                    if (f) { f.value = masterImage; refreshVariantImagePreview(f); }
-                }
-            }
-        }
     } else {
         noBtn.classList.add('active');
         yesBtn.classList.remove('active');
         variantWrapper.style.display = 'none';
         priceStockWrapper.style.display = 'grid';
-        if (imageWrapper) imageWrapper.style.display = 'block';
+        
+        // SHOW main image gallery for single items
+        if (mainGalleryWrapper) mainGalleryWrapper.style.display = 'block';
+        
         if (priceInput) priceInput.required = true;
         if (stockInput) stockInput.required = true;
-
-        if (variantsContainer && variantsContainer.children.length > 0) {
-            const firstRow = variantsContainer.children[0];
-            const vPrice = firstRow.querySelector('.v-price');
-            const vStock = firstRow.querySelector('.v-stock');
-            const vImg = firstRow.querySelector('.v-img');
-            if (vPrice && vPrice.value && priceInput) priceInput.value = vPrice.value;
-            if (vStock && vStock.value && stockInput) stockInput.value = vStock.value;
-            if (vImg && vImg.value) {
-                document.getElementById('formProductImage').value = vImg.value;
-                const previewFrame = document.getElementById('adminFormImagePreviewFrame');
-                const previewVisual = document.getElementById('adminFormImagePreviewVisual');
-                if (previewFrame && previewVisual) {
-                    previewVisual.src = vImg.value;
-                    previewFrame.style.display = 'block';
-                }
-            }
-        }
-        if (variantsContainer) variantsContainer.innerHTML = '';
     }
 }
 
@@ -1977,6 +1948,7 @@ function appendNewVariantRowToAdminForm(existingData = null) {
     const rowDiv = document.createElement('div');
     rowDiv.id = uniqueRowId;
     rowDiv.className = "admin-variant-input-row admin-variant-card";
+    rowDiv.style.cssText = "background:#fafafa; border:1px solid #e8e8ef; border-radius:8px; padding:14px; margin-bottom:12px;";
 
     const NEW_VARIANT_DEFAULT_COLOR_PALETTE = ['#D4AF37', '#B76E79', '#C0C0C0', '#8C7853', '#9B111E', '#0F52BA', '#046307', '#F0EAD6'];
     const existingRowCount = container.children.length;
@@ -1988,24 +1960,62 @@ function appendNewVariantRowToAdminForm(existingData = null) {
     const sku = existingData ? (existingData.sku || '') : '';
     const price = existingData ? (existingData.price || '') : '';
     const stock = existingData ? (existingData.stock || '0') : '0';
-    const imgUrl = existingData ? (existingData.image_url || existingData.image || '') : '';
     const variantDatabaseId = existingData ? (existingData.id || '') : ''; 
 
     rowDiv.innerHTML = `
         <input type="hidden" class="v-db-id" value="${variantDatabaseId}">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
             <input type="color" class="v-hex" value="${colorHex}" style="width:28px; height:28px; border:none; border-radius:50%; cursor:pointer;">
-            <span style="font-size:0.75rem; font-weight:700; color:var(--purple-primary); text-transform:uppercase;">Color Variant</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--purple-primary); text-transform:uppercase;">Color Variant Option</span>
             <button type="button" onclick="document.getElementById('${uniqueRowId}').remove()" style="margin-left:auto; background:transparent; border:none; color:#d9383a; font-size:0.72rem; font-weight:700; cursor:pointer;">
                 <i class="fas fa-trash-alt"></i> Remove
             </button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Color Name</label><input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
-            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">SKU</label><input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
-            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Price (₹)</label><input type="number" class="v-price" value="${price}" placeholder="4500" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
-            <div><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Stock Qty</label><input type="number" class="v-stock" value="${stock}" placeholder="5" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
-            <div style="grid-column: 1 / -1;"><label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Image URL</label><input type="text" class="v-img" value="${imgUrl}" placeholder="Paste Image URL" oninput="refreshVariantImagePreview(this)" style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;"></div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px;">
+            <div>
+                <label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Color Name</label>
+                <input type="text" class="v-name" value="${colorName}" placeholder="e.g. Ruby Red" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;">
+            </div>
+            <div>
+                <label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">SKU</label>
+                <input type="text" class="v-sku" value="${sku}" placeholder="SKU-001" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;">
+            </div>
+            <div>
+                <label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Price (₹)</label>
+                <input type="number" class="v-price" value="${price}" placeholder="4500" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;">
+            </div>
+            <div>
+                <label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:4px;">Stock Qty</label>
+                <input type="number" class="v-stock" value="${stock}" placeholder="5" required style="width:100%; padding:8px; border:1px solid #e8e8ef; border-radius:4px; font-size:0.8rem; outline:none;">
+            </div>
+        </div>
+
+        <!-- VARIANT MULTI-MEDIA FILE UPLOAD SLOTS -->
+        <div style="background:#ffffff; border:1px dashed #cca43b; border-radius:6px; padding:10px; margin-top:8px;">
+            <label style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--purple-primary); display:block; margin-bottom:8px;">
+                <i class="fas fa-images"></i> Variant Media Gallery
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <div>
+                    <span style="font-size:0.58rem; font-weight:700; color:#555; display:block; margin-bottom:2px;">Cover Img</span>
+                    <input type="file" class="v-slot1" accept="image/*" style="font-size:0.68rem; width:100%;">
+                </div>
+                <div>
+                    <span style="font-size:0.58rem; font-weight:700; color:#555; display:block; margin-bottom:2px;">Angle Img</span>
+                    <input type="file" class="v-slot2" accept="image/*" style="font-size:0.68rem; width:100%;">
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <span style="font-size:0.58rem; font-weight:700; color:#ff1493;">Highlight</span>
+                        <div style="display:flex; gap:4px;">
+                            <label style="font-size:0.55rem; font-weight:700;"><input type="radio" name="v_slot3Type_${uniqueRowId}" value="image" checked> Img</label>
+                            <label style="font-size:0.55rem; font-weight:700;"><input type="radio" name="v_slot3Type_${uniqueRowId}" value="video"> Vid</label>
+                        </div>
+                    </div>
+                    <input type="file" class="v-slot3" accept="image/*,video/mp4,video/mov,video/webm" style="font-size:0.68rem; width:100%;">
+                </div>
+            </div>
         </div>
     `;
 
@@ -2037,6 +2047,25 @@ function runAdminOnlyPageSetup() {
 
             const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
             const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+            
+            // 1. Process Main/Parent Top-Level Media Slots
+            const galleryMediaPayload = [];
+
+            const slot1El = document.getElementById('formMediaSlot1');
+            const slot2El = document.getElementById('formMediaSlot2');
+            const slot3El = document.getElementById('formMediaSlot3');
+            const isSlot3Video = document.querySelector('input[name="slot3Type"]:checked')?.value === 'video';
+
+            const [res1, res2, slot3Res] = await Promise.all([
+                uploadMediaSlotToSupabase(slot1El, 'image'),
+                uploadMediaSlotToSupabase(slot2El, 'image'),
+                uploadMediaSlotToSupabase(slot3El, isSlot3Video ? 'video' : 'image')
+            ]);
+
+            if (res1) galleryMediaPayload.push(res1);
+            if (res2) galleryMediaPayload.push(res2);
+            if (slot3Res) galleryMediaPayload.push(slot3Res);
+
             const customHeaders = {
                 'apikey': sbKey,
                 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
@@ -2049,20 +2078,6 @@ function runAdminOnlyPageSetup() {
                 const isEditOperationMode = editingTargetRowId !== "";
                 const assignedProductId = isEditOperationMode ? parseInt(editingTargetRowId) : parseInt(document.getElementById('formProductId').value);
 
-                const filePicker = document.getElementById('formProductImageFilePicker');
-                let finalCalculatedImageUrl = document.getElementById('formProductImage').value;
-
-                if (filePicker && filePicker.files.length > 0) {
-                    submitBtn.innerHTML = `<i class="fas fa-cloud-upload-alt fa-spin"></i> Uploading Image...`;
-                    const uploadedFile = filePicker.files[0];
-                    finalCalculatedImageUrl = await uploadProductImageToSupabaseStorage(uploadedFile);
-                    document.getElementById('formProductImage').value = finalCalculatedImageUrl;
-                }
-
-                if (!finalCalculatedImageUrl) {
-                    finalCalculatedImageUrl = 'assets/placeholder.png';
-                }
-
                 const variantRows = document.querySelectorAll('.admin-variant-input-row');
                 let baseCatalogPrice = parseFloat(document.getElementById('formProductPrice').value) || 0;
                 let baseCatalogStock = parseInt(document.getElementById('formProductStock').value) || 0;
@@ -2070,7 +2085,6 @@ function runAdminOnlyPageSetup() {
                 if (variantRows.length > 0) {
                     baseCatalogPrice = parseFloat(variantRows[0].querySelector('.v-price').value) || baseCatalogPrice;
                     baseCatalogStock = parseInt(variantRows[0].querySelector('.v-stock').value) || baseCatalogStock;
-                    finalCalculatedImageUrl = variantRows[0].querySelector('.v-img').value.trim() || finalCalculatedImageUrl;
                 }
 
                 const computedStatusFlag = baseCatalogStock <= 0 ? "sold" : "available";
@@ -2082,7 +2096,8 @@ function runAdminOnlyPageSetup() {
                     badge: baseCatalogStock <= 0 ? "Sold Out" : document.getElementById('formProductBadge').value.trim(),
                     status: computedStatusFlag,
                     description: document.getElementById('formProductDesc').value.trim(),
-                    style: document.getElementById('formProductStyle').value
+                    style: document.getElementById('formProductStyle').value,
+                    gallery_media: galleryMediaPayload
                 };
 
                 let parentRequestUrl = `${sbUrl}/rest/v1/products`;
@@ -2108,10 +2123,35 @@ function runAdminOnlyPageSetup() {
                     });
                 }
 
+                // 2. Process Variant Batch Payload Array
                 const variationsBatchPayloadArray = [];
 
                 if (variantRows.length > 0) {
-                    variantRows.forEach(row => {
+                    for (const row of variantRows) {
+                        const vSlot1 = row.querySelector('.v-slot1');
+                        const vSlot2 = row.querySelector('.v-slot2');
+                        const vSlot3 = row.querySelector('.v-slot3');
+                        
+                        // Extract row-specific radio choice for Slot 3
+                        const vSlot3Radio = row.querySelector('input[type="radio"]:checked');
+                        const isVSlot3Video = vSlot3Radio ? vSlot3Radio.value === 'video' : false;
+
+                        // Upload variant-level media files
+                        const [vRes1, vRes2, vRes3] = await Promise.all([
+                            uploadMediaSlotToSupabase(vSlot1, 'image'),
+                            uploadMediaSlotToSupabase(vSlot2, 'image'),
+                            uploadMediaSlotToSupabase(vSlot3, isVSlot3Video ? 'video' : 'image')
+                        ]);
+
+                        const variantGallery = [];
+                        if (vRes1) variantGallery.push(vRes1);
+                        if (vRes2) variantGallery.push(vRes2);
+                        if (vRes3) variantGallery.push(vRes3);
+
+                        // Fallback to top-level gallery if no variant media was uploaded
+                        const finalVariantGallery = variantGallery.length > 0 ? variantGallery : galleryMediaPayload;
+                        const coverImgUrl = finalVariantGallery.find(m => m.type === 'image')?.url || 'assets/placeholder.png';
+
                         variationsBatchPayloadArray.push({
                             product_id: assignedProductId,
                             color_name: row.querySelector('.v-name').value.trim(),
@@ -2119,11 +2159,15 @@ function runAdminOnlyPageSetup() {
                             sku: row.querySelector('.v-sku').value.trim().toUpperCase(),
                             price: parseFloat(row.querySelector('.v-price').value) || 0,
                             stock: parseInt(row.querySelector('.v-stock').value) || 0,
-                            image_url: row.querySelector('.v-img').value.trim() || finalCalculatedImageUrl,
+                            image_url: coverImgUrl,
+                            gallery_media: finalVariantGallery,
                             status: parseInt(row.querySelector('.v-stock').value) <= 0 ? 'sold' : 'active'
                         });
-                    });
+                    }
                 } else {
+                    // Single Product (No Variants)
+                    const coverImgUrl = galleryMediaPayload.find(m => m.type === 'image')?.url || 'assets/placeholder.png';
+
                     variationsBatchPayloadArray.push({
                         product_id: assignedProductId,
                         color_name: 'Standard',
@@ -2131,7 +2175,8 @@ function runAdminOnlyPageSetup() {
                         sku: `SKU-${assignedProductId}-STD`,
                         price: baseCatalogPrice,
                         stock: baseCatalogStock,
-                        image_url: finalCalculatedImageUrl,
+                        image_url: coverImgUrl,
+                        gallery_media: galleryMediaPayload,
                         status: baseCatalogStock <= 0 ? 'sold' : 'active'
                     });
                 }
@@ -2163,4 +2208,108 @@ function runAdminOnlyPageSetup() {
     }
 
     loadLiveCarouselDatabaseEngine();
-}
+}
+
+async function uploadMediaSlotToSupabase(fileInputEl, forcedType = 'image') {
+    if (!fileInputEl || fileInputEl.files.length === 0) return null;
+
+    const file = fileInputEl.files[0];
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    let processableFile = file;
+    const isVideo = forcedType === 'video' || file.type.startsWith('video/');
+
+    // Convert image to WebP; skip conversion if it's a video file
+    if (!isVideo && file.type.startsWith('image/')) {
+        try {
+            processableFile = await convertImageFileToWebP(file);
+        } catch (err) {
+            console.warn("WebP compression fallback triggered:", err);
+        }
+    }
+
+    const safeName = processableFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    const signature = `${Date.now()}_${safeName}`;
+    const encodedSignature = encodeURIComponent(signature);
+    const bucketEndpoint = `${sbUrl}/storage/v1/object/product-images/${encodedSignature}`;
+
+    const response = await fetch(bucketEndpoint, {
+        method: 'POST',
+        headers: {
+            'apikey': sbKey,
+            'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
+            'Content-Type': processableFile.type,
+            'x-upsert': 'true'
+        },
+        body: processableFile
+    });
+
+    if (!response.ok) {
+        throw new Error(`Media storage upload failed: ${response.status}`);
+    }
+
+    const publicUrl = `${sbUrl}/storage/v1/object/public/product-images/${encodedSignature}`;
+    return {
+        type: isVideo ? 'video' : 'image',
+        url: publicUrl
+    };
+}
+
+function renderQuickViewGallery(product) {
+    const mainFrame = document.getElementById('qvMainMediaFrame');
+    const thumbTrack = document.getElementById('qvThumbnailTrack');
+    if (!mainFrame || !thumbTrack) return;
+
+    // Use current variant or parent gallery media
+    const activeVariant = window.activeVariantSelection;
+    let mediaList = (activeVariant && activeVariant.gallery_media && activeVariant.gallery_media.length > 0)
+        ? activeVariant.gallery_media
+        : (product.gallery_media || []);
+
+    // Fallback: If no gallery array exists, construct one from single image
+    if (mediaList.length === 0) {
+        mediaList = [{ type: 'image', url: (activeVariant ? activeVariant.image_url : product.image) || 'assets/placeholder.png' }];
+    }
+
+    thumbTrack.innerHTML = '';
+
+    // Function to swap main preview box content
+    const switchMainView = (mediaItem) => {
+        if (mediaItem.type === 'video') {
+            mainFrame.innerHTML = `
+                <video src="${mediaItem.url}" autoplay loop muted playsinline controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+            `;
+        } else {
+            mainFrame.innerHTML = `
+                <img id="qvImage" src="${mediaItem.url}" style="width: 100%; height: 100%; object-fit: cover;">
+            `;
+        }
+    };
+
+    // Render initial cover image/video
+    switchMainView(mediaList[0]);
+
+    // Build thumbnails
+    mediaList.forEach((item, idx) => {
+        const thumb = document.createElement('div');
+        thumb.style.cssText = `width: 50px; height: 50px; min-width: 50px; border-radius: 4px; overflow: hidden; border: 2px solid ${idx === 0 ? '#202c55' : '#e8e8ef'}; cursor: pointer; position: relative;`;
+
+        if (item.type === 'video') {
+            thumb.innerHTML = `
+                <video src="${item.url}#t=0.5" preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>
+                <i class="fas fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:0.65rem; background:rgba(0,0,0,0.5); padding:4px; border-radius:50%;"></i>
+            `;
+        } else {
+            thumb.innerHTML = `<img src="${item.url}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+
+        thumb.onclick = () => {
+            Array.from(thumbTrack.children).forEach(t => t.style.borderColor = '#e8e8ef');
+            thumb.style.borderColor = '#202c55';
+            switchMainView(item);
+        };
+
+        thumbTrack.appendChild(thumb);
+    });
+}
