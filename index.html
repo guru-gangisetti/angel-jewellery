@@ -968,22 +968,42 @@
         </div>
     </div>
 
-    <!-- Welcome Discount Pop-up -->
+    <!-- Welcome Spin-Wheel Discount Pop-up -->
     <div id="welcomeDiscountModal" class="welcome-discount-modal" style="display:none;">
-        <div class="welcome-discount-modal-inner">
+        <div class="welcome-discount-modal-inner spin-wheel-modal-inner">
             <button type="button" class="welcome-discount-close-btn" onclick="closeWelcomeDiscountModal()" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>
-            <span class="welcome-discount-eyebrow">Welcome to Angel Jewellery</span>
-            <h2 class="welcome-discount-title">10% Off Your First Order</h2>
-            <p class="welcome-discount-subtext">Use this code at checkout to save on your first purchase with us.</p>
-            <div class="welcome-discount-code-row">
-                <span class="welcome-discount-code">WELCOME10</span>
-                <button type="button" id="welcomeDiscountCopyBtn" class="welcome-discount-copy-btn" onclick="copyWelcomeDiscountCode()">
-                    <i class="fas fa-copy"></i> Copy
+
+            <!-- STATE 1: The wheel itself -->
+            <div id="spinWheelStageView">
+                <span class="welcome-discount-eyebrow">Welcome to Angel Jewellery</span>
+                <h2 class="welcome-discount-title" style="margin-bottom: 18px;">Spin & Win a Discount</h2>
+
+                <div class="spin-wheel-arena">
+                    <div class="spin-wheel-pointer"><i class="fas fa-caret-down"></i></div>
+                    <div id="spinWheelDial" class="spin-wheel-dial"></div>
+                    <div class="spin-wheel-hub"><i class="fas fa-gem"></i></div>
+                </div>
+
+                <button type="button" id="spinWheelActionBtn" class="welcome-discount-shop-btn spin-wheel-spin-btn" onclick="spinTheWheel()">
+                    Spin The Wheel
                 </button>
             </div>
-            <button type="button" class="welcome-discount-shop-btn" onclick="closeWelcomeDiscountModal()">Start Shopping</button>
+
+            <!-- STATE 2: The prize reveal (hidden until the spin finishes) -->
+            <div id="spinWheelResultView" style="display:none;">
+                <span class="welcome-discount-eyebrow">Congratulations!</span>
+                <h2 class="welcome-discount-title" id="spinWheelResultTitle">You Won 10% Off</h2>
+                <p class="welcome-discount-subtext">Use this code at checkout to save on your order with us.</p>
+                <div class="welcome-discount-code-row">
+                    <span class="welcome-discount-code" id="spinWheelResultCode">WELCOME10</span>
+                    <button type="button" id="welcomeDiscountCopyBtn" class="welcome-discount-copy-btn" onclick="copyWelcomeDiscountCode()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <button type="button" class="welcome-discount-shop-btn" onclick="closeWelcomeDiscountModal()">Start Shopping</button>
+            </div>
         </div>
     </div>
 
@@ -1203,6 +1223,13 @@
                 <div>
                     <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Your Full Name</label>
                     <input type="text" id="feedbackFormClientName" placeholder="e.g. Ananya Sharma" required style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-size: 0.9rem; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #202c55; display: block; margin-bottom: 6px;">Which Piece Did You Buy?</label>
+                    <select id="feedbackFormProductId" required style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; font-size: 0.9rem; box-sizing: border-box; background: #fff; font-family: 'Montserrat', sans-serif;">
+                        <option value="" selected disabled>Select a product...</option>
+                    </select>
                 </div>
 
                 <div>

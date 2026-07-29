@@ -262,6 +262,7 @@ let activeDiscount = { code: "", type: "", value: 0 };
 let currentSelectedFilterCategoryKey = "all"; 
 
 let MASTER_LIVE_INVENTORY_CACHE = {};
+let PRODUCT_RATING_CACHE = {}; // { [productId]: { avg: number, count: number } } — real data only, never fabricated
 
 let carouselRegistryCache = []
 
@@ -459,10 +460,35 @@ document.addEventListener('DOMContentLoaded', () => {
 // this is just a popup with no teeth.
 // =========================================================================
 
-const WELCOME_DISCOUNT_STORAGE_KEY = 'angelJewelleryWelcomeDiscountShown';
+// =========================================================================
+// ANGEL JEWELLERY — FIRST-TIME VISITOR SPIN-WHEEL DISCOUNT GAME
+// Shows once ever per browser (localStorage flag). IMPORTANT: each prize
+// below maps to a real coupon code — every one of these MUST genuinely
+// exist in your Coupons table (type: percentage) via the admin Promo
+// Codes panel, or that prize will look real to the customer but fail
+// silently at checkout. Create these six codes before going live:
+//   ANGEL5   → percentage, value 5
+//   ANGEL7   → percentage, value 7
+//   WELCOME10 → percentage, value 10   (same code used elsewhere already)
+//   ANGEL8   → percentage, value 8
+//   ANGEL12  → percentage, value 12
+//   ANGEL15  → percentage, value 15
+// Weights are relative — bigger discounts are intentionally rarer so an
+// average visitor sees a smaller (but still real) prize most of the time.
+// =========================================================================
 
-const WELCOME_DISCOUNT_CODE = 'WELCOME10';
+const WELCOME_DISCOUNT_STORAGE_KEY = 'angelJewellerySpinWheelPlayed';
 
+const SPIN_WHEEL_PRIZES = [
+    { label: '5% OFF',  code: 'ANGEL5',    color: '#202c55', weight: 30 },
+    { label: '7% OFF',  code: 'ANGEL7',    color: '#cca43b', weight: 22 },
+    { label: '10% OFF', code: 'WELCOME10', color: '#202c55', weight: 20 },
+    { label: '8% OFF',  code: 'ANGEL8',    color: '#cca43b', weight: 18 },
+    { label: '12% OFF', code: 'ANGEL12',   color: '#202c55', weight: 7  },
+    { label: '15% OFF', code: 'ANGEL15',   color: '#cca43b', weight: 3  }
+];
+
+let spinWheelHasSpun = false;
 
 function maybeShowWelcomeDiscountPopup() {
     let alreadyShown = true;
@@ -475,24 +501,109 @@ function maybeShowWelcomeDiscountPopup() {
 
     setTimeout(() => {
         const modal = document.getElementById('welcomeDiscountModal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+            modal.style.display = 'flex';
+            renderSpinWheelDial();
+        }
         try {
             localStorage.setItem(WELCOME_DISCOUNT_STORAGE_KEY, 'true');
         } catch (err) {
-            console.error('Could not save welcome discount shown flag:', err);
+            console.error('Could not save spin wheel shown flag:', err);
         }
     }, 2500);
 }
 
+function renderSpinWheelDial() {
+    const dial = document.getElementById('spinWheelDial');
+    if (!dial) return;
+
+    const sliceCount = SPIN_WHEEL_PRIZES.length;
+    const sliceDegrees = 360 / sliceCount;
+
+    // Build the conic-gradient background from each prize's color
+    const gradientStops = SPIN_WHEEL_PRIZES.map((prize, i) =>
+        `${prize.color} ${i * sliceDegrees}deg ${(i + 1) * sliceDegrees}deg`
+    ).join(', ');
+    dial.style.background = `conic-gradient(${gradientStops})`;
+
+    // Lay the label for each slice on top, rotated to point outward from center
+    dial.innerHTML = SPIN_WHEEL_PRIZES.map((prize, i) => {
+        const midAngle = (i * sliceDegrees) + (sliceDegrees / 2);
+        return `<span class="spin-wheel-slice-label" style="transform: rotate(${midAngle}deg) translateY(-78px) rotate(${-midAngle}deg);">${prize.label}</span>`;
+    }).join('');
+}
+
+function pickWeightedSpinWheelPrize() {
+    const totalWeight = SPIN_WHEEL_PRIZES.reduce((sum, p) => sum + p.weight, 0);
+    let roll = Math.random() * totalWeight;
+    for (let i = 0; i < SPIN_WHEEL_PRIZES.length; i++) {
+        roll -= SPIN_WHEEL_PRIZES[i].weight;
+        if (roll <= 0) return i;
+    }
+    return SPIN_WHEEL_PRIZES.length - 1; // fallback, should rarely hit
+}
+
+function spinTheWheel() {
+    if (spinWheelHasSpun) return;
+    spinWheelHasSpun = true;
+
+    const dial = document.getElementById('spinWheelDial');
+    const spinBtn = document.getElementById('spinWheelActionBtn');
+    if (!dial) return;
+    if (spinBtn) {
+        spinBtn.disabled = true;
+        spinBtn.style.opacity = '0.6';
+        spinBtn.style.cursor = 'not-allowed';
+        spinBtn.innerText = 'Spinning...';
+    }
+
+    const winningIndex = pickWeightedSpinWheelPrize();
+    const sliceCount = SPIN_WHEEL_PRIZES.length;
+    const sliceDegrees = 360 / sliceCount;
+
+    // Land the pointer (fixed at the top, i.e. 0deg / 12 o'clock) on the
+    // middle of the winning slice, with a little random jitter within the
+    // slice so it doesn't look robotically centered every time, plus
+    // several full rotations first so the spin actually feels like a spin.
+    const jitter = (Math.random() - 0.5) * (sliceDegrees * 0.6);
+    const targetSliceMidAngle = (winningIndex * sliceDegrees) + (sliceDegrees / 2) + jitter;
+    const fullSpins = 5 + Math.floor(Math.random() * 3); // 5–7 full rotations
+    const finalRotation = (fullSpins * 360) + (360 - targetSliceMidAngle);
+
+    dial.style.transition = 'transform 4.2s cubic-bezier(0.14, 0.85, 0.15, 1)';
+    dial.style.transform = `rotate(${finalRotation}deg)`;
+
+    dial.addEventListener('transitionend', function onSpinComplete() {
+        dial.removeEventListener('transitionend', onSpinComplete);
+        const wonPrize = SPIN_WHEEL_PRIZES[winningIndex];
+        revealSpinWheelResult(wonPrize);
+    }, { once: true });
+}
+
+function revealSpinWheelResult(prize) {
+    const stageView = document.getElementById('spinWheelStageView');
+    const resultView = document.getElementById('spinWheelResultView');
+    const resultTitle = document.getElementById('spinWheelResultTitle');
+    const resultCode = document.getElementById('spinWheelResultCode');
+
+    if (resultTitle) resultTitle.innerText = `You Won ${prize.label}`;
+    if (resultCode) resultCode.innerText = prize.code;
+
+    if (stageView && resultView) {
+        stageView.style.display = 'none';
+        resultView.style.display = 'block';
+    }
+}
 
 function closeWelcomeDiscountModal() {
     const modal = document.getElementById('welcomeDiscountModal');
     if (modal) modal.style.display = 'none';
 }
 
-
 function copyWelcomeDiscountCode() {
-    navigator.clipboard.writeText(WELCOME_DISCOUNT_CODE).then(() => {
+    const codeToCopy = document.getElementById('spinWheelResultCode')?.innerText || '';
+    if (!codeToCopy) return;
+    navigator.clipboard.writeText(codeToCopy).then(() => {
         const btn = document.getElementById('welcomeDiscountCopyBtn');
         if (!btn) return;
         const originalHTML = btn.innerHTML;
@@ -681,6 +792,7 @@ function filterCatalog(passedSearchQuery) {
                             ${colorDotsHTML}
 
                             <h3 class="angel-card-title">${product.title}</h3>
+                            ${buildProductRatingRowHTML(product.id)}
                             
                             <span id="catalog-card-stockflag-${product.id}" class="angel-card-stock-flag ${isHealthyStock ? 'angel-card-stock-flag--available' : ''}" style="${(isLowStock || isHealthyStock) ? '' : 'display:none;'}">${isLowStock ? `<i class="fas fa-fire"></i> Only ${liveStockCount} left` : `<i class="fas fa-check-circle"></i> ${liveStockCount} in stock`}</span>
 
@@ -825,6 +937,7 @@ function renderVaultSaleSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Jewellery'} • Special Offer</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                            ${buildProductRatingRowHTML(product.id)}
                 ${stockFlagHTML}
                 ${pricingLayoutHTML}
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
@@ -914,6 +1027,7 @@ function renderTrendingSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                            ${buildProductRatingRowHTML(product.id)}
                 ${stockFlagHTML}
                 ${pricingLayoutHTML}
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
@@ -996,6 +1110,7 @@ function renderNewArrivalsSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                            ${buildProductRatingRowHTML(product.id)}
                 ${stockFlagHTML}
                 <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
                 <button class="angel-card-cta" 
@@ -1097,6 +1212,7 @@ function renderRecentlyViewedSection() {
             <div class="angel-card-body">
                 <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
                 <h3 class="angel-card-title">${product.title}</h3>
+                            ${buildProductRatingRowHTML(product.id)}
                 ${stockFlagHTML}
                 <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
                 <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}" 
@@ -3278,6 +3394,84 @@ function getBadgeCustomStyles(badgeText) {
 }
 
 // =========================================================================
+// ANGEL JEWELLERY — REAL PER-PRODUCT STAR RATINGS
+// Reads ONLY from the `product_rating_summary` aggregate view — never the
+// raw Feedback table (which would require pulling every review row client
+// side just to average it). Create this view once in the Supabase SQL
+// editor (also add the product_id column to Feedback if you haven't):
+//
+//   alter table public."Feedback"
+//       add column if not exists product_id integer references public.products(id);
+//
+//   create or replace view public.product_rating_summary as
+//   select
+//       product_id,
+//       round(avg(rating)::numeric, 1) as avg_rating,
+//       count(*) as review_count
+//   from public."Feedback"
+//   where product_id is not null
+//   group by product_id;
+//
+//   grant select on public.product_rating_summary to anon;
+//
+// Until that's run, this silently finds nothing and every card simply
+// shows no rating row — it never invents a number.
+// =========================================================================
+
+async function loadProductRatingSummary() {
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        const response = await fetch(`${sbUrl}/rest/v1/product_rating_summary?select=product_id,avg_rating,review_count`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            console.log("ℹ️ Product rating summary view not available yet. Cards will show no rating row until it's created.");
+            return;
+        }
+
+        const rows = await response.json();
+        const freshCache = {};
+        (rows || []).forEach(row => {
+            const pid = parseInt(row.product_id);
+            if (!isNaN(pid)) {
+                freshCache[pid] = {
+                    avg: parseFloat(row.avg_rating) || 0,
+                    count: parseInt(row.review_count) || 0
+                };
+            }
+        });
+        PRODUCT_RATING_CACHE = freshCache;
+
+    } catch (error) {
+        console.log("ℹ️ Product rating summary fetch skipped:", error.message);
+    }
+}
+
+function buildProductRatingRowHTML(productId) {
+    const ratingData = PRODUCT_RATING_CACHE[productId];
+    // No real reviews for this product yet — show nothing, never a fake number
+    if (!ratingData || !ratingData.count || ratingData.count <= 0) return '';
+
+    const avg = ratingData.avg;
+    const count = ratingData.count;
+    const fillPercent = Math.max(0, Math.min(100, (avg / 5) * 100));
+
+    return `
+        <div class="angel-card-rating-row" title="${avg.toFixed(1)} out of 5 (${count} review${count === 1 ? '' : 's'})">
+            <span class="rating-stars-wrap">
+                <span class="rating-stars-bg">★★★★★</span>
+                <span class="rating-stars-fg" style="width:${fillPercent}%;">★★★★★</span>
+            </span>
+            <span class="rating-count-label">(${count})</span>
+        </div>`;
+}
+
+// =========================================================================
 // SUPABASE PRODUCTION CHANNEL — LIVE STOCK BACKGROUND SYNCHRONIZATION
 // =========================================================================
 
@@ -3590,11 +3784,20 @@ async function submitCustomerFeedbackPipeline(event) {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
 
+    const selectedProductId = parseInt(document.getElementById('feedbackFormProductId').value);
+
     const feedbackPayloadObject = {
         name: document.getElementById('feedbackFormClientName').value.trim(),
+        product_id: selectedProductId,
         rating: parseInt(document.getElementById('feedbackFormRatingValue').value) || 5,
         review: document.getElementById('feedbackFormReviewText').value.trim()
     };
+
+    if (!selectedProductId) {
+        alert("Please select which product you're reviewing.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
 
     try {
         const response = await fetch(`${sbUrl}/rest/v1/Feedback`, {
@@ -3614,6 +3817,11 @@ async function submitCustomerFeedbackPipeline(event) {
         closeCustomerFeedbackModal();
         await loadLiveCustomerFeedbackShowroom();
 
+        // Refresh real product ratings so this review reflects on cards right away
+        await loadProductRatingSummary();
+        if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
+        if (typeof filterCatalog === 'function') filterCatalog();
+
     } catch (error) {
         alert("Pipeline Sync Interrupted. Please check your connection.");
     } finally {
@@ -3627,7 +3835,25 @@ function openCustomerFeedbackModal(event) {
     if (event) event.preventDefault();
     document.getElementById('angelStoreCustomerFeedbackForm').reset();
     setInteractiveFeedbackFormRating(5);
+    populateFeedbackProductDropdown();
     document.getElementById('customerFeedbackSubmissionModal').style.display = 'flex';
+}
+
+function populateFeedbackProductDropdown() {
+    const dropdown = document.getElementById('feedbackFormProductId');
+    if (!dropdown) return;
+
+    if (!productDatabase || productDatabase.length === 0) {
+        dropdown.innerHTML = `<option value="" selected disabled>Loading products...</option>`;
+        // Catalog may not have finished loading yet — try again shortly rather
+        // than leaving the reviewer stuck with an empty dropdown.
+        setTimeout(populateFeedbackProductDropdown, 800);
+        return;
+    }
+
+    const sortedProducts = [...productDatabase].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    dropdown.innerHTML = `<option value="" selected disabled>Select a product...</option>` +
+        sortedProducts.map(p => `<option value="${p.id}">${(p.title || 'Untitled piece').replace(/</g, '&lt;')}</option>`).join('');
 }
 
 
@@ -4772,7 +4998,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Kick off the social-proof activity toast (independent of catalog load)
     initializeSocialProofToast();
 
-    // 2. Load catalog & coupons
-    loadProductDatabaseEngine();
+    // 3. Load catalog + real product ratings in parallel, then coupons
+    await Promise.all([
+        loadProductDatabaseEngine(),
+        loadProductRatingSummary()
+    ]);
     loadLiveCouponDatabaseEngine();
+
+    // Ratings may have resolved after the catalog's own initial render —
+    // re-render once more so star ratings are guaranteed to show up on cards
+    if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
+    if (typeof filterCatalog === 'function') filterCatalog();
 });

@@ -1568,6 +1568,23 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     background: rgba(42,123,106,0.09);
 }
 
+/* --- REAL PER-PRODUCT STAR RATING ROW --- */
+.angel-card-rating-row {
+    display: flex; align-items: center; gap: 6px; margin: 2px 0 6px;
+}
+.rating-stars-wrap {
+    position: relative; display: inline-block;
+    font-size: 0.72rem; line-height: 1; letter-spacing: 1px;
+}
+.rating-stars-bg { color: #e3e3ea; }
+.rating-stars-fg {
+    position: absolute; top: 0; left: 0; overflow: hidden;
+    white-space: nowrap; color: #cca43b;
+}
+.rating-count-label {
+    font-size: 0.66rem; color: #8a8a99; font-family: var(--font-body);
+}
+
 /* --- CATEGORY FOLDER NODES --- */
 .category-node-card {
     display: flex; flex-direction: column; align-items: center;
@@ -1857,6 +1874,73 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .welcome-discount-modal-inner { padding: 34px 24px 26px; }
     .welcome-discount-title { font-size: 1.3rem; }
 }
+
+/* --- SPIN-WHEEL PROMO GAME --- */
+.spin-wheel-modal-inner { padding-top: 34px; }
+.spin-wheel-arena {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 22px;
+}
+.spin-wheel-pointer {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    color: #cca43b;
+    z-index: 3;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+}
+.spin-wheel-dial {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 5px solid #ffffff;
+    box-shadow: 0 6px 24px rgba(32,44,85,0.25), 0 0 0 2px #e8e8ef;
+    position: relative;
+    transform: rotate(0deg);
+}
+.spin-wheel-slice-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.spin-wheel-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #cca43b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--purple-primary, #202c55);
+    font-size: 1.1rem;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.spin-wheel-spin-btn {
+    background: var(--purple-primary, #202c55) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+.spin-wheel-spin-btn:hover { background: #161f3d !important; }
+.spin-wheel-spin-btn:disabled:hover { background: var(--purple-primary, #202c55) !important; }
 
 /* --- CUSTOMER TRACK ORDER PAGE --- */
 .tracking-page-overlay {
