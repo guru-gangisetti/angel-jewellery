@@ -336,13 +336,17 @@ async function loadProductDatabaseEngine() {
                 variants: variations
             };
 
+            const rawBadgeText = String(item.badge || '').trim();
+            const looksLikeStaleStockClaim = /only\s*\d+\s*(left|remaining)|low\s*stock/i.test(rawBadgeText);
+            const safeBadgeText = looksLikeStaleStockClaim ? '' : rawBadgeText;
+
             return {
                 id: parsedUniqueId,
                 title: item.title,
                 price: verifiedPrice, // Safely assigned to show the variant price on grid cards!
                 category: item.category || 'Luxury Collection',
                 image: verifiedImage, // Safely assigned to show the variant image on grid cards!
-                badge: updatedStatus === "sold" ? "Sold Out" : (item.badge || ''),
+                badge: updatedStatus === "sold" ? "Sold Out" : safeBadgeText,
                 description: item.description || '',
                 style: item.style ? String(item.style).trim().toLowerCase() : '',
                 created_at: item.created_at || null,
@@ -4598,9 +4602,175 @@ async function loadLiveCarouselDatabaseEngine() {
     }
 }
 
+// =========================================================================
+// ANGEL JEWELLERY — LIVE SOCIAL-PROOF ACTIVITY TOAST
+// =========================================================================
+// Shows real recent purchases as small dismissible toasts (bottom-left).
+//
+// PRIVACY NOTE: this reads ONLY from a dedicated Supabase view called
+// `recent_order_activity` — never the raw "Orders" table directly, since
+// that table holds customer phone numbers and full delivery addresses.
+// The view exposes just: first name, a short product label, and the order
+// timestamp. Run this once in the Supabase SQL editor to set it up:
+//
+//   create or replace view public.recent_order_activity as
+//   select
+//       id,
+//       split_part(customer_name, ' ', 1) as first_name,
+//       order_items,
+//       created_at
+//   from public."Orders"
+//   where status = 'Paid'
+//   order by created_at desc
+//   limit 25;
+//
+//   grant select on public.recent_order_activity to anon;
+//
+// If this view doesn't exist yet, the widget just quietly does nothing —
+// it will never fall back to querying the raw Orders table.
+
+const SOCIAL_PROOF_CONFIG = {
+    MIN_GAP_MS: 14000,          // shortest wait between toasts
+    MAX_GAP_MS: 24000,          // longest wait between toasts
+    VISIBLE_MS: 6000,           // how long each toast stays up
+    MAX_TOASTS_PER_SESSION: 6,  // stop after this many so it never feels spammy
+    INITIAL_DELAY_MS: 9000      // let the page (and welcome popup) settle first
+};
+
+let socialProofQueue = [];
+let socialProofShownCount = 0;
+let socialProofDismissedForSession = false;
+
+async function initializeSocialProofToast() {
+    // Respect a manual close within this browser tab's session
+    if (sessionStorage.getItem('angel_social_proof_dismissed') === '1') return;
+
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        const response = await fetch(
+            `${sbUrl}/rest/v1/recent_order_activity?select=first_name,order_items,created_at&order=created_at.desc&limit=25`,
+            {
+                method: 'GET',
+                headers: {
+                    'apikey': sbKey,
+                    'Authorization': `Bearer ${sbKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        // View not created yet, or no permission — fail silently, no fallback
+        // to the raw Orders table under any circumstances.
+        if (!response.ok) {
+            console.log("ℹ️ Social-proof feed not available yet (view may not be created). Skipping.");
+            return;
+        }
+
+        const rows = await response.json();
+        if (!Array.isArray(rows) || rows.length === 0) return;
+
+        // Build a friendly queue: real first name + first product name only (an
+        // order can contain multiple items like "Royal Gold Choker (x1), Bangles (x2)")
+        socialProofQueue = rows.map(row => {
+            const firstProduct = String(row.order_items || '').split(',')[0].replace(/\s*\(x\d+\)\s*$/i, '').trim();
+            return {
+                name: String(row.first_name || 'A customer').trim() || 'A customer',
+                product: firstProduct || 'a piece from the collection',
+                timeAgo: getRelativeTimeLabel(row.created_at)
+            };
+        }).filter(entry => entry.product);
+
+        if (socialProofQueue.length === 0) return;
+
+        // Shuffle so repeat visitors don't see the exact same order first every time
+        socialProofQueue.sort(() => Math.random() - 0.5);
+
+        setTimeout(scheduleNextSocialProofToast, SOCIAL_PROOF_CONFIG.INITIAL_DELAY_MS);
+
+    } catch (error) {
+        console.log("ℹ️ Social-proof toast skipped:", error.message);
+    }
+}
+
+function getRelativeTimeLabel(isoTimestamp) {
+    if (!isoTimestamp) return 'recently';
+    const diffMs = Date.now() - new Date(isoTimestamp).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins === 1 ? '' : 's'} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+}
+
+function scheduleNextSocialProofToast() {
+    if (socialProofDismissedForSession) return;
+    if (socialProofShownCount >= SOCIAL_PROOF_CONFIG.MAX_TOASTS_PER_SESSION) return;
+    if (socialProofQueue.length === 0) return;
+    if (document.hidden) {
+        // Tab isn't active — check again shortly rather than burning the slot
+        setTimeout(scheduleNextSocialProofToast, 3000);
+        return;
+    }
+
+    const entry = socialProofQueue[socialProofShownCount % socialProofQueue.length];
+    showSocialProofToast(entry);
+    socialProofShownCount++;
+
+    const nextGap = SOCIAL_PROOF_CONFIG.MIN_GAP_MS + Math.random() * (SOCIAL_PROOF_CONFIG.MAX_GAP_MS - SOCIAL_PROOF_CONFIG.MIN_GAP_MS);
+    setTimeout(scheduleNextSocialProofToast, nextGap);
+}
+
+function showSocialProofToast(entry) {
+    // Remove any toast still lingering before showing the next one
+    const existing = document.getElementById('socialProofToast');
+    if (existing) existing.remove();
+
+    const safeName = String(entry.name).replace(/</g, '&lt;');
+    const safeProduct = String(entry.product).replace(/</g, '&lt;');
+
+    const toastEl = document.createElement('div');
+    toastEl.id = 'socialProofToast';
+    toastEl.className = 'social-proof-toast';
+    toastEl.innerHTML = `
+        <div class="social-proof-toast-icon"><i class="fas fa-shopping-bag"></i></div>
+        <div class="social-proof-toast-body">
+            <p class="social-proof-toast-text"><strong>${safeName}</strong> purchased <strong>${safeProduct}</strong></p>
+            <p class="social-proof-toast-time">${entry.timeAgo}</p>
+        </div>
+        <button class="social-proof-toast-close" aria-label="Dismiss">&times;</button>
+    `;
+
+    document.body.appendChild(toastEl);
+    requestAnimationFrame(() => toastEl.classList.add('is-visible'));
+
+    const autoHideTimer = setTimeout(() => hideSocialProofToast(toastEl), SOCIAL_PROOF_CONFIG.VISIBLE_MS);
+
+    toastEl.querySelector('.social-proof-toast-close').addEventListener('click', () => {
+        clearTimeout(autoHideTimer);
+        hideSocialProofToast(toastEl);
+        // A manual close is a clear signal — stop showing more this session
+        socialProofDismissedForSession = true;
+        sessionStorage.setItem('angel_social_proof_dismissed', '1');
+    });
+}
+
+function hideSocialProofToast(toastEl) {
+    if (!toastEl) return;
+    toastEl.classList.remove('is-visible');
+    setTimeout(() => toastEl.remove(), 400);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Fetch live carousel slides from Supabase table
     await loadLiveCarouselDatabaseEngine();
+
+    // 2. Kick off the social-proof activity toast (independent of catalog load)
+    initializeSocialProofToast();
 
     // 2. Load catalog & coupons
     loadProductDatabaseEngine();
