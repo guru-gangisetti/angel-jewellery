@@ -352,12 +352,26 @@ async function loadProductDatabaseEngine() {
 
         console.log(`✨ Success! Relational database maps aligned. Loaded ${productDatabase.length} items.`);
 
+        // Loading is done — hide the spinner now that we have data to show
+        const loadingStateEl = document.getElementById('catalogLoadingState');
+        if (loadingStateEl) loadingStateEl.style.display = 'none';
+
         if (typeof generateDynamicCatalogFilters === 'function') {
             generateDynamicCatalogFilters();
         }
 
     } catch (error) {
         console.error('Critical Supabase catalog extraction breakdown caught:', error);
+
+        // Swap the spinner for a friendly retry message instead of leaving it spinning forever
+        const loadingStateEl = document.getElementById('catalogLoadingState');
+        if (loadingStateEl) {
+            loadingStateEl.innerHTML = `
+                <p style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--purple-primary, #202c55); text-align: center;">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i>
+                    Couldn't load the collection right now. Please refresh the page.
+                </p>`;
+        }
     }
 }
 function formatCurrency(amount) {
