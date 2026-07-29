@@ -5009,4 +5009,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // re-render once more so star ratings are guaranteed to show up on cards
     if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
     if (typeof filterCatalog === 'function') filterCatalog();
+
+    // Guarantee the homepage showcase sections run now that productDatabase
+    // is definitely populated. These previously only fired from inside
+    // synchronizeLiveStorefrontInventory(), which can run before the catalog
+    // finishes loading — silently skipping Trending/Sale/New Arrivals/Recently
+    // Viewed on many page loads. Calling them here closes that gap for good.
+    if (typeof renderFlashVaultShowroom === 'function') renderFlashVaultShowroom();
+    if (typeof renderTrendingSection === 'function') renderTrendingSection();
+    if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
+    if (typeof renderNewArrivalsSection === 'function') renderNewArrivalsSection();
+    if (typeof renderRecentlyViewedSection === 'function') renderRecentlyViewedSection();
 });
