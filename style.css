@@ -401,6 +401,16 @@ header.scrolled ~ #catalog,
     gap: 20px !important;
 }
 
+/* ➔ #catalog now holds the full folder-circle "Our Collection" grid, not the
+   original slim filter-tab bar the sticky/fixed rules above were built for.
+   A section this tall sticking to the viewport top mid-scroll looks like a
+   glitch, so it's kept in normal document flow here without touching the
+   shared .catalog-controls class (in case a slim sticky bar is reused later). */
+#catalog {
+    position: relative !important;
+    top: auto !important;
+}
+
 .search-container {
     position: relative;
     margin: 0 !important;
@@ -1438,7 +1448,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .style-clusters-section { margin: 32px auto !important; }
     .ugc-showcase-section { margin: 36px auto !important; }
     .ugc-showcase-header { margin-bottom: 24px !important; }
-    #catalog, #saleSection, #trendingSection, #newArrivalsSection, #recentlyViewedSection { padding: 28px 0 !important; }
+    #catalog, .products-section, #saleSection, #trendingSection, #newArrivalsSection, #recentlyViewedSection { padding: 28px 0 !important; }
     .sale-section-wrapper, .trending-section-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
     #flashVaultSection { margin: 20px 8px !important; padding: 18px 14px !important; }
 }

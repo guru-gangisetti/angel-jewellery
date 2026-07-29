@@ -2130,8 +2130,6 @@ window.addEventListener('DOMContentLoaded', () => {
             wishlistMemory = [];
         }
     }
-    loadProductDatabaseEngine();
-    loadLiveCouponDatabaseEngine();
     initializeLuxuryBannerCarousel();
     setTimeout(renderFlashVaultShowroom, 800);
     applyStrictIndianPhoneValidationRules('invClientPhone');
@@ -2262,7 +2260,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const whatsappBubble = document.getElementById("whatsappFloatingBubble");
     if (whatsappBubble) {
         const defaultText = "Hello Angel Jewellery!";
-        whatsappBubble.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(defaultText)}`;
+        whatsappBubble.href = `${ANGEL_STORE_CONFIG?.CONCIERGE_CHANNELS?.WHATSAPP_LINK_URI || '#'}?text=${encodeURIComponent(defaultText)}`;
     }
 
     // Hydrate footer context contact anchors automatically
@@ -2270,17 +2268,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const footerWhatsappSocialAnchor = document.getElementById("footerWhatsappSocial");
 
     if (footerPhoneAnchor) {
-        footerPhoneAnchor.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
+        footerPhoneAnchor.href = `tel:+${ANGEL_STORE_CONFIG?.CONCIERGE_CHANNELS?.WHATSAPP_PHONE_RAW || ''}`;
     }
 
     if (footerWhatsappSocialAnchor) {
         const footerWelcomeMessage = "Hello Angel Jewellery! I am looking for details from your footer section links.";
-        footerWhatsappSocialAnchor.href = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(footerWelcomeMessage)}`;
+        footerWhatsappSocialAnchor.href = `${ANGEL_STORE_CONFIG?.CONCIERGE_CHANNELS?.WHATSAPP_LINK_URI || '#'}?text=${encodeURIComponent(footerWelcomeMessage)}`;
     }
 
     const interactivePhoneBubble = document.getElementById("phoneFloatingBubble");
     if (interactivePhoneBubble) {
-        interactivePhoneBubble.href = `tel:+${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_PHONE_RAW}`;
+        interactivePhoneBubble.href = `tel:+${ANGEL_STORE_CONFIG?.CONCIERGE_CHANNELS?.WHATSAPP_PHONE_RAW || ''}`;
     }
 
     const gridContainer = document.getElementById("trendingShowroomGridCanvas");
@@ -2683,7 +2681,7 @@ function executePostPaidWhatsAppDispatch(paymentId, name, phone, address) {
     messageText += `📍 *Delivery Address:* \n${address}\n\n`;
     messageText += `💬 _Payment token validated. Please share to generate courier delivery slip profiles._`;
 
-    const generatedLink = `${ANGEL_STORE_CONFIG.CONCIERGE_CHANNELS.WHATSAPP_LINK_URI}?text=${encodeURIComponent(messageText)}`;
+    const generatedLink = `${ANGEL_STORE_CONFIG?.CONCIERGE_CHANNELS?.WHATSAPP_LINK_URI || '#'}?text=${encodeURIComponent(messageText)}`;
     
     document.getElementById('confWhatsAppBtn').onclick = () => {
         window.open(generatedLink, '_blank');
@@ -3120,7 +3118,6 @@ function updateCarouselRenderPosition() {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadProductDatabaseEngine();
     initializeLuxuryBannerCarousel();
 });
 
@@ -3196,12 +3193,14 @@ function selectShowroomCategoryFolder(targetCategoryName) {
     currentSelectedFilterCategoryKey = targetCategoryName;
 
     const foldersGrid = document.getElementById('jewelryCategoryFoldersGrid');
+    const mainSectionTitle = document.getElementById('collection-main-title');
     const productGridCanvas = document.getElementById('productGrid');
     const navHeader = document.getElementById('showroomNavigationHeader');
     const navTitle = document.getElementById('activeShowroomCategoryTitle');
 
     // 1. Hide the circles and reveal the product cards grid layer
     if (foldersGrid) foldersGrid.style.display = "none";
+    if (mainSectionTitle) mainSectionTitle.style.setProperty("display", "none", "important");
     if (productGridCanvas) productGridCanvas.style.setProperty("display", "grid", "important");
     
     // 2. Force open the empty wrapper section template block framework
@@ -3220,7 +3219,10 @@ function selectShowroomCategoryFolder(targetCategoryName) {
         filterCatalog();
     }
 
-    const scrollAnchor = document.getElementById('catalog') || productGridCanvas;
+    // NOTE: scroll to where the cards actually are (productGridCanvas / its
+    // section wrapper), not to #catalog — keeps this correct regardless of
+    // where .products-section sits in the page relative to #catalog.
+    const scrollAnchor = parentSectionWrapper || productGridCanvas;
     if (scrollAnchor) {
         window.scrollTo({ top: scrollAnchor.offsetTop - 20, behavior: 'smooth' });
     }
@@ -3258,27 +3260,6 @@ function returnToMainShowroomFolders() {
     }
 }
 
-
-function applyCustomFilterTabButtonStyles(buttonNode, isCurrentlySelected) {
-    const baseStyles = `padding: 10px 18px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: inline-block;`;
-    if (isCurrentlySelected) {
-        buttonNode.style.cssText = baseStyles + `background: var(--purple-primary, #202c55); color: #ffffff; border: 1px solid var(--purple-primary, #202c55); box-shadow: 0 2px 6px rgba(32, 44, 85, 0.12); font-weight: 700;`;
-    } else {
-        buttonNode.style.cssText = baseStyles + `background: #fff; color: var(--text-dark-primary, #111116); border: 1px solid #111116; font-weight: 600;`;
-    }
-}
-
-
-function refreshFilterTabStylesAndTriggerRender() {
-    const allTabButtons = document.querySelectorAll('.filter-category-tab-btn');
-    allTabButtons.forEach(btn => {
-        const buttonTargetKey = btn.getAttribute('data-category-target') || 'all';
-        applyCustomFilterTabButtonStyles(btn, currentSelectedFilterCategoryKey === buttonTargetKey);
-    });
-    const liveInputEl = document.getElementById('searchInput');
-    const currentSearchText = liveInputEl ? liveInputEl.value : "";
-    filterCatalog(currentSearchText);
-}
 
 function getBadgeCustomStyles(badgeText) {
     const text = String(badgeText || '').trim().toLowerCase();
@@ -3353,7 +3334,12 @@ async function synchronizeLiveStorefrontInventory() {
         console.log("💎 Live Inventory Vault Synchronized successfully from Relational Database:", MASTER_LIVE_INVENTORY_CACHE);
         
         if (!productDatabase || productDatabase.length === 0) {
-            await loadProductDatabaseEngine();
+            // The main catalog loader (loadProductDatabaseEngine) owns populating
+            // productDatabase and will render everything itself once it resolves —
+            // calling it again here too was racy and could trigger a redundant
+            // full catalog fetch depending on which async call resolved first.
+            console.log("⏳ Skipping render — productDatabase not populated yet, main loader will handle it.");
+            return;
         } else {
             generateDynamicCatalogFilters();
             filterCatalog();
