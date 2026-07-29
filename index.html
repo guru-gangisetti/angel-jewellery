@@ -195,6 +195,30 @@
             <div id="jewelryCategoryFoldersGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 35px; width: 100%; box-sizing: border-box;">
             </div>
         </div>
+            <section class="products-section" style="padding: 0px 0 8px 0; display: none; background: #ffffff;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0px;">
+            
+            <!-- CATALOG LAYOUT SWITCHER TOOLBAR -->
+            <div class="catalog-layout-toolbar" id="catalogLayoutSwitcher">
+                <div class="layout-controls-group">
+                    <!-- List View (3 Bars) -->
+                    <button type="button" class="layout-btn" data-layout="list" onclick="switchCatalogLayout('list')" title="List View">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <!-- Large View (1 Solid Square) -->
+                    <button type="button" class="layout-btn" data-layout="large" onclick="switchCatalogLayout('large')" title="Large Grid">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                    </button>
+                    <!-- Standard View (2 Vertical Rectangles) -->
+                    <button type="button" class="layout-btn active" data-layout="standard" onclick="switchCatalogLayout('standard')" title="Standard Grid">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 3h8v18H3zM13 3h8v18h-8z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-grid filtered-collection-frame" id="productGrid"></div>
+        </div>
+    </section>
     </section>
 
     <!-- =========================================================================
@@ -512,35 +536,7 @@
         }
     </style>
 
-    <!-- =========================================================================
-         10. Main Filtered Products Grid
-         ========================================================================= -->
-    <section class="products-section" style="padding: 0px 0 8px 0; display: none; background: #ffffff;">
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0px;">
-            
-            <!-- CATALOG LAYOUT SWITCHER TOOLBAR -->
-            <div class="catalog-layout-toolbar" id="catalogLayoutSwitcher">
-                <div class="layout-controls-group">
-                    <!-- List View (3 Bars) -->
-                    <button type="button" class="layout-btn" data-layout="list" onclick="switchCatalogLayout('list')" title="List View">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                    </button>
-                    <!-- Large View (1 Solid Square) -->
-                    <button type="button" class="layout-btn" data-layout="large" onclick="switchCatalogLayout('large')" title="Large Grid">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                    </button>
-                    <!-- Standard View (2 Vertical Rectangles) -->
-                    <button type="button" class="layout-btn active" data-layout="standard" onclick="switchCatalogLayout('standard')" title="Standard Grid">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 3h8v18H3zM13 3h8v18h-8z"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-grid filtered-collection-frame" id="productGrid"></div>
-        </div>
-    </section>
-
-    <!-- =========================================================================
+      <!-- =========================================================================
          11. Customer Reviews Marquee
          ========================================================================= -->
     <section class="feedback-display-section" style="background: #fafafa; padding: 80px 24px; border-top: 1px solid #e8e8ef; font-family: 'Montserrat', sans-serif; box-sizing: border-box; width: 100%; overflow: hidden;">

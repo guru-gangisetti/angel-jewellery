@@ -3934,67 +3934,111 @@ function renderFlashVaultShowroom() {
     `;
 }
 
-// Global modal overlay backdrop click tracking dismissals
-
-function selectStyleClusterFilter(clusterKeyword) {
+async function selectStyleClusterFilter(clusterKeyword) {
     const modal = document.getElementById('stylePortfolioModalShield');
     const grid = document.getElementById('portfolioModalProductsGrid');
     const mainTitle = document.getElementById('portfolioModalMainTitle');
     const miniTag = document.getElementById('portfolioMiniTag');
     const scrollBody = document.getElementById('portfolioModalScrollBody');
 
-    if (!modal || !grid || !productDatabase || productDatabase.length === 0) return;
+    if (!modal || !grid) return;
 
-    const cleanKeyword = String(clusterKeyword).trim().toLowerCase();
+    // 1. Fallback fetch if productDatabase isn't populated yet
+    if (!productDatabase || productDatabase.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #202c55; font-family:'Montserrat';">
+                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+                <p>Syncing products from database...</p>
+            </div>`;
+        modal.style.display = "flex";
+        await loadProductDatabaseEngine();
+    }
 
-    // Filters database records safely using active cluster hooks
-    const matchedStylePool = productDatabase.filter(p => p && String(p.style).trim().toLowerCase() === cleanKeyword);
+    // Clean search keyword
+    const rawKeyword = String(clusterKeyword || '').trim().toLowerCase();
 
-    // Apply custom headers dynamically
-    let descriptiveTitle = `${clusterKeyword} Showcase`;
-    if (cleanKeyword === 'cz') descriptiveTitle = "CZ & Silver Polish Curation";
-    if (cleanKeyword === 'antique') descriptiveTitle = "Antique Temple Masterpieces";
-    if (cleanKeyword === 'handcrafted') descriptiveTitle = "Heritage Devotion Editions";
-    if (cleanKeyword === 'navratna') descriptiveTitle = "Navratna & Multi-Stone Strings";
+    // Map common card keywords to potential synonyms
+    const keywordAliases = {
+        'cz': ['cz', 'cubic zirconia', 'silver polish', 'diamond', 'pink diamond'],
+        'antique': ['antique', 'temple', 'nakshi', 'guttapusalu', 'kemp'],
+        'handcrafted': ['handcrafted', 'heritage', 'devotion', 'radha', 'krishna', 'pendant'],
+        'navratna': ['navratna', 'beads', 'multi-stone', 'stone', 'string']
+    };
+
+    const targetSearchTerms = keywordAliases[rawKeyword] || [rawKeyword];
+
+    // 2. BROAD MULTI-FIELD MATCH: Check style, category, title, description & variants
+    const matchedStylePool = productDatabase.filter(product => {
+        if (!product) return false;
+
+        // Collect all possible text values from the product object (handles capital/lowercase DB keys)
+        const fieldsToSearch = [
+            product.style,
+            product.Style,
+            product.category,
+            product.Category,
+            product.title,
+            product.Title,
+            product.description,
+            product.Description
+        ].map(val => String(val || '').toLowerCase());
+
+        // Also check color names from inner product variants
+        if (product.product_variants && Array.isArray(product.product_variants)) {
+            product.product_variants.forEach(v => {
+                if (v.color_name) fieldsToSearch.push(String(v.color_name).toLowerCase());
+            });
+        }
+
+        const combinedText = fieldsToSearch.join(' ');
+
+        // Return true if ANY of our target terms exist inside the product's combined text
+        return targetSearchTerms.some(term => combinedText.includes(term));
+    });
+
+    // Custom titles for the modal header
+    let descriptiveTitle = `${clusterKeyword} Collection`;
+    if (rawKeyword === 'cz') descriptiveTitle = "CZ & Silver Polish Curation";
+    if (rawKeyword === 'antique') descriptiveTitle = "Antique Temple Masterpieces";
+    if (rawKeyword === 'handcrafted') descriptiveTitle = "Heritage Devotion Editions";
+    if (rawKeyword === 'navratna') descriptiveTitle = "Navratna & Multi-Stone Strings";
 
     if (mainTitle) mainTitle.innerText = descriptiveTitle;
     if (miniTag) miniTag.innerText = `Angel Jewellery • ${clusterKeyword}`;
 
-    // ➔ THE INLINE STABILIZER: Resets container layout blocks perfectly
     if (scrollBody) {
         scrollBody.style.cssText = "padding: 10px 8px; overflow-x: hidden !important; width: 100%; box-sizing: border-box; background: #ffffff; flex-grow: 1;";
     }
 
-    // ➔ THE CRITICAL GRID UNIFIER FIX: Cleans out variable widths, forces clean uniform matrix layout proportions
     grid.style.cssText = "display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; flex-direction: unset !important; overflow-x: hidden !important;";
 
+    // 3. Render Modal Items or Empty State
     if (matchedStylePool.length === 0) {
+        // Console debug log so you can inspect what was searched vs loaded in browser dev tools
+        console.warn(`[Shop By Style] No matches found for "${clusterKeyword}". Loaded database items:`, productDatabase);
+
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #777; font-weight: 500; font-family:'Montserrat';">
                 <i class="fas fa-gem" style="font-size: 1.5rem; color: #e8e8ef; display: block; margin-bottom: 10px;"></i>
-                No items in this style.
+                No items found matching "${clusterKeyword}".
             </div>`;
     } else {
         grid.innerHTML = matchedStylePool.map(product => {
-            const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+            const isSoldOut = product.badge && String(product.badge).toLowerCase() === 'sold out';
             const displayPrice = product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on Request';
-            const safeTitleString = product.title.replace(/'/g, "\\'");
+            const safeTitleString = (product.title || '').replace(/'/g, "\\'");
 
-            // ➔ THE CARD LAYOUT FIX: Strict height alignments, text clamp truncation, uniform buttons
             return `
                 <div class="mosaic-modal-tile" style="background: #ffffff; border: 1px solid #e8e8ef; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; width: 100%; min-height: 290px; height: 100%; text-align: center; position: relative;">
-                    
                     <div>
-                        <!-- Uniform Aspect-Ratio Image Frame -->
                         <div onclick="closeStylePortfolioModal(); setTimeout(() => openQuickViewShield(${product.id}), 200);" 
                              style="width: 100%; aspect-ratio: 1/1; border-radius: 4px; overflow: hidden; background: #fafafa; margin-bottom: 8px; position: relative; cursor: pointer; border: 1px solid #f4f4f7; box-sizing: border-box;">
-                            <img src="${product.image}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            <img src="${product.image || 'assets/placeholder.png'}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='assets/placeholder.png'">
                             ${isSoldOut ? `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(32,44,85,0.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🔒 Sold Out</div>` : ''}
                         </div>
 
-                        <!-- Truncated Uniform Title Height Structure -->
                         <h4 style="margin: 0 0 4px 0; font-size: 0.78rem; font-weight: 600; color: #111116; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 32px; font-family: 'Montserrat'; text-align: left;">
-                            ${product.title}
+                            ${product.title || 'Untitled Piece'}
                         </h4>
                     </div>
 
@@ -4016,11 +4060,9 @@ function selectStyleClusterFilter(clusterKeyword) {
 
     modal.style.display = "flex";
     document.body.style.overflow = "hidden"; 
-    
     if (scrollBody) scrollBody.scrollTop = 0;
     angelModalPushHistory(closeStylePortfolioModal);
 }
-
 
 function closeStylePortfolioModal() {
     const modal = document.getElementById('stylePortfolioModalShield');
