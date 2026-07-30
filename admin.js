@@ -94,6 +94,7 @@ async function revealAdminDashboardAfterLogin() {
 
     await loadProductDatabaseEngine();
     await loadLiveCouponDatabaseEngine();
+    await loadFestivalRegistry();
     await synchronizeLiveStorefrontInventory();
     if (typeof loadLiveCarouselDatabaseEngine === 'function') {
         await loadLiveCarouselDatabaseEngine();
@@ -201,6 +202,7 @@ let productDatabase = [];
 let MASTER_LIVE_INVENTORY_CACHE = {};
 let carouselRegistryCache = [];
 let couponRegistryCache = [];
+let festivalRegistryCache = [];
 
 function formatCurrency(amount) {
     return '₹' + (amount || 0).toLocaleString('en-IN');
@@ -305,6 +307,207 @@ async function loadLiveCouponDatabaseEngine() {
     } catch (err) {
         console.error("❌ Failed to synchronize active coupon registry layers:", err);
     }
+}
+
+// =========================================================================
+// FESTIVAL SHOWCASE MODULE (admin side)
+// Requires a `Festivals` table in Supabase — see SQL provided alongside
+// this file. Reads use the anon key (same as everything else here); writes
+// use the logged-in admin's session token, matching the Coupons pattern.
+// =========================================================================
+
+async function loadFestivalRegistry() {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const targetUrl = `${sbUrl}/rest/v1/Festivals?select=*&order=start_date.asc`;
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
+        festivalRegistryCache = await response.json();
+    } catch (err) {
+        console.error("❌ Failed to synchronize festival registry (has the Festivals table been created yet?):", err);
+        festivalRegistryCache = [];
+    }
+}
+
+function renderAdminFestivalConsoleGrid() {
+    const container = document.getElementById('adminFestivalTableContainer');
+    if (!container) return;
+
+    if (festivalRegistryCache.length === 0) {
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No festivals configured yet.</p>`;
+        return;
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+            <thead>
+                <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
+                    <th style="padding:10px;">Festival</th>
+                    <th style="padding:10px;">Dates</th>
+                    <th style="padding:10px;">Items</th>
+                    <th style="padding:10px;">Status</th>
+                    <th style="padding:10px; text-align:center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${festivalRegistryCache.map(fest => {
+                    const isLive = todayStr >= fest.start_date && todayStr <= fest.end_date;
+                    const itemCount = Array.isArray(fest.featured_product_ids) ? fest.featured_product_ids.length : 0;
+                    return `
+                    <tr style="border-bottom:1px solid #f1f1f5;">
+                        <td style="padding:10px; font-weight:700; color:var(--purple-primary);">
+                            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${fest.theme_primary_color || '#7a1f2b'}; margin-right:6px; vertical-align:middle;"></span>
+                            ${fest.name}
+                        </td>
+                        <td style="padding:10px; font-size:0.75rem; color:#666;">${fest.start_date} → ${fest.end_date}</td>
+                        <td style="padding:10px;">${itemCount} piece${itemCount === 1 ? '' : 's'}</td>
+                        <td style="padding:10px;">
+                            ${isLive
+                                ? `<span style="color:#04693a; font-weight:700; font-size:0.72rem;"><i class="fas fa-circle" style="font-size:0.5rem;"></i> LIVE NOW</span>`
+                                : `<span style="color:#8a8da0; font-size:0.72rem;">Scheduled</span>`}
+                        </td>
+                        <td style="padding:10px; text-align:center;">
+                            <button onclick="executeAdminFestivalPurgePipeline(event, ${fest.id}, '${String(fest.name).replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Festival">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderFestivalProductPickerList() {
+    const listEl = document.getElementById('festivalProductPickerList');
+    if (!listEl) return;
+
+    if (!productDatabase || productDatabase.length === 0) {
+        listEl.innerHTML = `<p style="font-size:0.75rem; color:#aaa; padding:10px;">Loading products...</p>`;
+        return;
+    }
+
+    const sortedProducts = [...productDatabase].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+    listEl.innerHTML = sortedProducts.map(p => `
+        <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:0.78rem; cursor:pointer; border-bottom:1px solid #f4f4f7;">
+            <input type="checkbox" class="festival-product-checkbox" value="${p.id}" style="cursor:pointer;">
+            <span>${(p.title || 'Untitled piece').replace(/</g, '&lt;')} <span style="color:#aaa;">· ${p.category || ''}</span></span>
+        </label>
+    `).join('');
+}
+
+async function handleAdminFestivalFormSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('festivalFormSubmitBtn');
+    if (!submitBtn) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    const selectedProductIds = Array.from(document.querySelectorAll('.festival-product-checkbox:checked'))
+        .map(cb => parseInt(cb.value));
+
+    const newFestivalPayload = {
+        name: document.getElementById('newFestivalNameInput').value.trim(),
+        tagline: document.getElementById('newFestivalTaglineInput').value.trim(),
+        start_date: document.getElementById('newFestivalStartDateInput').value,
+        end_date: document.getElementById('newFestivalEndDateInput').value,
+        theme_primary_color: document.getElementById('newFestivalPrimaryColorInput').value,
+        theme_secondary_color: document.getElementById('newFestivalSecondaryColorInput').value,
+        coupon_code: document.getElementById('newFestivalCouponInput').value.trim().toUpperCase() || null,
+        featured_product_ids: selectedProductIds
+    };
+
+    if (!newFestivalPayload.name || !newFestivalPayload.start_date || !newFestivalPayload.end_date) {
+        alert("Please provide a name, start date, and end date.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
+    if (newFestivalPayload.end_date < newFestivalPayload.start_date) {
+        alert("End date can't be before the start date.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
+    if (selectedProductIds.length === 0) {
+        alert("Please select at least one product to feature.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Festivals`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(newFestivalPayload)
+        });
+
+        if (!response.ok) throw new Error("Supabase rejected the festival entry — check the Festivals table exists.");
+
+        alert(`✨ "${newFestivalPayload.name}" festival saved! It will automatically appear on the site between ${newFestivalPayload.start_date} and ${newFestivalPayload.end_date}.`);
+        document.getElementById('adminFestivalCreatorForm').reset();
+
+        await loadFestivalRegistry();
+        renderAdminFestivalConsoleGrid();
+        renderFestivalProductPickerList();
+
+    } catch (err) {
+        console.error(err);
+        alert("Could not save festival. Make sure the Festivals table has been created in Supabase (see setup notes).");
+    } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+    }
+}
+
+async function executeAdminFestivalPurgePipeline(event, festivalId, festivalName) {
+    if (event) event.stopPropagation();
+    const verify = confirm(`Delete the "${festivalName}" festival? This can't be undone.`);
+    if (!verify) return;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/Festivals?id=eq.${festivalId}`, {
+            method: 'DELETE',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error("Deletion failed.");
+
+        await loadFestivalRegistry();
+        renderAdminFestivalConsoleGrid();
+
+    } catch (err) {
+        console.error(err);
+        alert("Unable to delete this festival entry.");
+    }
+}
+
+function openAdminFestivalConsoleOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('adminFestivalConsoleOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    renderAdminFestivalConsoleGrid();
+    renderFestivalProductPickerList();
+}
+
+function closeAdminFestivalConsoleOverlay() {
+    const overlay = document.getElementById('adminFestivalConsoleOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 async function synchronizeLiveStorefrontInventory() {

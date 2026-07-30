@@ -4858,6 +4858,213 @@ async function loadLiveCarouselDatabaseEngine() {
 }
 
 // =========================================================================
+// ANGEL JEWELLERY — FESTIVAL SHOWCASE
+// Auto-shows/hides purely based on today's date falling inside a festival's
+// start_date/end_date window in the Festivals table. Requires that table —
+// see the SQL notes provided alongside this file. If the table doesn't
+// exist yet, or nothing is currently active, the section just stays hidden.
+// =========================================================================
+
+let festivalCountdownIntervalHandle = null;
+
+async function loadActiveFestivalShowcase() {
+    const section = document.getElementById('festivalShowcaseSection');
+    if (!section) return;
+
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        const response = await fetch(`${sbUrl}/rest/v1/Festivals?select=*`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            // Table probably doesn't exist yet — stay silent and hidden
+            section.style.display = 'none';
+            return;
+        }
+
+        const festivals = await response.json();
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        const activeFestival = (festivals || []).find(f => todayStr >= f.start_date && todayStr <= f.end_date);
+
+        if (!activeFestival) {
+            section.style.display = 'none';
+            if (festivalCountdownIntervalHandle) clearInterval(festivalCountdownIntervalHandle);
+            return;
+        }
+
+        renderActiveFestivalShowcase(activeFestival);
+
+    } catch (error) {
+        console.log("ℹ️ Festival showcase skipped:", error.message);
+        section.style.display = 'none';
+    }
+}
+
+function renderActiveFestivalShowcase(festival) {
+    const section = document.getElementById('festivalShowcaseSection');
+    if (!section) return;
+
+    // Apply this festival's own theme colors
+    section.style.setProperty('--festival-primary', festival.theme_primary_color || '#7a1f2b');
+    section.style.setProperty('--festival-secondary', festival.theme_secondary_color || '#cca43b');
+
+    const titleEl = document.getElementById('festivalTitle');
+    const taglineEl = document.getElementById('festivalTagline');
+    if (titleEl) titleEl.innerText = festival.name || 'Festival Collection';
+    if (taglineEl) {
+        taglineEl.innerText = festival.tagline || '';
+        taglineEl.style.display = festival.tagline ? 'block' : 'none';
+    }
+
+    const couponCallout = document.getElementById('festivalCouponCallout');
+    const couponCodeEl = document.getElementById('festivalCouponCode');
+    if (festival.coupon_code && couponCallout && couponCodeEl) {
+        couponCodeEl.innerText = festival.coupon_code;
+        couponCallout.style.display = 'inline-flex';
+    } else if (couponCallout) {
+        couponCallout.style.display = 'none';
+    }
+
+    populateFestivalSparkles();
+    startFestivalCountdown(festival.end_date);
+    renderFestivalProductGrid(festival.featured_product_ids || []);
+
+    section.style.display = 'block';
+}
+
+function populateFestivalSparkles() {
+    const layer = document.getElementById('festivalSparkleLayer');
+    if (!layer || layer.children.length > 0) return; // only build once
+
+    let sparklesHTML = '';
+    for (let i = 0; i < 25; i++) {
+        const top = Math.random() * 100;
+        const left = Math.random() * 100;
+        const delay = Math.random() * 4;
+        sparklesHTML += `<div class="festival-sparkle-dot" style="top:${top}%; left:${left}%; animation-delay:${delay}s;"></div>`;
+    }
+    layer.innerHTML = sparklesHTML;
+}
+
+function startFestivalCountdown(endDateStr) {
+    if (festivalCountdownIntervalHandle) clearInterval(festivalCountdownIntervalHandle);
+
+    // Countdown runs to the END of the festival's last day (23:59:59), giving
+    // urgency to shop before the sale window closes.
+    const endMoment = new Date(`${endDateStr}T23:59:59`).getTime();
+
+    const tick = () => {
+        const now = Date.now();
+        const diff = endMoment - now;
+
+        if (diff <= 0) {
+            clearInterval(festivalCountdownIntervalHandle);
+            loadActiveFestivalShowcase(); // festival just ended — re-check and hide if needed
+            return;
+        }
+
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+
+        const pad = n => String(n).padStart(2, '0');
+        const daysEl = document.getElementById('festivalCountdownDays');
+        const hoursEl = document.getElementById('festivalCountdownHours');
+        const minsEl = document.getElementById('festivalCountdownMins');
+        const secsEl = document.getElementById('festivalCountdownSecs');
+        if (daysEl) daysEl.innerText = pad(days);
+        if (hoursEl) hoursEl.innerText = pad(hours);
+        if (minsEl) minsEl.innerText = pad(mins);
+        if (secsEl) secsEl.innerText = pad(secs);
+    };
+
+    tick();
+    festivalCountdownIntervalHandle = setInterval(tick, 1000);
+}
+
+function renderFestivalProductGrid(featuredProductIds) {
+    const grid = document.getElementById('festivalProductGrid');
+    if (!grid) return;
+
+    if (!productDatabase || productDatabase.length === 0 || !Array.isArray(featuredProductIds) || featuredProductIds.length === 0) {
+        grid.innerHTML = '';
+        return;
+    }
+
+    const featuredItems = productDatabase.filter(p => featuredProductIds.includes(p.id));
+    grid.innerHTML = '';
+
+    featuredItems.forEach(product => {
+        const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+        const isFavorited = wishlistMemory.includes(product.id);
+
+        const card = document.createElement('div');
+        card.className = `angel-card ${isSoldOut ? 'is-disabled' : ''}`;
+        card.setAttribute('onclick', `openQuickViewShield(${product.id})`);
+
+        const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+        const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+        const discountPercent = hasDiscount
+            ? Math.round(((product.originalPrice - currentPriceValue) / product.originalPrice) * 100)
+            : 0;
+
+        const liveStockData = MASTER_LIVE_INVENTORY_CACHE[product.id];
+        const liveStockCount = liveStockData ? liveStockData.stock : (parseInt(product.stock) || 0);
+        const isLowStock = !isSoldOut && liveStockCount > 0 && liveStockCount <= 2;
+        const isHealthyStock = !isSoldOut && liveStockCount > 2;
+        const stockFlagHTML = isLowStock
+            ? `<span class="angel-card-stock-flag"><i class="fas fa-fire"></i> Only ${liveStockCount} left</span>`
+            : (isHealthyStock ? `<span class="angel-card-stock-flag angel-card-stock-flag--available"><i class="fas fa-check-circle"></i> ${liveStockCount} in stock</span>` : '');
+
+        const pricingLayoutHTML = hasDiscount ? `
+            <div class="angel-card-price-row">
+                <span class="angel-card-price">${formatCurrency(currentPriceValue)}</span>
+                <span class="angel-card-price-was">${formatCurrency(product.originalPrice)}</span>
+                ${discountPercent > 0 ? `<span class="angel-card-discount-pill">${discountPercent}% OFF</span>` : ''}
+            </div>
+        ` : `
+            <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
+        `;
+
+        const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+        card.innerHTML = `
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                <span class="angel-card-badge" style="background: linear-gradient(135deg, var(--festival-primary, #7a1f2b), var(--festival-secondary, #cca43b)); color: #fff;">Festive Pick</span>
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}"
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)"
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                </button>
+                ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
+            </div>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="angel-card-title">${product.title}</h3>
+                ${buildProductRatingRowHTML(product.id)}
+                ${stockFlagHTML}
+                ${pricingLayoutHTML}
+                <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}"
+                        onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
+                        ${isSoldOut ? 'disabled' : ''}>
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i>
+                    <span>${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}</span>
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// =========================================================================
 // ANGEL JEWELLERY — LIVE SOCIAL-PROOF ACTIVITY TOAST
 // =========================================================================
 // Shows real recent purchases as small dismissible toasts (bottom-left).
@@ -5049,4 +5256,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof renderVaultSaleSection === 'function') renderVaultSaleSection();
     if (typeof renderNewArrivalsSection === 'function') renderNewArrivalsSection();
     if (typeof renderRecentlyViewedSection === 'function') renderRecentlyViewedSection();
+    if (typeof loadActiveFestivalShowcase === 'function') loadActiveFestivalShowcase();
 });

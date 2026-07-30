@@ -173,6 +173,34 @@
     </section>
 
     <!-- =========================================================================
+         4.5. Festival Showcase (auto-appears only during an active festival window)
+         ========================================================================= -->
+    <section id="festivalShowcaseSection" style="display: none; padding: 70px 0; position: relative; overflow: hidden; font-family: 'Montserrat', sans-serif;">
+        <div id="festivalSparkleLayer" class="festival-sparkle-layer"></div>
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 2; box-sizing: border-box;">
+
+            <div style="text-align: center; margin-bottom: 30px;">
+                <span id="festivalEyebrow" class="festival-eyebrow">Limited Time</span>
+                <h2 id="festivalTitle" class="festival-title">Festival Name</h2>
+                <p id="festivalTagline" class="festival-tagline"></p>
+
+                <div id="festivalCountdownRow" class="festival-countdown-row">
+                    <div class="festival-countdown-unit"><span id="festivalCountdownDays">00</span><small>Days</small></div>
+                    <div class="festival-countdown-unit"><span id="festivalCountdownHours">00</span><small>Hrs</small></div>
+                    <div class="festival-countdown-unit"><span id="festivalCountdownMins">00</span><small>Min</small></div>
+                    <div class="festival-countdown-unit"><span id="festivalCountdownSecs">00</span><small>Sec</small></div>
+                </div>
+
+                <div id="festivalCouponCallout" class="festival-coupon-callout" style="display: none;">
+                    <i class="fas fa-tag"></i> Use code <strong id="festivalCouponCode"></strong> at checkout
+                </div>
+            </div>
+
+            <div id="festivalProductGrid" class="product-grid festival-product-grid"></div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
          5. Category Folders (Our Collection)
          ========================================================================= -->
     <section class="catalog-controls" id="catalog" style="background: #fafafa; padding: 90px 0 70px 0; width: 100%; display: block !important; position: relative;">
