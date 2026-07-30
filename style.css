@@ -150,6 +150,51 @@ header.scrolled .logo img { height: 45px; }
 .carousel-slide h3 { color: #ffffff !important; }
 .carousel-slide img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
 
+/* --- HARD ANTI-PEEK GUARANTEE: exactly one slide visible, ever --- */
+.updates-carousel-section .container { overflow: hidden !important; }
+#carouselSliderTrack {
+    gap: 0 !important;
+    box-sizing: border-box;
+}
+#carouselSliderTrack .carousel-slide {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* --- STORY-STYLE PROGRESS BAR INDICATORS (replaces dots) --- */
+#carouselIndicatorsDock {
+    flex: 1;
+    max-width: 420px;
+}
+.carousel-progress-segment {
+    flex: 1;
+    height: 4px;
+    border-radius: 4px;
+    background: #e8e8ef;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+.carousel-progress-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--purple-primary, #202c55);
+    border-radius: 4px;
+}
+.carousel-progress-fill.is-complete { width: 100%; }
+.carousel-progress-fill.is-animating {
+    animation: carouselProgressFill 5s linear forwards;
+}
+.carousel-progress-fill.is-paused { animation-play-state: paused !important; }
+@keyframes carouselProgressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
 /* =========================================================================
    ANGEL JEWELLERY — LUXURY CONTINUOUS MARQUEE RIBBON OVERRIDE
    ========================================================================= */

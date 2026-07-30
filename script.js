@@ -3138,9 +3138,9 @@ function copyShippingLabelToClipboard(name, phone, address, buttonElement) {
 
 let currentCarouselActiveIndex = 0;
 
-let carouselAutoRotationTimerHandle = null;
-
 let isCarouselAutoPlayPaused = false;
+
+const CAROUSEL_SLIDE_DURATION_MS = 5000;
 
 
 function initializeLuxuryBannerCarousel() {
@@ -3157,71 +3157,88 @@ function initializeLuxuryBannerCarousel() {
     const slidesCount = track.children.length;
     if (slidesCount === 0) return;
 
+    currentCarouselActiveIndex = 0;
     indicatorsDock.innerHTML = "";
     for (let i = 0; i < slidesCount; i++) {
-        const indicatorDot = document.createElement('div');
-        indicatorDot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? 'var(--purple-primary)' : '#e8e8ef'}; cursor: pointer; transition: background 0.3s;`;
-        indicatorDot.onclick = () => jumpToSpecificCarouselSlide(i);
-        indicatorsDock.appendChild(indicatorDot);
+        const segment = document.createElement('div');
+        segment.className = 'carousel-progress-segment';
+        segment.onclick = () => jumpToSpecificCarouselSlide(i);
+        segment.innerHTML = `<div class="carousel-progress-fill" data-segment-index="${i}"></div>`;
+        indicatorsDock.appendChild(segment);
     }
-    startCarouselAutoPlayCycle(slidesCount);
+
+    updateCarouselRenderPosition();
+    startCarouselAutoPlayCycle();
 }
 
 
 function toggleCarouselAutoPlayEngine() {
-    const track = document.getElementById('carouselSliderTrack');
     const pauseIcon = document.getElementById('carouselPauseIcon');
     const buttonWrapper = document.getElementById('carouselPauseToggleBtn');
-    
-    if (!track) return;
-    const slidesCount = track.children.length;
+    const activeFill = document.querySelector('.carousel-progress-fill.is-animating');
 
     if (isCarouselAutoPlayPaused) {
         isCarouselAutoPlayPaused = false;
         if (pauseIcon) pauseIcon.className = "fas fa-pause";
         if (buttonWrapper) buttonWrapper.title = "Pause Slideshow";
-        startCarouselAutoPlayCycle(slidesCount);
+        if (activeFill) activeFill.classList.remove('is-paused');
     } else {
         isCarouselAutoPlayPaused = true;
         if (pauseIcon) pauseIcon.className = "fas fa-play";
         if (buttonWrapper) buttonWrapper.title = "Play Slideshow";
-        if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
+        if (activeFill) activeFill.classList.add('is-paused');
     }
 }
 
 
-function startCarouselAutoPlayCycle(totalSlidesCount) {
-    if (carouselAutoRotationTimerHandle) clearInterval(carouselAutoRotationTimerHandle);
-    if (isCarouselAutoPlayPaused) return;
+function startCarouselAutoPlayCycle() {
+    const indicatorsDock = document.getElementById('carouselIndicatorsDock');
+    if (!indicatorsDock) return;
 
-    carouselAutoRotationTimerHandle = setInterval(() => {
+    const activeFill = indicatorsDock.querySelector(`.carousel-progress-fill[data-segment-index="${currentCarouselActiveIndex}"]`);
+    if (!activeFill) return;
+
+    // Advance automatically the instant this segment's own fill animation
+    // completes — this is what keeps the bar and the actual slide change
+    // perfectly in sync, since there's no separate timer to drift apart.
+    activeFill.addEventListener('animationend', function onFillComplete() {
+        activeFill.removeEventListener('animationend', onFillComplete);
+        if (isCarouselAutoPlayPaused) return; // paused mid-flight, don't advance
+        const track = document.getElementById('carouselSliderTrack');
+        const totalSlidesCount = track ? track.children.length : 1;
         currentCarouselActiveIndex = (currentCarouselActiveIndex + 1) % totalSlidesCount;
         updateCarouselRenderPosition();
-    }, 5000);
+        startCarouselAutoPlayCycle();
+    }, { once: true });
+
+    if (isCarouselAutoPlayPaused) activeFill.classList.add('is-paused');
+    // Force a reflow so re-adding the animation class always restarts it
+    // cleanly, even if this exact segment was already mid-animation before.
+    activeFill.classList.remove('is-animating');
+    void activeFill.offsetWidth;
+    activeFill.classList.add('is-animating');
 }
 
 
 function shiftCarouselSlideDirection(directionStep) {
     const track = document.getElementById('carouselSliderTrack');
     if (!track) return;
-    
+
     const totalSlides = track.children.length;
     currentCarouselActiveIndex += directionStep;
-    
+
     if (currentCarouselActiveIndex >= totalSlides) currentCarouselActiveIndex = 0;
     if (currentCarouselActiveIndex < 0) currentCarouselActiveIndex = totalSlides - 1;
 
     updateCarouselRenderPosition();
-    startCarouselAutoPlayCycle(totalSlides);
+    startCarouselAutoPlayCycle();
 }
 
 
 function jumpToSpecificCarouselSlide(targetIndex) {
     currentCarouselActiveIndex = targetIndex;
     updateCarouselRenderPosition();
-    
-    const track = document.getElementById('carouselSliderTrack');
-    if (track) startCarouselAutoPlayCycle(track.children.length);
+    startCarouselAutoPlayCycle();
 }
 
 
@@ -3231,8 +3248,17 @@ function updateCarouselRenderPosition() {
     if (!track || !indicatorsDock) return;
 
     track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
-    Array.from(indicatorsDock.children).forEach((dot, index) => {
-        dot.style.background = index === currentCarouselActiveIndex ? 'var(--purple-primary)' : '#e8e8ef';
+
+    // Every segment before the active one shows fully filled (already seen),
+    // the active one is handled by startCarouselAutoPlayCycle(), and every
+    // segment after it resets back to empty.
+    Array.from(indicatorsDock.querySelectorAll('.carousel-progress-fill')).forEach((fill, index) => {
+        fill.classList.remove('is-animating', 'is-paused', 'is-complete');
+        if (index < currentCarouselActiveIndex) {
+            fill.style.width = '100%';
+        } else {
+            fill.style.width = '0%';
+        }
     });
 }
 
