@@ -3247,7 +3247,9 @@ function updateCarouselRenderPosition() {
     const indicatorsDock = document.getElementById('carouselIndicatorsDock');
     if (!track || !indicatorsDock) return;
 
-    track.style.transform = `translateX(-${currentCarouselActiveIndex * 100}%)`;
+    Array.from(track.children).forEach((slide, index) => {
+        slide.classList.toggle('is-active-slide', index === currentCarouselActiveIndex);
+    });
 
     // Every segment before the active one shows fully filled (already seen),
     // the active one is handled by startCarouselAutoPlayCycle(), and every
@@ -4831,15 +4833,16 @@ async function loadLiveCarouselDatabaseEngine() {
 
         if (carouselRegistryCache.length === 0) {
             track.innerHTML = `
-                <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; border-radius:8px; overflow:hidden;">
+                <div class="carousel-slide is-active-slide">
                     <img src="assets/carousel/slide-1.png" style="width:100%; height:100%; object-fit:cover; display:block;">
                 </div>`;
             return;
         }
 
-        // Render live slides dynamically into the track
-        track.innerHTML = carouselRegistryCache.map(slide => `
-            <div class="carousel-slide" style="flex:0 0 100%; min-width:100%; position:relative; box-sizing:border-box; border-radius:8px; overflow:hidden; width:100%;">
+        // Render live slides dynamically into the track — all stacked in the
+        // same spot via CSS; only the first one starts visible (is-active-slide)
+        track.innerHTML = carouselRegistryCache.map((slide, i) => `
+            <div class="carousel-slide ${i === 0 ? 'is-active-slide' : ''}">
                 <img src="${slide.image_url}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block;" alt="${slide.title || 'Campaign Banner'}">
             </div>
         `).join('');

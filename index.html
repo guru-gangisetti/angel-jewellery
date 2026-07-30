@@ -95,14 +95,14 @@
         <div class="container" style="max-width: 1200px; margin: 0 auto; position: relative; overflow: hidden; padding: 0 20px; box-sizing: border-box;">
     
             <!-- Smooth Sliding Track Window Frame Container Layer -->
-            <div id="carouselSliderTrack" style="display: flex; transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1); width: 100%;">
+            <div id="carouselSliderTrack" style="position: relative; width: 100%;">
             </div>
 
             <!-- Left Directional Trigger Arrow (Minimalist Floating Variant Accent) -->
-            <button onclick="shiftCarouselSlideDirection(-1)" class="luxury-carousel-arrow-btn" style="position: absolute; top: 50%; left: 35px; transform: translateY(-50%); background: #ffffff; border: 1px solid #e8e8ef; color: #202c55; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.08); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 10; outline: none;"><i class="fas fa-chevron-left" style="font-size: 0.85rem;"></i></button>
+            <button onclick="shiftCarouselSlideDirection(-1)" class="luxury-carousel-arrow-btn carousel-arrow-prev" style="position: absolute; top: 50%; left: 35px; transform: translateY(-50%); background: #ffffff; border: 1px solid #e8e8ef; color: #202c55; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.08); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 10; outline: none;"><i class="fas fa-chevron-left" style="font-size: 0.85rem;"></i></button>
             
             <!-- Right Directional Trigger Arrow (Minimalist Floating Variant Accent) -->
-            <button onclick="shiftCarouselSlideDirection(1)" class="luxury-carousel-arrow-btn" style="position: absolute; top: 50%; right: 35px; transform: translateY(-50%); background: #ffffff; border: 1px solid #e8e8ef; color: #202c55; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.08); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 10; outline: none;"><i class="fas fa-chevron-right" style="font-size: 0.85rem;"></i></button>
+            <button onclick="shiftCarouselSlideDirection(1)" class="luxury-carousel-arrow-btn carousel-arrow-next" style="position: absolute; top: 50%; right: 35px; transform: translateY(-50%); background: #ffffff; border: 1px solid #e8e8ef; color: #202c55; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(32, 44, 85, 0.08); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 10; outline: none;"><i class="fas fa-chevron-right" style="font-size: 0.85rem;"></i></button>
 
             <!-- Consolidated Control Dock Bar Frame Panel Setup -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; position: relative; width: 100%;">
@@ -130,8 +130,9 @@
         }
         /* Mobile configuration adaptation parameters layer locks */
         @media (max-width: 640px) {
-            .luxury-carousel-arrow-btn { width: 36px !important; height: 36px !important; left: 28px !important; }
-            button[onclick*="directionStep(1)"] { right: 28px !important; left: auto !important; }
+            .luxury-carousel-arrow-btn { width: 36px !important; height: 36px !important; }
+            .carousel-arrow-prev { left: 28px !important; right: auto !important; }
+            .carousel-arrow-next { right: 28px !important; left: auto !important; }
         }
     </style>
 
