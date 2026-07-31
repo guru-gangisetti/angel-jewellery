@@ -1718,7 +1718,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .festival-product-grid {
     background: #ffffff;
     border-radius: 12px;
-    padding: 20px;
+    padding: 2px;
     box-sizing: border-box;
 }
 @media (max-width: 640px) {
