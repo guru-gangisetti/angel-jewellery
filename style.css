@@ -1631,6 +1631,85 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     background: rgba(42,123,106,0.09);
 }
 
+/* --- "COMPLETE THE LOOK" CART BUNDLE SUGGESTION --- */
+.complete-look-suggestion {
+    margin: 4px 15px 16px 15px;
+    border: 1px dashed #cca43b;
+    background: #fffdf6;
+    border-radius: 8px;
+    padding: 12px;
+    box-sizing: border-box;
+}
+.complete-look-header {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #7a1f2b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.complete-look-discount-pill {
+    background: #7a1f2b;
+    color: #ffffff;
+    font-size: 0.62rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+}
+.complete-look-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+.complete-look-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.complete-look-body img {
+    width: 48px; height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #e8e8ef;
+    flex-shrink: 0;
+}
+.complete-look-info { flex: 1; min-width: 0; }
+.complete-look-title {
+    margin: 0 0 2px 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #111116;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.complete-look-price { margin: 0; font-size: 0.78rem; }
+.complete-look-price-new { color: #7a1f2b; font-weight: 700; margin-right: 6px; }
+.complete-look-price-old { color: #aaa; text-decoration: line-through; font-weight: 500; }
+.complete-look-add-btn {
+    flex-shrink: 0;
+    background: var(--purple-primary, #202c55);
+    color: #ffffff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.complete-look-add-btn:hover { background: #161f3d; }
+
 /* --- FESTIVAL SHOWCASE SECTION --- */
 #festivalShowcaseSection {
     --festival-primary: #7a1f2b;
@@ -1718,7 +1797,7 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
 .festival-product-grid {
     background: #ffffff;
     border-radius: 12px;
-    padding: 2px;
+    padding: 20px;
     box-sizing: border-box;
 }
 @media (max-width: 640px) {

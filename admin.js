@@ -95,6 +95,7 @@ async function revealAdminDashboardAfterLogin() {
     await loadProductDatabaseEngine();
     await loadLiveCouponDatabaseEngine();
     await loadFestivalRegistry();
+    await loadSiteSettingsRegistry();
     await synchronizeLiveStorefrontInventory();
     if (typeof loadLiveCarouselDatabaseEngine === 'function') {
         await loadLiveCarouselDatabaseEngine();
@@ -203,6 +204,7 @@ let MASTER_LIVE_INVENTORY_CACHE = {};
 let carouselRegistryCache = [];
 let couponRegistryCache = [];
 let festivalRegistryCache = [];
+let siteSettingsRegistryCache = {};
 
 function formatCurrency(amount) {
     return '₹' + (amount || 0).toLocaleString('en-IN');
@@ -507,6 +509,103 @@ function openAdminFestivalConsoleOverlay(event) {
 
 function closeAdminFestivalConsoleOverlay() {
     const overlay = document.getElementById('adminFestivalConsoleOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// =========================================================================
+// SITE FEATURE TOGGLES MODULE (admin side)
+// Requires a `SiteSettings` key/value table in Supabase — see SQL notes
+// provided alongside this file. Reads use the anon key; writes use the
+// logged-in admin's session token, matching the Coupons/Festivals pattern.
+//
+// To add a new toggle later: just add one entry to SITE_FEATURE_TOGGLE_DEFS
+// below — no other code changes needed on the admin side.
+// =========================================================================
+
+const SITE_FEATURE_TOGGLE_DEFS = [
+    {
+        key: 'complete_the_look_enabled',
+        label: 'Complete the Look Suggestions',
+        description: 'Shows complementary product suggestions (with a discount) in the cart drawer, before checkout.'
+    }
+];
+
+async function loadSiteSettingsRegistry() {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/SiteSettings?select=*`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
+        const rows = await response.json();
+        siteSettingsRegistryCache = {};
+        (rows || []).forEach(row => { siteSettingsRegistryCache[row.key] = row.value; });
+    } catch (err) {
+        console.error("❌ Failed to load site settings (has the SiteSettings table been created yet?):", err);
+        siteSettingsRegistryCache = {};
+    }
+}
+
+function renderSiteFeatureToggles() {
+    const container = document.getElementById('adminSiteFeatureTogglesContainer');
+    if (!container) return;
+
+    container.innerHTML = SITE_FEATURE_TOGGLE_DEFS.map(def => {
+        // Default to ON if the setting hasn't been saved yet, so a feature
+        // isn't silently disabled just because this row doesn't exist yet.
+        const isEnabled = siteSettingsRegistryCache[def.key] !== 'false';
+        return `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid #f1f1f5;">
+                <div>
+                    <p style="margin:0; font-size:0.88rem; font-weight:700; color:var(--purple-primary);">${def.label}</p>
+                    <p style="margin:2px 0 0 0; font-size:0.74rem; color:#8a8da0;">${def.description}</p>
+                </div>
+                <label class="admin-toggle-switch">
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="handleSiteFeatureToggleChange('${def.key}', this.checked, this)">
+                    <span class="admin-toggle-slider"></span>
+                </label>
+            </div>`;
+    }).join('');
+}
+
+async function handleSiteFeatureToggleChange(settingKey, isEnabled, checkboxEl) {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+    const newValue = isEnabled ? 'true' : 'false';
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/SiteSettings`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
+                'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal'
+            },
+            body: JSON.stringify({ key: settingKey, value: newValue })
+        });
+        if (!response.ok) throw new Error("Supabase rejected the settings update — check the SiteSettings table exists.");
+
+        siteSettingsRegistryCache[settingKey] = newValue;
+
+    } catch (err) {
+        console.error(err);
+        alert("Could not save this setting. Make sure the SiteSettings table has been created in Supabase (see setup notes).");
+        // Revert the visual toggle since the save failed
+        if (checkboxEl) checkboxEl.checked = !isEnabled;
+    }
+}
+
+function openAdminSiteFeaturesOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('adminSiteFeaturesOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    renderSiteFeatureToggles();
+}
+
+function closeAdminSiteFeaturesOverlay() {
+    const overlay = document.getElementById('adminSiteFeaturesOverlay');
     if (overlay) overlay.style.display = 'none';
 }
 

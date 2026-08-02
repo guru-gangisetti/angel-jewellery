@@ -263,6 +263,7 @@ let currentSelectedFilterCategoryKey = "all";
 
 let MASTER_LIVE_INVENTORY_CACHE = {};
 let PRODUCT_RATING_CACHE = {}; // { [productId]: { avg: number, count: number } } — real data only, never fabricated
+let SITE_SETTINGS_CACHE = {}; // { [key]: 'true' | 'false' } — admin-controlled feature toggles
 
 let carouselRegistryCache = []
 
@@ -1235,6 +1236,142 @@ function shareReferralViaWhatsApp() {
 }
 
 
+// =========================================================================
+// ANGEL JEWELLERY — "COMPLETE THE LOOK" CART BUNDLE SUGGESTION
+// Shows one complementary, discounted suggestion in the cart drawer (after
+// the items list, before the totals) — never a fake discount: the price
+// shown here is exactly what gets charged, via getEffectiveLineUnitPrice().
+// =========================================================================
+
+const COMPLETE_THE_LOOK_DISCOUNT_PERCENT = 10;
+const COMPLETE_THE_LOOK_MAX_SUGGESTIONS = 5;
+
+const COMPLETE_THE_LOOK_COMPLEMENT_MAP = [
+    { has: 'neck', wants: ['earring'] },
+    { has: 'haram', wants: ['earring'] },
+    { has: 'earring', wants: ['neck', 'haram'] },
+    { has: 'bangle', wants: ['neck', 'earring', 'ring'] },
+    { has: 'kada', wants: ['bangle', 'neck'] },
+    { has: 'ring', wants: ['earring', 'neck'] }
+];
+
+function renderCartCompleteTheLookSuggestion() {
+    const container = document.getElementById('cartCompleteTheLookSlot');
+    if (!container) return;
+
+    if (!isSiteFeatureEnabled('complete_the_look_enabled')) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    if (!shoppingCart || shoppingCart.length === 0 || !currentDb || currentDb.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const cartProductIds = shoppingCart.map(i => i.id);
+    const cartCategories = [...new Set(shoppingCart.map(i => String(i.category || '').toLowerCase()))];
+
+    const isEligible = p => !cartProductIds.includes(p.id) &&
+        !(p.badge && p.badge.toLowerCase() === 'sold out') &&
+        !String(p.category || '').toLowerCase().includes('flash');
+
+    let candidatePool = [];
+    cartCategories.forEach(cat => {
+        const rule = COMPLETE_THE_LOOK_COMPLEMENT_MAP.find(r => cat.includes(r.has));
+        if (rule) {
+            rule.wants.forEach(wantKeyword => {
+                candidatePool = candidatePool.concat(
+                    currentDb.filter(p => isEligible(p) && String(p.category || '').toLowerCase().includes(wantKeyword))
+                );
+            });
+        }
+    });
+
+    // Fallback: nothing matched a known complement pairing — suggest
+    // anything from a category not already represented in the cart
+    if (candidatePool.length === 0) {
+        candidatePool = currentDb.filter(p => isEligible(p) && !cartCategories.includes(String(p.category || '').toLowerCase()));
+    }
+
+    // De-duplicate
+    candidatePool = candidatePool.filter((p, idx) => candidatePool.findIndex(x => x.id === p.id) === idx);
+
+    if (candidatePool.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Rank by real rating first, so the best-per-category pick is the best available
+    candidatePool.sort((a, b) => (PRODUCT_RATING_CACHE[b.id]?.avg || 0) - (PRODUCT_RATING_CACHE[a.id]?.avg || 0));
+
+    // One item per distinct category, capped at COMPLETE_THE_LOOK_MAX_SUGGESTIONS
+    const seenCategories = new Set();
+    const finalSuggestions = [];
+    for (const p of candidatePool) {
+        const cat = String(p.category || '').toLowerCase();
+        if (seenCategories.has(cat)) continue;
+        seenCategories.add(cat);
+        finalSuggestions.push(p);
+        if (finalSuggestions.length >= COMPLETE_THE_LOOK_MAX_SUGGESTIONS) break;
+    }
+
+    if (finalSuggestions.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="complete-look-suggestion">
+            <div class="complete-look-header"><i class="fas fa-sparkles"></i> Complete The Look <span class="complete-look-discount-pill">${COMPLETE_THE_LOOK_DISCOUNT_PERCENT}% OFF</span></div>
+            <div class="complete-look-list">
+                ${finalSuggestions.map(buildCompleteLookItemRowHTML).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function buildCompleteLookItemRowHTML(suggestion) {
+    const basePrice = typeof suggestion.price === 'number' ? suggestion.price : parseFloat(suggestion.price) || 0;
+    const discountedPrice = basePrice * (1 - COMPLETE_THE_LOOK_DISCOUNT_PERCENT / 100);
+
+    return `
+        <div class="complete-look-body">
+            <img src="${suggestion.image || 'assets/placeholder.png'}" alt="${suggestion.title}" loading="lazy" onerror="this.src='assets/placeholder.png'">
+            <div class="complete-look-info">
+                <p class="complete-look-title">${suggestion.title}</p>
+                <p class="complete-look-price">
+                    <span class="complete-look-price-new">${formatCurrency(discountedPrice)}</span>
+                    <span class="complete-look-price-old">${formatCurrency(basePrice)}</span>
+                </p>
+            </div>
+            <button class="complete-look-add-btn" onclick="addCompleteTheLookSuggestionToCart(${suggestion.id})">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </div>
+    `;
+}
+
+function addCompleteTheLookSuggestionToCart(productId) {
+    const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
+    const product = currentDb.find(p => p.id === productId);
+    if (!product) return;
+
+    // Reuse the exact same entry point as every other "add to cart" trigger
+    // on the site, so quantity merging / stock checks / variant defaults
+    // all stay perfectly consistent — then tag the resulting line with the
+    // bundle discount afterward.
+    addToCartEngine(productId);
+
+    const justAddedLine = shoppingCart.find(item => item.id === productId);
+    if (justAddedLine) {
+        justAddedLine.bundleDiscountPercent = COMPLETE_THE_LOOK_DISCOUNT_PERCENT;
+    }
+
+    updateCartUI();
+}
+
 function addToCartEngine(productId) {
     const currentDb = (typeof productDatabase !== 'undefined') ? productDatabase : (window.productDatabase || []);
     const product = currentDb.find(p => p.id === productId);
@@ -1337,9 +1474,23 @@ function removeFromCart(id) {
     updateCartUI();
 }
 
+function clearEntireCart() {
+    if (shoppingCart.length === 0) return;
+    const confirmClear = confirm("Remove all items from your cart? This can't be undone.");
+    if (!confirmClear) return;
+
+    shoppingCart = [];
+    updateCartUI();
+}
+
 // =========================================================================
 // ANGEL JEWELLERY — SHOPPING BAG ENGINE WITH VISUAL INLINE HIGHLIGHTS
 // =========================================================================
+
+function getEffectiveLineUnitPrice(item) {
+    const bundleDiscountPercent = item.bundleDiscountPercent || 0;
+    return bundleDiscountPercent > 0 ? item.price * (1 - bundleDiscountPercent / 100) : item.price;
+}
 
 function updateCartUI() {
     localStorage.setItem('shoppingCart', JSON.stringify(shoppingCart));
@@ -1354,11 +1505,16 @@ function updateCartUI() {
     let totalItemsCount = 0;
     let grandSubtotal = 0;
 
+    const clearCartBtn = document.getElementById('clearCartBtn');
+
     if (shoppingCart.length === 0) {
         cartItemsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding: 40px 0;">Your cart is currently empty.</div>`;
         if (cartCountBadge) cartCountBadge.style.opacity = "0";
         if (cartFooterSection) cartFooterSection.style.display = "none";
         if (shippingProgressBox) shippingProgressBox.style.display = "none";
+        if (clearCartBtn) clearCartBtn.style.display = "none";
+        const lookSlotEmpty = document.getElementById('cartCompleteTheLookSlot');
+        if (lookSlotEmpty) lookSlotEmpty.innerHTML = '';
         
         activeDiscount = { code: "", type: "", value: 0 };
         if (document.getElementById('couponInput')) document.getElementById('couponInput').value = "";
@@ -1371,6 +1527,8 @@ function updateCartUI() {
         return;
     }
 
+    if (clearCartBtn) clearCartBtn.style.display = "inline-flex";
+
     if (cartFooterSection) cartFooterSection.style.display = "flex";
     if (shippingProgressBox) shippingProgressBox.style.display = "block";
 
@@ -1378,7 +1536,7 @@ function updateCartUI() {
 
     shoppingCart.forEach(item => {
         totalItemsCount += item.quantity;
-        grandSubtotal += (item.price * item.quantity);
+        grandSubtotal += (getEffectiveLineUnitPrice(item) * item.quantity);
 
         // ➔ THE CRITICAL FIX: Extract true available stock for this SPECIFIC variant row
         let trueAvailableStock = 0;
@@ -1417,7 +1575,9 @@ function updateCartUI() {
             <div style="flex-grow:1; text-align: left;">
                 <h4 class="cart-item-title" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #111116; font-family: 'Montserrat';">${item.title} ${item.color ? `<span style="color:var(--pink-accent); font-size:0.75rem;">(${item.color})</span>` : ''}</h4>
                 <p class="cart-item-meta" style="margin: 2px 0; font-size: 0.72rem; color: #777; font-family: 'Montserrat';">${item.category}</p>
-                <p class="cart-item-price" style="margin: 2px 0 6px 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">${formatCurrency(item.price)}</p>
+                <p class="cart-item-price" style="margin: 2px 0 6px 0; font-size: 0.85rem; font-weight: 700; color: #202c55; font-family: 'Montserrat';">
+                    ${item.bundleDiscountPercent ? `<span style="text-decoration: line-through; color: #aaa; font-weight: 500; margin-right: 6px;">${formatCurrency(item.price)}</span>${formatCurrency(getEffectiveLineUnitPrice(item))} <span style="background: rgba(204,164,59,0.15); color: #7a1f2b; font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: 4px; text-transform: uppercase;">Complete The Look</span>` : formatCurrency(item.price)}
+                </p>
                 <div class="cart-item-controls" style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
                     <i class="fas fa-minus" onclick="changeQtyExplicit('${item.cartLineId}', -1)" style="cursor: pointer; font-size: 0.75rem; color: #777; padding: 4px;"></i>
                     <span style="font-size: 0.85rem; font-weight: 700; min-width: 15px; text-align: center; font-family: 'Montserrat'; color: ${isThisItemOversold ? '#d9383a' : '#111116'}">${item.quantity}</span>
@@ -1439,6 +1599,8 @@ function updateCartUI() {
         `;
         cartItemsList.insertBefore(errorBanner, cartItemsList.firstChild);
     }
+
+    renderCartCompleteTheLookSuggestion();
 
     if (cartCountBadge) {
         cartCountBadge.innerText = totalItemsCount;
@@ -2575,11 +2737,11 @@ function openInvoiceScreen() {
                     <p style="margin: 2px 0 0 0; font-size: 0.72rem; color: var(--text-muted); font-weight: 500; font-family: 'Montserrat';">Category: ${item.category} • Qty: ${item.quantity}</p>
                 </div>
             </div>
-            <span style="font-weight: 600; font-size: 0.88rem; color: var(--purple-primary); white-space: nowrap; font-family: 'Montserrat';">${formatCurrency(item.price * item.quantity)}</span>
+            <span style="font-weight: 600; font-size: 0.88rem; color: var(--purple-primary); white-space: nowrap; font-family: 'Montserrat';">${formatCurrency(getEffectiveLineUnitPrice(item) * item.quantity)}</span>
         </div>
     `).join('');
 
-    let grandSubtotal = shoppingCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let grandSubtotal = shoppingCart.reduce((sum, item) => sum + (getEffectiveLineUnitPrice(item) * item.quantity), 0);
     let discountAmount = 0;
     if (activeDiscount.code) {
         if (activeDiscount.type === "percentage") discountAmount = (grandSubtotal * activeDiscount.value) / 100;
@@ -3445,6 +3607,44 @@ function getBadgeCustomStyles(badgeText) {
 // Until that's run, this silently finds nothing and every card simply
 // shows no rating row — it never invents a number.
 // =========================================================================
+
+// =========================================================================
+// ANGEL JEWELLERY — SITE FEATURE TOGGLES
+// Reads a small key/value table so admin can flip individual features on
+// or off (e.g. Complete the Look) without a redeploy. Defaults to feature
+// ENABLED if the table doesn't exist yet or a key hasn't been saved, so
+// nothing breaks before the admin panel is used for the first time.
+// =========================================================================
+
+async function loadSiteSettingsRegistry() {
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        const response = await fetch(`${sbUrl}/rest/v1/SiteSettings?select=*`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            console.log("ℹ️ SiteSettings table not available yet — all features default to enabled.");
+            return;
+        }
+
+        const rows = await response.json();
+        SITE_SETTINGS_CACHE = {};
+        (rows || []).forEach(row => { SITE_SETTINGS_CACHE[row.key] = row.value; });
+
+    } catch (error) {
+        console.log("ℹ️ Site settings fetch skipped:", error.message);
+    }
+}
+
+function isSiteFeatureEnabled(settingKey) {
+    // Fail-open: only treat a feature as OFF if explicitly saved as 'false'
+    return SITE_SETTINGS_CACHE[settingKey] !== 'false';
+}
 
 async function loadProductRatingSummary() {
     try {
@@ -5234,10 +5434,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Kick off the social-proof activity toast (independent of catalog load)
     initializeSocialProofToast();
 
-    // 3. Load catalog + real product ratings in parallel, then coupons
+    // 3. Load catalog + real product ratings + site feature toggles in parallel, then coupons
     await Promise.all([
         loadProductDatabaseEngine(),
-        loadProductRatingSummary()
+        loadProductRatingSummary(),
+        loadSiteSettingsRegistry()
     ]);
     loadLiveCouponDatabaseEngine();
 
