@@ -1,41 +1,4 @@
 // =========================================================================
-// ANGEL JEWELLERY — "AS SEEN ON INSTAGRAM" UGC SHOWCASE
-// Curated manually for now — a live Instagram feed needs a Meta Graph API
-// app + backend token, which is a bigger lift than this section warrants
-// today. To add a new photo: drop the image into assets/ugc/ and push a
-// new entry into the array below. Keep images square (1:1) for best fit.
-// =========================================================================
-
-const instagramShowcaseFeed = [
-    { image: 'assets/ugc/ugc-1.webp', handle: '@priya.wears.gold' },
-    { image: 'assets/ugc/ugc-2.webp', handle: '@meera.style' },
-    { image: 'assets/ugc/ugc-3.jpeg', handle: '@ananya.k' },
-    { image: 'assets/ugc/ugc-4.jpeg', handle: '@thejewelrydiaries' },
-    { image: 'assets/ugc/ugc-5.webp', handle: '@radhika.official' },
-    { image: 'assets/ugc/ugc-6.jpeg', handle: '@styledby.sn' }
-];
-
-const instagramProfileLink = 'https://www.instagram.com/angeljewelleryofficial?igsh=djNuZzlwMGY5NzBl';
-
-
-function renderInstagramShowcaseGallery() {
-    const grid = document.getElementById('ugcShowcaseGrid');
-    if (!grid) return;
-
-    grid.innerHTML = instagramShowcaseFeed.map(post => `
-        <a href="${instagramProfileLink}" target="_blank" rel="noopener" class="ugc-showcase-tile" aria-label="View ${post.handle} on Instagram">
-            <img src="${post.image}" loading="lazy" decoding="async" alt="Customer wearing Angel Jewellery"
-                 onerror="this.closest('.ugc-showcase-tile').style.display='none'">
-            <div class="ugc-showcase-overlay"><i class="fab fa-instagram"></i></div>
-            <span class="ugc-showcase-handle">${post.handle}</span>
-        </a>
-    `).join('');
-}
-
-
-document.addEventListener('DOMContentLoaded', renderInstagramShowcaseGallery);
-
-// =========================================================================
 // 💎 ANGEL JEWELLERY — GLOBAL MULTI-GRID METADATA DECK LAYOUT OVERRIDES
 // =========================================================================
 if (typeof document !== 'undefined' && !document.getElementById('angelJewelryGlobalMobileCardOverrides')) {

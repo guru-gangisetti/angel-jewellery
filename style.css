@@ -1334,122 +1334,6 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .trust-strip-icon { font-size: 1.1rem; }
 }
 
-/* --- AS SEEN ON INSTAGRAM --- */
-.ugc-showcase-section {
-    max-width: 1200px;
-    margin: 70px auto;
-    padding: 0 20px;
-    font-family: var(--font-body);
-    text-align: center;
-    box-sizing: border-box;
-}
-.ugc-showcase-header { margin-bottom: 40px; }
-.ugc-showcase-eyebrow {
-    color: #cca43b;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 8px;
-}
-.ugc-showcase-title {
-    color: var(--purple-primary);
-    font-size: 1.8rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin: 0;
-    text-transform: uppercase;
-}
-.ugc-showcase-divider {
-    width: 30px;
-    height: 1.5px;
-    background: #cca43b;
-    margin: 20px auto;
-    opacity: 0.8;
-}
-.ugc-showcase-subtext { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
-.ugc-showcase-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 14px;
-}
-.ugc-showcase-tile {
-    position: relative;
-    aspect-ratio: 1/1;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fafafa;
-    border: 1px solid var(--border-subtle);
-    display: block;
-    text-decoration: none;
-}
-.ugc-showcase-tile img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease;
-}
-.ugc-showcase-tile:hover img { transform: scale(1.06); }
-.ugc-showcase-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(32,44,85,0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s ease;
-}
-.ugc-showcase-tile:hover .ugc-showcase-overlay { background: rgba(32,44,85,0.45); }
-.ugc-showcase-overlay i {
-    color: #ffffff;
-    font-size: 1.4rem;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.ugc-showcase-tile:hover .ugc-showcase-overlay i { opacity: 1; }
-.ugc-showcase-handle {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-}
-.ugc-showcase-tile:hover .ugc-showcase-handle { opacity: 1; }
-.ugc-showcase-cta { margin-top: 35px; }
-.ugc-showcase-follow-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    border: 1px solid var(--purple-primary);
-    color: var(--purple-primary);
-    padding: 12px 28px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-.ugc-showcase-follow-btn:hover { background: var(--purple-primary); color: #fff; }
-.ugc-showcase-follow-btn i { font-size: 1rem; color: #cca43b; }
-
-@media (max-width: 900px) {
-    .ugc-showcase-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 480px) {
-    .ugc-showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .ugc-showcase-title { font-size: 1.4rem; }
-    .ugc-showcase-section { margin: 45px auto; }
-}
 
 /* --- MODERN UNIFIED PRODUCT CARD SYSTEM --- */
 .angel-card {
@@ -1583,8 +1467,6 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .story-section-wrapper { padding: 48px 0 !important; }
     .feedback-display-section { padding: 44px 20px !important; }
     .style-clusters-section { margin: 32px auto !important; }
-    .ugc-showcase-section { margin: 36px auto !important; }
-    .ugc-showcase-header { margin-bottom: 24px !important; }
     #catalog, .products-section, #saleSection, #trendingSection, #newArrivalsSection, #recentlyViewedSection { padding: 28px 0 !important; }
     .sale-section-wrapper, .trending-section-wrapper { padding-left: 0 !important; padding-right: 0 !important; }
     #flashVaultSection { margin: 20px 8px !important; padding: 18px 14px !important; }
