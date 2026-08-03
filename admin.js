@@ -204,6 +204,7 @@ let MASTER_LIVE_INVENTORY_CACHE = {};
 let carouselRegistryCache = [];
 let couponRegistryCache = [];
 let festivalRegistryCache = [];
+let currentlyEditingFestivalId = null;
 let siteSettingsRegistryCache = {};
 
 function formatCurrency(amount) {
@@ -375,7 +376,10 @@ function renderAdminFestivalConsoleGrid() {
                                 ? `<span style="color:#04693a; font-weight:700; font-size:0.72rem;"><i class="fas fa-circle" style="font-size:0.5rem;"></i> LIVE NOW</span>`
                                 : `<span style="color:#8a8da0; font-size:0.72rem;">Scheduled</span>`}
                         </td>
-                        <td style="padding:10px; text-align:center;">
+                        <td style="padding:10px; text-align:center; white-space:nowrap;">
+                            <button onclick="startEditingFestival(${fest.id})" style="background:transparent; border:none; color:var(--purple-primary); cursor:pointer; font-size:0.9rem; margin-right:10px;" title="Edit Festival">
+                                <i class="far fa-edit"></i>
+                            </button>
                             <button onclick="executeAdminFestivalPurgePipeline(event, ${fest.id}, '${String(fest.name).replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Festival">
                                 <i class="far fa-trash-alt"></i>
                             </button>
@@ -387,9 +391,11 @@ function renderAdminFestivalConsoleGrid() {
     `;
 }
 
-function renderFestivalProductPickerList() {
+function renderFestivalProductPickerList(preCheckedIds) {
     const listEl = document.getElementById('festivalProductPickerList');
     if (!listEl) return;
+
+    const checkedSet = new Set((preCheckedIds || []).map(id => parseInt(id)));
 
     if (!productDatabase || productDatabase.length === 0) {
         listEl.innerHTML = `<p style="font-size:0.75rem; color:#aaa; padding:10px;">Loading products...</p>`;
@@ -400,10 +406,50 @@ function renderFestivalProductPickerList() {
 
     listEl.innerHTML = sortedProducts.map(p => `
         <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:0.78rem; cursor:pointer; border-bottom:1px solid #f4f4f7;">
-            <input type="checkbox" class="festival-product-checkbox" value="${p.id}" style="cursor:pointer;">
+            <input type="checkbox" class="festival-product-checkbox" value="${p.id}" ${checkedSet.has(p.id) ? 'checked' : ''} style="cursor:pointer;">
             <span>${(p.title || 'Untitled piece').replace(/</g, '&lt;')} <span style="color:#aaa;">· ${p.category || ''}</span></span>
         </label>
     `).join('');
+}
+
+function startEditingFestival(festivalId) {
+    const fest = festivalRegistryCache.find(f => f.id === festivalId);
+    if (!fest) return;
+
+    currentlyEditingFestivalId = festivalId;
+
+    document.getElementById('newFestivalNameInput').value = fest.name || '';
+    document.getElementById('newFestivalTaglineInput').value = fest.tagline || '';
+    document.getElementById('newFestivalStartDateInput').value = fest.start_date || '';
+    document.getElementById('newFestivalEndDateInput').value = fest.end_date || '';
+    document.getElementById('newFestivalPrimaryColorInput').value = fest.theme_primary_color || '#7a1f2b';
+    document.getElementById('newFestivalSecondaryColorInput').value = fest.theme_secondary_color || '#cca43b';
+    document.getElementById('newFestivalCouponInput').value = fest.coupon_code || '';
+
+    renderFestivalProductPickerList(fest.featured_product_ids || []);
+
+    const formHeading = document.getElementById('festivalFormHeading');
+    const submitBtn = document.getElementById('festivalFormSubmitBtn');
+    const cancelBtn = document.getElementById('festivalFormCancelEditBtn');
+    if (formHeading) formHeading.innerText = `Editing "${fest.name}"`;
+    if (submitBtn) submitBtn.innerText = 'Update Festival';
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+    const formPanel = document.getElementById('adminFestivalCreatorForm');
+    if (formPanel) formPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelEditingFestival() {
+    currentlyEditingFestivalId = null;
+    document.getElementById('adminFestivalCreatorForm').reset();
+    renderFestivalProductPickerList();
+
+    const formHeading = document.getElementById('festivalFormHeading');
+    const submitBtn = document.getElementById('festivalFormSubmitBtn');
+    const cancelBtn = document.getElementById('festivalFormCancelEditBtn');
+    if (formHeading) formHeading.innerText = 'Schedule New Festival';
+    if (submitBtn) submitBtn.innerText = 'Schedule Festival';
+    if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
 async function handleAdminFestivalFormSubmit(event) {
@@ -449,8 +495,13 @@ async function handleAdminFestivalFormSubmit(event) {
     }
 
     try {
-        const response = await fetch(`${sbUrl}/rest/v1/Festivals`, {
-            method: 'POST',
+        const isEditing = currentlyEditingFestivalId !== null;
+        const requestUrl = isEditing
+            ? `${sbUrl}/rest/v1/Festivals?id=eq.${currentlyEditingFestivalId}`
+            : `${sbUrl}/rest/v1/Festivals`;
+
+        const response = await fetch(requestUrl, {
+            method: isEditing ? 'PATCH' : 'POST',
             headers: {
                 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
                 'Content-Type': 'application/json', 'Prefer': 'return=minimal'
@@ -460,8 +511,11 @@ async function handleAdminFestivalFormSubmit(event) {
 
         if (!response.ok) throw new Error("Supabase rejected the festival entry — check the Festivals table exists.");
 
-        alert(`✨ "${newFestivalPayload.name}" festival saved! It will automatically appear on the site between ${newFestivalPayload.start_date} and ${newFestivalPayload.end_date}.`);
-        document.getElementById('adminFestivalCreatorForm').reset();
+        alert(isEditing
+            ? `✨ "${newFestivalPayload.name}" updated!`
+            : `✨ "${newFestivalPayload.name}" festival saved! It will automatically appear on the site between ${newFestivalPayload.start_date} and ${newFestivalPayload.end_date}.`);
+
+        cancelEditingFestival(); // resets the form back to create-mode either way
 
         await loadFestivalRegistry();
         renderAdminFestivalConsoleGrid();
@@ -490,6 +544,8 @@ async function executeAdminFestivalPurgePipeline(event, festivalId, festivalName
         });
         if (!response.ok) throw new Error("Deletion failed.");
 
+        if (currentlyEditingFestivalId === festivalId) cancelEditingFestival();
+
         await loadFestivalRegistry();
         renderAdminFestivalConsoleGrid();
 
@@ -503,13 +559,14 @@ function openAdminFestivalConsoleOverlay(event) {
     if (event) event.preventDefault();
     const overlay = document.getElementById('adminFestivalConsoleOverlay');
     if (overlay) overlay.style.display = 'flex';
+    cancelEditingFestival();
     renderAdminFestivalConsoleGrid();
-    renderFestivalProductPickerList();
 }
 
 function closeAdminFestivalConsoleOverlay() {
     const overlay = document.getElementById('adminFestivalConsoleOverlay');
     if (overlay) overlay.style.display = 'none';
+    cancelEditingFestival();
 }
 
 // =========================================================================
@@ -527,6 +584,16 @@ const SITE_FEATURE_TOGGLE_DEFS = [
         key: 'complete_the_look_enabled',
         label: 'Complete the Look Suggestions',
         description: 'Shows complementary product suggestions (with a discount) in the cart drawer, before checkout.'
+    },
+    {
+        key: 'spin_wheel_enabled',
+        label: 'Spin-the-Wheel Welcome Popup',
+        description: 'The first-time-visitor discount game that appears a few seconds after landing on the site.'
+    },
+    {
+        key: 'social_proof_toast_enabled',
+        label: 'Social-Proof Activity Toast',
+        description: 'The small "so-and-so just purchased..." card that appears periodically bottom-left of the site.'
     }
 ];
 

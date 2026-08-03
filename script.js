@@ -501,6 +501,8 @@ function maybeShowWelcomeDiscountPopup() {
     if (alreadyShown) return;
 
     setTimeout(() => {
+        if (!isSiteFeatureEnabled('spin_wheel_enabled')) return; // don't mark as shown — stays eligible once re-enabled
+
         const modal = document.getElementById('welcomeDiscountModal');
         if (modal) {
             modal.style.display = 'flex';
@@ -5373,6 +5375,11 @@ function scheduleNextSocialProofToast() {
     if (socialProofDismissedForSession) return;
     if (socialProofShownCount >= SOCIAL_PROOF_CONFIG.MAX_TOASTS_PER_SESSION) return;
     if (socialProofQueue.length === 0) return;
+    if (!isSiteFeatureEnabled('social_proof_toast_enabled')) {
+        // Keep checking periodically in case it gets re-enabled mid-session
+        setTimeout(scheduleNextSocialProofToast, 10000);
+        return;
+    }
     if (document.hidden) {
         // Tab isn't active — check again shortly rather than burning the slot
         setTimeout(scheduleNextSocialProofToast, 3000);

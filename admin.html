@@ -1183,7 +1183,7 @@
                     </div>
 
                     <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content; max-height: 68vh; overflow-y: auto;">
-                        <h4 style="margin: 0 0 14px 0; font-size: 0.75rem; text-transform: uppercase; color: #8a8da0; letter-spacing: 0.8px; font-weight: 700;">Schedule New Festival</h4>
+                        <h4 id="festivalFormHeading" style="margin: 0 0 14px 0; font-size: 0.75rem; text-transform: uppercase; color: #8a8da0; letter-spacing: 0.8px; font-weight: 700;">Schedule New Festival</h4>
 
                         <form id="adminFestivalCreatorForm" onsubmit="handleAdminFestivalFormSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
                             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -1230,6 +1230,9 @@
 
                             <button type="submit" id="festivalFormSubmitBtn" style="margin-top: 6px; background: var(--purple-primary); color: #ffffff; border: none; padding: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
                                 Schedule Festival
+                            </button>
+                            <button type="button" id="festivalFormCancelEditBtn" onclick="cancelEditingFestival()" style="display: none; margin-top: 4px; background: transparent; color: #8a8da0; border: none; padding: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; cursor: pointer;">
+                                Cancel Edit
                             </button>
                         </form>
                     </div>

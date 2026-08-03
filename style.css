@@ -1804,6 +1804,12 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .festival-title { font-size: 1.7rem; }
     .festival-countdown-unit { min-width: 46px; padding: 8px 10px; }
     .festival-countdown-unit span { font-size: 1.1rem; }
+
+    #festivalShowcaseSection { padding: 28px 0 !important; }
+    #festivalShowcaseSection .container { padding: 0 0.5% !important; }
+    .festival-tagline { margin-bottom: 16px; }
+    .festival-countdown-row { margin-bottom: 12px; }
+    .festival-product-grid { padding: 12px; }
 }
 
 /* --- REAL PER-PRODUCT STAR RATING ROW --- */
