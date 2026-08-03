@@ -3015,6 +3015,42 @@ function exitConfirmationAndReset() {
 // SUPABASE PUBLIC CHANNEL — LIVE CLIENT ORDER VISUAL TRACKER WITH GLOBAL TOP NOTE
 // =========================================================================
 
+function findBestMatchingProductForOrderItem(orderItemTitle, database) {
+    if (!orderItemTitle || !database || database.length === 0) return null;
+
+    const normalize = str => String(str || '').trim().toLowerCase();
+    const cleanItemTitle = normalize(orderItemTitle);
+
+    // Fast path: an exact match, when the title hasn't changed since the order
+    const exactMatch = database.find(p => normalize(p.title) === cleanItemTitle);
+    if (exactMatch) return exactMatch;
+
+    // Fuzzy fallback: order text sometimes differs from the current catalog
+    // title (truncated, edited, reworded since the order was placed) — so
+    // score every product by how many of the order item's meaningful words
+    // actually appear in its title, and take the best-scoring one.
+    const stopWords = new Set(['the', 'a', 'an', 'of', 'for', 'with', 'and', 'excellent', 'updated', 'new', 'item', 'variant', 'testing']);
+    const itemWords = cleanItemTitle.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    if (itemWords.length === 0) return null;
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    database.forEach(p => {
+        const titleWords = normalize(p.title).split(/\s+/);
+        const matchCount = itemWords.filter(w => titleWords.some(tw => tw.includes(w) || w.includes(tw))).length;
+        const score = matchCount / itemWords.length;
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = p;
+        }
+    });
+
+    // Require at least half the meaningful words to genuinely match —
+    // avoids linking to a wildly unrelated product on a weak coincidence
+    return bestScore >= 0.5 ? bestMatch : null;
+}
+
 async function executeLiveOrderTrackingSearch() {
     const inputPhone = document.getElementById('trackingPhoneInput').value.trim();
     const statusMsg = document.getElementById('trackingStatusMessage');
@@ -3143,12 +3179,23 @@ async function executeLiveOrderTrackingSearch() {
                 }
                 const matchedImgUrl = itemImagesArray[index] || 'assets/placeholder.png';
 
+                // Try to match this line item back to a real product in the
+                // current catalog so we can link straight to a pre-selected
+                // review — only worth offering once it's shipped. Order text
+                // doesn't always exactly match the current product title
+                // (older/edited/truncated titles), so this uses a forgiving
+                // word-overlap match rather than requiring perfect equality.
+                const matchedProduct = findBestMatchingProductForOrderItem(parsedTitle, (typeof productDatabase !== 'undefined' ? productDatabase : []));
+                const reviewLinkHTML = (isShipped && matchedProduct)
+                    ? `<button class="order-item-review-link" onclick="openProductReviewFromOrder(${matchedProduct.id})"><i class="fas fa-star"></i> Review this product</button>`
+                    : '';
+
                 return `
                     <tr>
                         <td class="order-item-thumb-cell">
                             <img src="${matchedImgUrl}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'">
                         </td>
-                        <td class="order-item-title-cell">${parsedTitle}</td>
+                        <td class="order-item-title-cell">${parsedTitle}${reviewLinkHTML}</td>
                         <td class="order-item-qty-cell">×${parsedQuantity}</td>
                     </tr>
                 `;
@@ -4024,15 +4071,15 @@ async function submitCustomerFeedbackPipeline(event) {
 
 // B. MODAL VISIBILITY TRIGGERS
 
-function openCustomerFeedbackModal(event) {
+function openCustomerFeedbackModal(event, preSelectProductId) {
     if (event) event.preventDefault();
     document.getElementById('angelStoreCustomerFeedbackForm').reset();
     setInteractiveFeedbackFormRating(5);
-    populateFeedbackProductDropdown();
+    populateFeedbackProductDropdown(preSelectProductId);
     document.getElementById('customerFeedbackSubmissionModal').style.display = 'flex';
 }
 
-function populateFeedbackProductDropdown() {
+function populateFeedbackProductDropdown(preSelectProductId) {
     const dropdown = document.getElementById('feedbackFormProductId');
     if (!dropdown) return;
 
@@ -4040,13 +4087,19 @@ function populateFeedbackProductDropdown() {
         dropdown.innerHTML = `<option value="" selected disabled>Loading products...</option>`;
         // Catalog may not have finished loading yet — try again shortly rather
         // than leaving the reviewer stuck with an empty dropdown.
-        setTimeout(populateFeedbackProductDropdown, 800);
+        setTimeout(() => populateFeedbackProductDropdown(preSelectProductId), 800);
         return;
     }
 
+    const targetId = preSelectProductId ? parseInt(preSelectProductId) : null;
     const sortedProducts = [...productDatabase].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    dropdown.innerHTML = `<option value="" selected disabled>Select a product...</option>` +
-        sortedProducts.map(p => `<option value="${p.id}">${(p.title || 'Untitled piece').replace(/</g, '&lt;')}</option>`).join('');
+    dropdown.innerHTML = `<option value="" ${targetId ? '' : 'selected'} disabled>Select a product...</option>` +
+        sortedProducts.map(p => `<option value="${p.id}" ${targetId === p.id ? 'selected' : ''}>${(p.title || 'Untitled piece').replace(/</g, '&lt;')}</option>`).join('');
+}
+
+function openProductReviewFromOrder(productId) {
+    closeTrackingScreenOverlay();
+    openCustomerFeedbackModal(null, productId);
 }
 
 
