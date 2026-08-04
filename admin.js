@@ -349,7 +349,7 @@ function renderAdminFestivalConsoleGrid() {
     const todayStr = new Date().toISOString().slice(0, 10);
 
     container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+        <table style="width:100%; min-width: 480px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
             <thead>
                 <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
                     <th style="padding:10px;">Festival</th>
@@ -1228,7 +1228,7 @@ function renderAdminPromoConsoleGrid() {
     }
 
     container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+        <table style="width:100%; min-width: 420px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
             <thead>
                 <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
                     <th style="padding:10px;">Code</th>
@@ -2239,7 +2239,7 @@ function renderAdminCarouselConsoleGrid() {
     }
 
     container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+        <table style="width:100%; min-width: 380px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
             <thead>
                 <tr style="background:#f4f4f7; color:#777; font-weight:700; border-bottom:1px solid #e8e8ef;">
                     <th style="padding:10px; width:60px;">Preview</th>

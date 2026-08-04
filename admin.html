@@ -281,6 +281,33 @@
             .admin-modal-overlay { padding: 0 !important; }
             .admin-modal-panel { max-height: 100vh !important; height: 100vh !important; border-radius: 0 !important; padding: 16px 12px !important; }
             .form-grid-2col { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+            /* Promo Code, Festival & Carousel Banner modals: side-by-side
+               table+form was never given a mobile stack, so it was squishing
+               both into unusable narrow columns. Force them to stack vertically. */
+            #adminPromoConsoleOverlay .admin-modal-panel > div[style*="grid-template-columns"],
+            #adminFestivalConsoleOverlay .admin-modal-panel > div[style*="grid-template-columns"],
+            #adminCarouselConsoleOverlay .admin-modal-panel > div[style*="grid-template-columns"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 18px !important;
+            }
+            #adminPromoConsoleOverlay #adminPromoCodeTableContainer,
+            #adminFestivalConsoleOverlay #adminFestivalTableContainer,
+            #adminCarouselConsoleOverlay #adminCarouselListTableContainer {
+                max-height: 220px !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            #adminFestivalConsoleOverlay #festivalProductPickerList {
+                max-height: 140px !important;
+            }
+            #adminPromoConsoleOverlay .admin-modal-panel,
+            #adminFestivalConsoleOverlay .admin-modal-panel,
+            #adminCarouselConsoleOverlay .admin-modal-panel,
+            #adminSiteFeaturesOverlay .admin-modal-panel {
+                overflow-y: auto !important;
+            }
         }
         /* --- VARIANT MODE TOGGLE BUTTONS --- */
         .variant-mode-toggle-group {
@@ -814,7 +841,6 @@
                                 <option value="Rings">Rings</option>
                                 <option value="MiniHaram">MiniHaram</option>
                                 <option value="kada">Kada</option>
-                                <option value="tikka">Tikka</option>
                                 <option value="flash">Flash</option>
                             </select>
                         </div>
@@ -1086,7 +1112,7 @@
                 <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
                     <div>
                         <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: #8a8da0; letter-spacing: 0.8px; font-weight: 700;">Active Coupons Vault</h4>
-                        <div id="adminPromoCodeTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 45vh; overflow-y: auto;"></div>
+                        <div id="adminPromoCodeTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow-x: auto; overflow-y: auto; background: #fafafa; max-height: 45vh; -webkit-overflow-scrolling: touch;"></div>
                     </div>
 
                     <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content;">
@@ -1133,7 +1159,7 @@
                 <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
                     <div>
                         <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: #8a8da0; letter-spacing: 0.8px; font-weight: 700;">Active Banner Tracks</h4>
-                        <div id="adminCarouselListTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 45vh; overflow-y: auto;"></div>
+                        <div id="adminCarouselListTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow-x: auto; overflow-y: auto; background: #fafafa; max-height: 45vh; -webkit-overflow-scrolling: touch;"></div>
                     </div>
 
                     <div style="background: #fdfdfd; border: 1px solid #e8e8ef; border-radius: 6px; padding: 18px; box-sizing: border-box; height: fit-content;">
@@ -1177,7 +1203,7 @@
                 <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; box-sizing: border-box;">
                     <div>
                         <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; text-transform: uppercase; color: #8a8da0; letter-spacing: 0.8px; font-weight: 700;">Scheduled Festivals</h4>
-                        <div id="adminFestivalTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; background: #fafafa; max-height: 60vh; overflow-y: auto;"></div>
+                        <div id="adminFestivalTableContainer" style="border: 1px solid #e8e8ef; border-radius: 6px; overflow-x: auto; overflow-y: auto; background: #fafafa; max-height: 60vh; -webkit-overflow-scrolling: touch;"></div>
                         <p style="font-size: 0.68rem; color: #aaa; margin-top: 10px; line-height: 1.5;">
                             <i class="fas fa-info-circle"></i> The section shows itself automatically on your site only while today's date falls between a festival's start and end date — no manual publishing needed. Only one festival should be active at a time.
                         </p>
