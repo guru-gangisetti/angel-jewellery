@@ -4150,49 +4150,57 @@ const ANGEL_LEGAL_VAULT_POLICIES = {
     privacy: {
         title: "Privacy Policy",
         html: `
-            <p><strong>Effective Date: June 2026</strong></p>
-            <p>Welcome to Angel Jewellery. Your privacy is critical to our luxury standard. This policy clarifies how your data is treated during interactions on our platform.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Data Collection & Usage</h4>
-            <p>We process essential customer coordinates (Full Name, verified Phone Number, Shipping Address, and Order logs) solely to arrange handoffs, custom sizing updates, and live dispatch tracking updates.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Vault Security Guarantee</h4>
-            <p>Angel Jewellery does not cache, sell, or rent client identity profiles to advertising third parties. Your order history records sit entirely inside encrypted logistics infrastructure maps.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Tracker Transparency</h4>
-            <p>We use temporary local cache assets strictly to manage items retained inside your shopping cart drawer and process real-time UI catalog folder states.</p>
+            <p><strong>Last updated: June 2026</strong></p>
+            <p>Simply put: we only collect what we need to get your order to you, and we don't sell your information to anyone.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. What we collect, and why</h4>
+            <p>When you place an order, we collect your name, phone number, delivery address, and order details. That's it — and it's only used to process your order, keep you updated on delivery, and help you if you ever need support or a refund.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. We don't sell your data</h4>
+            <p>Your information is never sold or rented to advertisers or anyone else. It stays with us, stored securely, and is only used to run your order — not to spam you or build ad profiles.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. What cookies we use</h4>
+            <p>We use basic browser storage to remember what's in your cart and which items you've viewed, so your shopping bag doesn't disappear if you refresh the page. We don't use tracking cookies to follow you around the internet.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">4. Questions?</h4>
+            <p>If you ever want to know what information we have about you, or want it deleted, just message us on WhatsApp and we'll sort it out.</p>
         `
     },
     shipping: {
-        title: "Shipping & Fulfillment Policy",
+        title: "Shipping Policy",
         html: `
-            <p>Every piece curated by Angel Jewellery undergoes rigorous multi-tier verification before being sealed in our premium anti-tamper keepsake packaging.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Tariffs & Variable Rates</h4>
+            <p>Here's exactly what happens after you place an order, and what it costs.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Shipping cost</h4>
             <ul style="padding-left:20px; margin: 10px 0;">
-                <li><strong>Orders over ₹1,000:</strong> 100% Free Shipping all across pan-India delivery corridors automatically.</li>
-                <li><strong>Orders below ₹1,000:</strong> Calculated dynamically at checkout point based on your structural region zone profiles.</li>
+                <li><strong>Orders over ₹1,000:</strong> Free shipping, anywhere in India — automatically applied at checkout.</li>
+                <li><strong>Orders under ₹1,000:</strong> A small shipping fee is added at checkout based on your delivery location.</li>
             </ul>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Timestamps</h4>
-            <p>Orders are batched and handed to premium domestic freight networks (DTDC / Delhivery Express) within 24–48 hours. Transit speeds generally reach standard tier hubs across India in 3–5 operational business days.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. How long it takes</h4>
+            <p>We pack and hand your order to our courier partner (DTDC, Delhivery, or Blue Dart) within 24–48 hours of you ordering. From there, most orders reach major cities in 3–5 business days — a little longer for more remote areas.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Tracking your order</h4>
+            <p>Once it ships, you can track it anytime using the "Track Order" page — just enter the phone number you ordered with.</p>
         `
     },
     refund: {
-        title: "Refund, Return & Cancellation Matrix",
+        title: "Cancellations, Returns & Refunds",
         html: `
-            <p>Due to the fine handcrafted nature and luxury sanitization protocols of our artisan collections, Angel Jewellery maintains a strict structural return policy matrix.</p>
-            <h4 style="color:#d9383a; margin-top:15px; font-size:0.95rem;">1. Post-Dispatch Cancellation Lock</h4>
-            <p style="background:rgba(217,56,58,0.04); border-left:3px solid #d9383a; padding:8px 12px; font-weight:600;">Once your package has been fulfilled, tracking coordinates assigned, or handed to our courier partners, the order can neither be canceled, modified, nor recalled.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Absolute No-Exchange Rule</h4>
-            <p>To preserve pristine metal health guidelines for all patrons, items delivered securely cannot be exchanged or returned due to casual change-of-mind parameters.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Shipping Transit Damage Exceptions</h4>
-            <p>If a product arrives with a rare physical breakdown caused in transit, notify our Concierge desk via WhatsApp within 24 hours of box delivery with an unedited unboxing video to claim an identical luxury component replacement.</p>
+            <p>Because every piece is individually packed and quality-checked for you, we keep this policy simple and clear rather than making promises we can't keep after the fact:</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Cancelling an order</h4>
+            <p style="background:rgba(32,44,85,0.04); border-left:3px solid #202c55; padding:8px 12px;">You can cancel any order within <strong>24 hours of placing it</strong>, as long as it hasn't shipped yet — just go to "Track Order" and tap "Cancel Order." Once it's been handed to the courier, or 24 hours have passed, we're no longer able to cancel or change it.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Returns & exchanges</h4>
+            <p>We don't offer returns or exchanges for change-of-mind (wrong size, changed your taste, etc.) — each piece is hand-packed specifically for your order, so we're not able to resell returned items. We'd rather be upfront about this than promise something we can't deliver.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. If something arrives damaged or wrong</h4>
+            <p>This is different, and we'll always make it right. If your order arrives damaged, defective, or isn't what you ordered, message us on WhatsApp within 24 hours of delivery with a video of you unboxing the package (unedited, showing the seal) — we'll arrange a replacement or refund.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">4. How refunds are processed</h4>
+            <p>Approved refunds are sent directly to a UPI/PhonePe number you provide, usually within a few business days of approval.</p>
         `
     },
     terms: {
         title: "Terms of Service",
         html: `
-            <p>By entering, purchasing, or interacting with the Angel Jewellery showroom ecosystem, you agree to comply with our absolute standard operational terms:</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. Inventory Discrepancy Control</h4>
-            <p>While our Supabase link engines work in real-time, order queues that happen at the exact same split-second take priority by timestamp sequence. If an item runs out of stock mid-checkout, we will issue an immediate 100% gateway refund to your payment root source.</p>
-            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Intended Use and Copyright</h4>
-            <p>All catalog media assets, brand banners, and custom code modules remain the exclusive property of Angel Jewellery. Unauthorized duplication or commercial reselling is strictly prohibited.</p>
+            <p>The short version: shop with us in good faith, and we'll do the same for you. The slightly longer version:</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">1. If an item sells out while you're checking out</h4>
+            <p>Our stock updates in real time, but on rare occasions two people can order the last piece within seconds of each other. If that happens and we can't fulfill your order, we'll refund you in full immediately — no back-and-forth needed.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">2. Prices & product photos</h4>
+            <p>We try to keep photos, descriptions, and prices accurate and up to date. If we ever spot a genuine pricing error on the site, we'll contact you before processing the order rather than silently charging the wrong amount.</p>
+            <h4 style="color:#202c55; margin-top:15px; font-size:0.95rem;">3. Using our website and content</h4>
+            <p>The photos, designs, and content on this site belong to Angel Jewellery. Please don't copy or reuse them for commercial purposes without asking us first.</p>
         `
     }
 };
@@ -4243,9 +4251,16 @@ function closeFaqSystemModalOverlay() {
 }
 
 
+let faqAccordionTransitionInProgress = false;
+
 function toggleFaqAccordionUnit(headerElement) {
+    if (faqAccordionTransitionInProgress) return; // ignore clicks until the current animation settles
+
     const contentPane = headerElement.nextElementSibling;
     const chevronIcon = headerElement.querySelector('.fa-chevron-down');
+
+    faqAccordionTransitionInProgress = true;
+    setTimeout(() => { faqAccordionTransitionInProgress = false; }, 300); // matches the 0.25s CSS transition + small buffer
     
     // Check if item is already active
     if (contentPane.style.maxHeight && contentPane.style.maxHeight !== '0px') {

@@ -673,18 +673,24 @@
          14. Brand Story Section
          ========================================================================= -->
     <section class="story-section-wrapper" id="story">
+        <div class="story-bg-flourish"></div>
         <div class="container story-grid">
             <div class="story-image-pane">
                 <img loading="lazy" decoding="async" src="assets/our-story.png" alt="Crafting Angel Jewellery">
+                <div class="story-image-frame-accent"></div>
             </div>
             <div class="story-text-pane">
                 <span class="story-tagline">The Heritage of Elegance</span>
                 <h2>Our Story</h2>
-                <p>Founded on the philosophy that fine fashion should be an empowering extension of your inner brilliance, Angel Jewellery curates ultra-premium fashion accessories designed to transform your entire aura.</p>
-                <p>Every masterpiece in our collection undergoes strict multi-tier quality benchmarks—combining flawless micron plating mechanics with anti-tarnish protective engineering. We believe confidence is the ultimate ornament, and our purpose is to craft it for you daily.</p>
+                <i class="fas fa-quote-left story-quote-mark"></i>
+                <p>Angel Jewellery started with a simple idea: beautiful jewellery shouldn't have to mean an expensive trip to a traditional goldsmith, or waiting weeks for a piece you can wear once and love for years. We wanted to make that easy — pick it online, get it delivered to your door, and feel just as special wearing it.</p>
+                <p>Every piece we sell is checked by hand before it ships — for finish, for how well the stones are set, and for that anti-tarnish coating that keeps it looking new. If something isn't good enough for us to wear ourselves, it doesn't reach you. That's the only promise we've ever really needed to make.</p>
                 <div class="story-signature">
-                    <p class="sig-title"><b>SWATHI</b></p>
-                    <p style="margin: 0 !important;">Founder & CEO, <b> Angel Jewellery</b></p>
+                    <div class="story-signature-avatar">S</div>
+                    <div class="story-signature-text">
+                        <p class="sig-title"><b>Swathi</b></p>
+                        <p style="margin: 0 !important;">Founder &amp; CEO,<br><b>Angel Jewellery</b></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1302,10 +1308,10 @@
                 <i class="fas fa-times" onclick="closeAngelStorePolicyModal()" style="color: #ffffff; cursor: pointer; font-size: 1.1rem; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8"></i>
             </div>
 
-            <div id="angelPolicyModalScrollableBody" style="padding: 25px; overflow-y: auto; text-align: left; box-sizing: border-box; line-height: 1.6; font-size: 0.88rem; color: #4a4a5a;">
+            <div id="angelPolicyModalScrollableBody" style="padding: 25px; overflow-y: auto; min-height: 0; flex: 1 1 auto; text-align: left; box-sizing: border-box; line-height: 1.6; font-size: 0.88rem; color: #4a4a5a; -webkit-overflow-scrolling: touch;">
             </div>
             
-            <div style="background: #fdfdfd; padding: 12px 24px; border-top: 1px solid #e8e8ef; text-align: right;">
+            <div style="background: #fdfdfd; padding: 12px 24px; border-top: 1px solid #e8e8ef; text-align: right; flex-shrink: 0;">
                 <button type="button" onclick="closeAngelStorePolicyModal()" style="background: #202c55; color: #fff; border: none; padding: 8px 20px; font-family: 'Montserrat'; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">Close Document</button>
             </div>
         </div>
@@ -1313,49 +1319,97 @@
 
     <!-- FAQ System Modal -->
     <div id="faqSystemModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 27, 37, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
-        <div style="background: #ffffff; width: 100%; max-width: 650px; border-radius: 8px; border: 1px solid var(--purple-primary); box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 85vh; animation: faqModalSlideUp 0.3s ease;">
+        <div style="background: #ffffff; width: 100%; max-width: 650px; border-radius: 8px; border: 1px solid var(--purple-primary); box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 85vh; overflow: hidden; animation: faqModalSlideUp 0.3s ease;">
             
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f1f5; flex-shrink: 0;">
                 <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--purple-primary); letter-spacing: 0.5px; text-transform: uppercase;">
                     <i class="far fa-question-circle" style="color: var(--pink-accent); margin-right: 6px;"></i> FAQs & Support
                 </h3>
                 <button onclick="closeFaqSystemModalOverlay()" style="background: transparent; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; outline: none;" onmouseover="this.style.color='var(--pink-accent)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
             </div>
 
-            <div style="overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; font-family: 'Montserrat', sans-serif;">
+            <div style="overflow-y: auto; min-height: 0; flex: 1 1 auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; font-family: 'Montserrat', sans-serif; -webkit-overflow-scrolling: touch;">
                 
-                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
                     <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-                        <span>✨ How do I customize or order bespoke sizes?</span>
+                        <span>📏 How do I know what size to order?</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
                     </div>
                     <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
                         <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
-                            You can specify your exact sizing details directly during the checkout process, or initiate a luxury consultation instantly by tapping our automated WhatsApp portal at the base of your catalog cards.
+                            Not sure about bangle or ring sizing? Message us on WhatsApp (the green button in the corner) with a photo or measurement, and we'll help you pick the right size before you order — no guesswork needed.
                         </p>
                     </div>
                 </div>
 
-                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
                     <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-                        <span>🚚 What are your shipping windows across India?</span>
+                        <span>🚚 How long will delivery take?</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
                     </div>
                     <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
                         <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
-                            All orders are processed securely and dispatched through premium networks including DTDC, Delhivery, or Blue Dart. Delivery typically fulfills within 3 to 5 business days, and real-time step tracking can be checked directly via our live tracker using your phone number.
+                            We pack and hand your order to the courier (DTDC, Delhivery, or Blue Dart) within 24–48 hours. From there, it usually takes 3–5 business days to reach you. You can track the whole thing anytime using the "Track Order" link at the top of the page — just enter your phone number.
                         </p>
                     </div>
                 </div>
 
-                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden;">
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
                     <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-                        <span>🛡️ Is my payment transaction completely secure?</span>
+                        <span>🛡️ Is it safe to pay online here?</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
                     </div>
                     <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
                         <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
-                            Absolutely. All payments execute over bank-grade transaction gateways. Upon a validated ledger match, your order profile maps natively to our backend inventory tracking nodes.
+                            Yes. All payments go through Razorpay, the same secure payment gateway used by thousands of Indian businesses. We never see or store your card, UPI, or bank details — that all happens on Razorpay's end, not ours.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                    <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                        <span>❌ Can I cancel my order after placing it?</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                    </div>
+                    <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                        <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                            Yes — within 24 hours of placing it, as long as it hasn't shipped yet. Just go to "Track Order," find your order, and tap "Cancel Order." After 24 hours, or once it's been handed to the courier, we're no longer able to cancel it.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                    <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                        <span>🔄 Can I return or exchange something I don't like?</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                    </div>
+                    <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                        <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                            We don't accept returns or exchanges for change-of-mind, since each piece is handled and packed individually for hygiene reasons. But if something arrives damaged or wrong, we'll always make it right — message us on WhatsApp within 24 hours of delivery with an unboxing video and we'll sort it out.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                    <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                        <span>✨ Will the gold plating wear off or turn the skin green?</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                    </div>
+                    <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                        <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                            Every piece has an anti-tarnish coating built in, so it holds its shine much longer than uncoated imitation jewellery. To make it last: keep it away from perfume/water where possible, and store it in a pouch or box rather than loose in a drawer.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #e8e8ef; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                    <div onclick="toggleFaqAccordionUnit(this)" style="background: #fdfdfd; padding: 14px 18px; font-size: 0.88rem; font-weight: 700; color: var(--purple-primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                        <span>💳 Do you accept Cash on Delivery?</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--pink-accent); transition: transform 0.2s;"></i>
+                    </div>
+                    <div class="faq-content-pane" style="max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; background: #ffffff;">
+                        <p style="margin: 0; padding: 14px 18px; font-size: 0.82rem; line-height: 1.6; color: #555565; border-top: 1px dotted #e8e8ef;">
+                            Not currently — all orders are paid online at checkout through Razorpay (cards, UPI, or net banking). This also means your order gets processed and shipped faster, since there's no payment collection step at delivery.
                         </p>
                     </div>
                 </div>
@@ -1393,34 +1447,34 @@
                 <i class="fas fa-times" onclick="closeWhyAngelModal()" style="cursor: pointer; color: #ffffff; opacity: 0.8; font-size: 1.1rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"></i>
             </div>
 
-            <div style="flex-grow: 1; overflow-y: auto; padding: 30px 25px; box-sizing: border-box; font-family: 'Montserrat', sans-serif; text-align: left;">
+            <div style="flex-grow: 1; overflow-y: auto; min-height: 0; padding: 30px 25px; box-sizing: border-box; font-family: 'Montserrat', sans-serif; text-align: left; -webkit-overflow-scrolling: touch;">
                 <p style="margin-top: 0; margin-bottom: 25px; color: #4a4a5a; font-size: 0.92rem; line-height: 1.6; font-weight: 400;">
-                    By entering, purchasing, or interacting with the Angel Jewellery showroom ecosystem, you connect with a legacy dedicated to master-tier quality, absolute refinement, and dynamic consumer transparency:
+                    Here's what you're actually getting when you buy from us — no fine print, no surprises:
                 </p>
                 
                 <div style="margin-bottom: 25px;">
-                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">1. Uncompromised Fine Materials</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">1. We check every piece by hand</h4>
                     <p style="margin: 0; color: #5a5a6a; font-size: 0.88rem; line-height: 1.6; font-weight: 400;">
-                        Every single gemstone and raw metal batch is hand-selected and verified under rigorous laboratory standards. We source certified gold weights and top-tier color grades to ensure permanent radiance.
+                        Before anything ships, someone actually looks at it — the stones, the plating, the finish. We're not shipping straight from a warehouse without a second look.
                     </p>
                 </div>
 
                 <div style="margin-bottom: 25px;">
-                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">2. Legacy Artisan Craftsmanship</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">2. Real craftsmanship, not mass-stamped pieces</h4>
                     <p style="margin: 0; color: #5a5a6a; font-size: 0.88rem; line-height: 1.6; font-weight: 400;">
-                        Our master jewelers bring decades of design heritage to every curve, setting, and micro-polish execution. We blend structural durability with modern premium wearability.
+                        Our designs come from people who've been doing this for years — the kind of detail work that holds up after months of actual wear, not just in photos.
                     </p>
                 </div>
 
                 <div style="margin-bottom: 5px;">
-                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">3. Absolute Consumer Protection</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #202c55; font-size: 1rem; font-weight: 700; letter-spacing: -0.2px;">3. You're never left guessing</h4>
                     <p style="margin: 0; color: #5a5a6a; font-size: 0.88rem; line-height: 1.6; font-weight: 400;">
-                        We establish trust through fully documented authentication guarantees, dynamic secure checkout channels, and dedicated after-care repair vaults for complete peacetime reassurance.
+                        Secure checkout, honest photos, and a real person on WhatsApp if something needs fixing after delivery. If we get something wrong, we make it right.
                     </p>
                 </div>
             </div>
 
-            <div style="background: #fafafa; padding: 15px 25px; display: flex; justify-content: flex-end; border-top: 1px solid #eeeeee; box-sizing: border-box;">
+            <div style="background: #fafafa; padding: 15px 25px; display: flex; justify-content: flex-end; border-top: 1px solid #eeeeee; box-sizing: border-box; flex-shrink: 0;">
                 <button type="button" onclick="closeWhyAngelModal()" style="background: #202c55; color: #ffffff; border: none; padding: 12px 24px; font-family: 'Montserrat', sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#162040'" onmouseout="this.style.background='#202c55'">
                     Close Document
                 </button>
