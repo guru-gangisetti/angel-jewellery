@@ -1228,12 +1228,13 @@ function renderAdminPromoConsoleGrid() {
     }
 
     container.innerHTML = `
-        <table style="width:100%; min-width: 420px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+        <table style="width:100%; min-width: 480px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
             <thead>
                 <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
                     <th style="padding:10px;">Code</th>
                     <th style="padding:10px;">Type</th>
                     <th style="padding:10px;">Discount Value</th>
+                    <th style="padding:10px;">Min. Order</th>
                     <th style="padding:10px; text-align:center;">Action</th>
                 </tr>
             </thead>
@@ -1243,6 +1244,7 @@ function renderAdminPromoConsoleGrid() {
                         <td style="padding:10px; font-weight:700; color:var(--purple-primary); font-family:monospace;">${promo.code}</td>
                         <td style="padding:10px; text-transform:uppercase; font-size:0.75rem;">${promo.type}</td>
                         <td style="padding:10px; font-weight:600;">${promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}</td>
+                        <td style="padding:10px; font-size:0.78rem; color:${promo.min_order_amount ? '#4a4a5a' : '#aaa'};">${promo.min_order_amount ? `₹${promo.min_order_amount}+` : 'Any amount'}</td>
                         <td style="padding:10px; text-align:center;">
                             <button onclick="executeAdminCouponPurgePipeline(event, ${promo.id}, '${promo.code}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Delete Coupon">
                                 <i class="far fa-trash-alt"></i>
@@ -1267,10 +1269,13 @@ async function handleAdminPromoFormSubmit(event) {
     const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
     const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
 
+    const minOrderRaw = document.getElementById('newPromoMinOrderInput').value.trim();
+
     const newPromoPayload = {
         code: document.getElementById('newPromoCodeInput').value.toUpperCase().trim(),
         type: document.getElementById('newPromoTypeSelect').value,
-        value: parseFloat(document.getElementById('newPromoValueInput').value) || 0
+        value: parseFloat(document.getElementById('newPromoValueInput').value) || 0,
+        min_order_amount: minOrderRaw === '' ? null : parseFloat(minOrderRaw)
     };
 
     if (!newPromoPayload.code || newPromoPayload.value <= 0) {

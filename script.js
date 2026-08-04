@@ -1459,6 +1459,26 @@ function getEffectiveLineUnitPrice(item) {
 
 function updateCartUI() {
     localStorage.setItem('shoppingCart', JSON.stringify(shoppingCart));
+
+    // Keep the active coupon honest: if it has a minimum order amount and the
+    // cart has since dropped below it (items removed, quantity reduced, etc.),
+    // remove the discount now rather than letting a stale one carry through
+    // to checkout/payment.
+    if (activeDiscount.code && activeDiscount.minOrderAmount > 0) {
+        const liveSubtotal = shoppingCart.reduce((sum, item) => sum + (getEffectiveLineUnitPrice(item) * item.quantity), 0);
+        if (liveSubtotal < activeDiscount.minOrderAmount) {
+            const removedCode = activeDiscount.code;
+            const minRequired = activeDiscount.minOrderAmount;
+            activeDiscount = { code: "", type: "", value: 0 };
+            const statusMsg = document.getElementById('couponStatusMessage');
+            if (statusMsg) {
+                statusMsg.style.display = "block";
+                statusMsg.style.color = "#ff4444";
+                statusMsg.innerText = `${removedCode} was removed — your cart is now below its ${formatCurrency(minRequired)} minimum.`;
+            }
+        }
+    }
+
     const cartItemsList = document.getElementById('cartItemsList');
     const cartCountBadge = document.getElementById('cartCountBadge');
     const cartTotalQty = document.getElementById('cartTotalQty');
@@ -1853,10 +1873,23 @@ function applyCouponEngineAction() {
     const matchedPromo = couponRegistryCache.find(c => c.code.toUpperCase() === inputtedCode);
     
     if (matchedPromo) {
+        // Optional minimum order amount — only enforced if the coupon actually has one set
+        const minOrderAmount = matchedPromo.min_order_amount ? parseFloat(matchedPromo.min_order_amount) : 0;
+        const currentSubtotal = shoppingCart.reduce((sum, item) => sum + (getEffectiveLineUnitPrice(item) * item.quantity), 0);
+
+        if (minOrderAmount > 0 && currentSubtotal < minOrderAmount) {
+            const shortfall = minOrderAmount - currentSubtotal;
+            statusMsg.style.display = "block";
+            statusMsg.style.color = "#ff4444";
+            statusMsg.innerText = `Add ${formatCurrency(shortfall)} more to your cart to use ${matchedPromo.code} (minimum order: ${formatCurrency(minOrderAmount)}).`;
+            return;
+        }
+
         activeDiscount = {
             code: matchedPromo.code,
             type: matchedPromo.type,    // 'percentage' or 'flat'
-            value: parseFloat(matchedPromo.value)
+            value: parseFloat(matchedPromo.value),
+            minOrderAmount: minOrderAmount
         };
         statusMsg.style.display = "block";
         statusMsg.style.color = "#25d366";

@@ -1137,6 +1137,12 @@
                                 <input type="number" id="newPromoValueInput" placeholder="e.g. 15 or 500" required min="1" step="any" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-weight: 600;">
                             </div>
 
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.68rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">Minimum Order Amount (optional)</label>
+                                <input type="number" id="newPromoMinOrderInput" placeholder="Leave blank to apply to any amount" min="0" step="any" style="padding: 8px 12px; border: 1px solid #e8e8ef; border-radius: 4px; font-size: 0.82rem; outline: none; font-weight: 600;">
+                                <span style="font-size: 0.66rem; color: #8a8da0;">If set, customers must have at least this much in their cart to use the code.</span>
+                            </div>
+
                             <button type="submit" id="promoFormSubmitBtn" style="margin-top: 6px; background: var(--purple-primary); color: #ffffff; border: none; padding: 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
                                 ADD PROMO CODE
                             </button>
