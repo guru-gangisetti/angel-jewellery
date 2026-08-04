@@ -503,6 +503,28 @@
     </script>
 
     <!-- =========================================================================
+         8.5. Shop By Body Part (fully dynamic — a tab only renders if real
+         products actually match it; the whole section hides if none do)
+         ========================================================================= -->
+    <section id="bodyPartShowcaseSection" style="display: none; max-width: 1200px; margin: 60px auto; padding: 0 20px; font-family: 'Montserrat', sans-serif; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <span style="color: #cca43b; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; display: block; margin-bottom: 6px;">Precisely Yours</span>
+            <h2 style="color: var(--purple-primary, #202c55); font-size: 1.6rem; font-weight: 500; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                Shop By Body Part
+            </h2>
+            <div style="width: 40px; height: 2px; background: #cca43b; margin: 10px auto 0 auto;"></div>
+        </div>
+
+        <div id="bodyPartTabsRow" class="bodypart-tabs-row"></div>
+
+        <div class="bodypart-carousel-wrapper">
+            <button class="bodypart-carousel-arrow bodypart-carousel-arrow--prev" onclick="scrollBodyPartCarousel(-1)" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+            <div id="bodyPartProductCarousel" class="modern-trending-carousel-track" style="display: flex; gap: 24px; overflow-x: auto; padding: 10px 4px 25px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch;"></div>
+            <button class="bodypart-carousel-arrow bodypart-carousel-arrow--next" onclick="scrollBodyPartCarousel(1)" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </section>
+
+    <!-- =========================================================================
          9. Trending / Sale Carousel
          ========================================================================= -->
     <section class="sale-section-wrapper" id="saleSection" style="background: #ffffff; padding: 90px 10px; display: none; font-family: 'Montserrat', sans-serif; position: relative;">

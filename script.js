@@ -4410,6 +4410,144 @@ function renderFlashVaultShowroom() {
     `;
 }
 
+const STYLE_CLUSTER_KEYWORD_ALIASES = {
+    'cz': ['cz', 'cubic zirconia', 'silver polish', 'diamond', 'pink diamond'],
+    'antique': ['antique', 'temple', 'nakshi', 'guttapusalu', 'kemp'],
+    'handcrafted': ['handcrafted', 'heritage', 'devotion', 'radha', 'krishna', 'pendant'],
+    'navratna': ['navratna', 'beads', 'multi-stone', 'stone', 'string'],
+    'bodypart-neck': ['neck', 'necklace', 'haram', 'choker', 'chain', 'pendant', 'mangalsutra'],
+    'bodypart-ears': ['ear', 'earring', 'jhumka', 'jhumki', 'stud', 'danglers'],
+    'bodypart-hands': ['bangle', 'kada', 'bracelet', 'ring', 'wrist', 'cuff'],
+    'bodypart-head': ['maang tikka', 'maangtikka', 'tikka', 'hair pin', 'headpiece', 'matha patti']
+};
+
+function getProductSearchableText(product) {
+    if (!product) return '';
+    const fieldsToSearch = [
+        product.style, product.Style, product.category, product.Category,
+        product.title, product.Title, product.description, product.Description
+    ].map(val => String(val || '').toLowerCase());
+
+    if (product.product_variants && Array.isArray(product.product_variants)) {
+        product.product_variants.forEach(v => {
+            if (v.color_name) fieldsToSearch.push(String(v.color_name).toLowerCase());
+        });
+    }
+    return fieldsToSearch.join(' ');
+}
+
+function getProductsMatchingCluster(clusterKeyword, database) {
+    const rawKeyword = String(clusterKeyword || '').trim().toLowerCase();
+    const targetSearchTerms = STYLE_CLUSTER_KEYWORD_ALIASES[rawKeyword] || [rawKeyword];
+    return (database || []).filter(product =>
+        targetSearchTerms.some(term => getProductSearchableText(product).includes(term))
+    );
+}
+
+// =========================================================================
+// ANGEL JEWELLERY — "SHOP BY BODY PART" (Neck / Ears / Hands / Head)
+// Fully dynamic, same spirit as the "Our Collection" category folders: a
+// tab only renders if at least one real product genuinely matches it
+// (reusing the exact keyword-cluster engine built for Shop By Style), so
+// this can never point a customer to an empty result. The whole section
+// stays hidden if the catalog doesn't yet cover any body part distinctly.
+//
+// Interaction: tabs across the top, clicking one swaps the product set in
+// the horizontal carousel below IN PLACE — no modal/overlay ever opens.
+// =========================================================================
+
+const BODY_PART_TAB_DEFS = [
+    { keyword: 'bodypart-neck', label: 'Neck', icon: 'fa-gem' },
+    { keyword: 'bodypart-ears', label: 'Ears', icon: 'fa-ear-listen' },
+    { keyword: 'bodypart-hands', label: 'Hands', icon: 'fa-hand' },
+    { keyword: 'bodypart-head', label: 'Head', icon: 'fa-crown' }
+];
+
+let activeBodyPartTabKeyword = null;
+
+function renderShopByBodyPartSection() {
+    const section = document.getElementById('bodyPartShowcaseSection');
+    const tabsRow = document.getElementById('bodyPartTabsRow');
+    if (!section || !tabsRow) return;
+
+    if (!productDatabase || productDatabase.length === 0) return;
+
+    const tabsWithStock = BODY_PART_TAB_DEFS.map(def => ({
+        ...def,
+        count: getProductsMatchingCluster(def.keyword, productDatabase).length
+    })).filter(def => def.count > 0);
+
+    if (tabsWithStock.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    tabsRow.innerHTML = tabsWithStock.map((def, i) => `
+        <button class="bodypart-tab-btn ${i === 0 ? 'is-active' : ''}" data-keyword="${def.keyword}" onclick="selectBodyPartTab('${def.keyword}')">
+            <i class="fas ${def.icon}"></i> ${def.label} <span class="bodypart-tab-count">${def.count}</span>
+        </button>
+    `).join('');
+
+    section.style.display = 'block';
+    selectBodyPartTab(tabsWithStock[0].keyword);
+}
+
+function selectBodyPartTab(keyword) {
+    activeBodyPartTabKeyword = keyword;
+
+    document.querySelectorAll('.bodypart-tab-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-keyword') === keyword);
+    });
+
+    const carousel = document.getElementById('bodyPartProductCarousel');
+    if (!carousel) return;
+
+    const matchedItems = getProductsMatchingCluster(keyword, productDatabase);
+    carousel.scrollTo({ left: 0 }); // reset scroll position for the new tab's items
+    carousel.innerHTML = matchedItems.map(buildBodyPartCarouselCardHTML).join('');
+}
+
+function scrollBodyPartCarousel(direction) {
+    const carousel = document.getElementById('bodyPartProductCarousel');
+    if (!carousel) return;
+    const cardWidth = carousel.querySelector('.angel-card')?.offsetWidth || 260;
+    carousel.scrollBy({ left: direction * (cardWidth + 24), behavior: 'smooth' });
+}
+
+function buildBodyPartCarouselCardHTML(product) {
+    const isSoldOut = product.badge && product.badge.toLowerCase() === 'sold out';
+    const isFavorited = wishlistMemory.includes(product.id);
+    const currentPriceValue = typeof product.price === 'number' ? product.price : parseFloat(product.price) || 0;
+    const safeTitleString = (product.title || '').replace(/'/g, "\\'");
+
+    return `
+        <div class="angel-card ${isSoldOut ? 'is-disabled' : ''}" onclick="openQuickViewShield(${product.id})">
+            <div class="angel-card-media">
+                <img src="${product.image}" loading="lazy" decoding="async" alt="${product.title}">
+                ${product.badge ? `<span class="angel-card-badge" style="${getBadgeCustomStyles(product.badge)}">${product.badge}</span>` : ''}
+                <button class="angel-card-wishlist wishlist-heart-btn ${isFavorited ? 'active' : ''}"
+                        onclick="event.stopPropagation(); toggleWishlistEngine(event, ${product.id}, this)"
+                        aria-label="Add to wishlist">
+                    <i class="${isFavorited ? 'fas' : 'far'} fa-heart" style="font-size: 0.8rem; color: ${isFavorited ? 'var(--pink-accent, #ff1493)' : '#202c55'};"></i>
+                </button>
+                ${isSoldOut ? `<div class="angel-card-soldout-scrim">Restocking Soon</div>` : ''}
+            </div>
+            <div class="angel-card-body">
+                <p class="angel-card-eyebrow">${product.category || 'Luxury Masterpiece'}</p>
+                <h3 class="angel-card-title">${product.title}</h3>
+                ${buildProductRatingRowHTML(product.id)}
+                <div class="angel-card-price-row"><span class="angel-card-price">${formatCurrency(currentPriceValue)}</span></div>
+                <button class="angel-card-cta ${isSoldOut ? 'is-sold-out' : ''}"
+                        onclick="event.stopPropagation(); if(!${isSoldOut}) { handleCatalogCardAddToCart(${product.id}, '${safeTitleString}'); }"
+                        ${isSoldOut ? 'disabled' : ''}>
+                    <i class="${isSoldOut ? 'fas fa-hourglass-start' : 'fas fa-shopping-cart'}" style="font-size: 0.7rem;"></i>
+                    <span>${isSoldOut ? 'Restocking Soon' : 'Add to Cart'}</span>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
 async function selectStyleClusterFilter(clusterKeyword) {
     const modal = document.getElementById('stylePortfolioModalShield');
     const grid = document.getElementById('portfolioModalProductsGrid');
@@ -4433,44 +4571,8 @@ async function selectStyleClusterFilter(clusterKeyword) {
     // Clean search keyword
     const rawKeyword = String(clusterKeyword || '').trim().toLowerCase();
 
-    // Map common card keywords to potential synonyms
-    const keywordAliases = {
-        'cz': ['cz', 'cubic zirconia', 'silver polish', 'diamond', 'pink diamond'],
-        'antique': ['antique', 'temple', 'nakshi', 'guttapusalu', 'kemp'],
-        'handcrafted': ['handcrafted', 'heritage', 'devotion', 'radha', 'krishna', 'pendant'],
-        'navratna': ['navratna', 'beads', 'multi-stone', 'stone', 'string']
-    };
-
-    const targetSearchTerms = keywordAliases[rawKeyword] || [rawKeyword];
-
     // 2. BROAD MULTI-FIELD MATCH: Check style, category, title, description & variants
-    const matchedStylePool = productDatabase.filter(product => {
-        if (!product) return false;
-
-        // Collect all possible text values from the product object (handles capital/lowercase DB keys)
-        const fieldsToSearch = [
-            product.style,
-            product.Style,
-            product.category,
-            product.Category,
-            product.title,
-            product.Title,
-            product.description,
-            product.Description
-        ].map(val => String(val || '').toLowerCase());
-
-        // Also check color names from inner product variants
-        if (product.product_variants && Array.isArray(product.product_variants)) {
-            product.product_variants.forEach(v => {
-                if (v.color_name) fieldsToSearch.push(String(v.color_name).toLowerCase());
-            });
-        }
-
-        const combinedText = fieldsToSearch.join(' ');
-
-        // Return true if ANY of our target terms exist inside the product's combined text
-        return targetSearchTerms.some(term => combinedText.includes(term));
-    });
+    const matchedStylePool = getProductsMatchingCluster(clusterKeyword, productDatabase);
 
     // Custom titles for the modal header
     let descriptiveTitle = `${clusterKeyword} Collection`;
@@ -4478,9 +4580,14 @@ async function selectStyleClusterFilter(clusterKeyword) {
     if (rawKeyword === 'antique') descriptiveTitle = "Antique Temple Masterpieces";
     if (rawKeyword === 'handcrafted') descriptiveTitle = "Heritage Devotion Editions";
     if (rawKeyword === 'navratna') descriptiveTitle = "Navratna & Multi-Stone Strings";
+    if (rawKeyword === 'bodypart-neck') descriptiveTitle = "Necklaces & Neck Pieces";
+    if (rawKeyword === 'bodypart-ears') descriptiveTitle = "Earrings Edit";
+    if (rawKeyword === 'bodypart-hands') descriptiveTitle = "Bangles, Kada & Rings";
+    if (rawKeyword === 'bodypart-head') descriptiveTitle = "Hair & Head Pieces";
 
     if (mainTitle) mainTitle.innerText = descriptiveTitle;
-    if (miniTag) miniTag.innerText = `Angel Jewellery • ${clusterKeyword}`;
+    const cleanDisplayLabel = rawKeyword.startsWith('bodypart-') ? rawKeyword.replace('bodypart-', '').replace(/^\w/, c => c.toUpperCase()) : clusterKeyword;
+    if (miniTag) miniTag.innerText = `Angel Jewellery • ${cleanDisplayLabel}`;
 
     if (scrollBody) {
         scrollBody.style.cssText = "padding: 10px 8px; overflow-x: hidden !important; width: 100%; box-sizing: border-box; background: #ffffff; flex-grow: 1;";
@@ -5481,4 +5588,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof renderNewArrivalsSection === 'function') renderNewArrivalsSection();
     if (typeof renderRecentlyViewedSection === 'function') renderRecentlyViewedSection();
     if (typeof loadActiveFestivalShowcase === 'function') loadActiveFestivalShowcase();
+    if (typeof renderShopByBodyPartSection === 'function') renderShopByBodyPartSection();
 });
