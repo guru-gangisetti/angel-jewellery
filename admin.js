@@ -377,10 +377,10 @@ function renderAdminFestivalConsoleGrid() {
                                 : `<span style="color:#8a8da0; font-size:0.72rem;">Scheduled</span>`}
                         </td>
                         <td style="padding:10px; text-align:center; white-space:nowrap;">
-                            <button onclick="startEditingFestival(${fest.id})" style="background:transparent; border:none; color:var(--purple-primary); cursor:pointer; font-size:0.9rem; margin-right:10px;" title="Edit Festival">
+                            <button onclick="startEditingFestival(${fest.id})" style="background:transparent; border:none; color:var(--purple-primary); cursor:pointer; font-size:0.9rem; margin-right:10px; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Edit Festival">
                                 <i class="far fa-edit"></i>
                             </button>
-                            <button onclick="executeAdminFestivalPurgePipeline(event, ${fest.id}, '${String(fest.name).replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Festival">
+                            <button onclick="executeAdminFestivalPurgePipeline(event, ${fest.id}, '${String(fest.name).replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Delete Festival">
                                 <i class="far fa-trash-alt"></i>
                             </button>
                         </td>
@@ -1244,7 +1244,7 @@ function renderAdminPromoConsoleGrid() {
                         <td style="padding:10px; text-transform:uppercase; font-size:0.75rem;">${promo.type}</td>
                         <td style="padding:10px; font-weight:600;">${promo.type === 'percentage' ? `${promo.value}%` : `₹${promo.value}`}</td>
                         <td style="padding:10px; text-align:center;">
-                            <button onclick="executeAdminCouponPurgePipeline(event, ${promo.id}, '${promo.code}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem;" title="Delete Coupon">
+                            <button onclick="executeAdminCouponPurgePipeline(event, ${promo.id}, '${promo.code}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Delete Coupon">
                                 <i class="far fa-trash-alt"></i>
                             </button>
                         </td>
@@ -2257,7 +2257,7 @@ function renderAdminCarouselConsoleGrid() {
                         <td style="padding:10px; font-weight:600; color:#202c55; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${slide.title}</td>
                         <td style="padding:10px; text-align:center; font-weight:700; color:#ff1493;">${slide.display_order}</td>
                         <td style="padding:10px; text-align:center; vertical-align:middle;">
-                            <button onclick="executeAdminCarouselPurgePipeline(event, ${slide.id}, '${slide.title}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; padding:4px;" title="Delete Campaign Slide">
+                            <button onclick="executeAdminCarouselPurgePipeline(event, ${slide.id}, '${slide.title}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Delete Campaign Slide">
                                 <i class="far fa-trash-alt"></i>
                             </button>
                         </td>
