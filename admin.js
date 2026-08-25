@@ -96,6 +96,7 @@ async function revealAdminDashboardAfterLogin() {
     await loadLiveCouponDatabaseEngine();
     await loadFestivalRegistry();
     await loadSiteSettingsRegistry();
+    await loadSpinWheelPrizeRegistry();
     await synchronizeLiveStorefrontInventory();
     if (typeof loadLiveCarouselDatabaseEngine === 'function') {
         await loadLiveCarouselDatabaseEngine();
@@ -404,12 +405,22 @@ function renderFestivalProductPickerList(preCheckedIds) {
 
     const sortedProducts = [...productDatabase].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 
-    listEl.innerHTML = sortedProducts.map(p => `
-        <label style="display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:0.78rem; cursor:pointer; border-bottom:1px solid #f4f4f7;">
-            <input type="checkbox" class="festival-product-checkbox" value="${p.id}" ${checkedSet.has(p.id) ? 'checked' : ''} style="cursor:pointer;">
-            <span>${(p.title || 'Untitled piece').replace(/</g, '&lt;')} <span style="color:#aaa;">· ${p.category || ''}</span></span>
-        </label>
-    `).join('');
+    listEl.innerHTML = sortedProducts.map(p => {
+        const itemImage = p.image || 'assets/placeholder.png';
+        const itemTitle = (p.title || 'Untitled piece').replace(/</g, '&lt;');
+        const itemCategory = p.category ? ` · ${p.category}` : '';
+
+        return `
+            <label style="display:flex; align-items:center; gap:10px; padding:6px 10px; font-size:0.78rem; cursor:pointer; border-bottom:1px solid #f4f4f7; transition:background 0.15s ease;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+                <input type="checkbox" class="festival-product-checkbox" value="${p.id}" ${checkedSet.has(p.id) ? 'checked' : ''} style="cursor:pointer; flex-shrink:0;">
+                <img src="${itemImage}" alt="${itemTitle}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'" style="width:34px; height:34px; border-radius:4px; object-fit:cover; border:1px solid #e8e8ef; flex-shrink:0;">
+                <div style="display:flex; flex-direction:column; min-width:0;">
+                    <span style="font-weight:600; color:var(--purple-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${itemTitle}</span>
+                    <span style="font-size:0.68rem; color:#8a8da0;">ID: #${p.id}${itemCategory}</span>
+                </div>
+            </label>
+        `;
+    }).join('');
 }
 
 function startEditingFestival(festivalId) {
@@ -673,6 +684,236 @@ function openAdminSiteFeaturesOverlay(event) {
 
 function closeAdminSiteFeaturesOverlay() {
     const overlay = document.getElementById('adminSiteFeaturesOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// =========================================================================
+// SPIN WHEEL PRIZES MODULE (admin side)
+// Requires a `SpinWheelPrizes` table in Supabase — see SQL notes provided
+// alongside this file. Reads use the anon key; writes use the logged-in
+// admin's session token, matching the Coupons/Festivals pattern. Each
+// prize's coupon_code MUST exist as a real coupon in the Coupons table.
+// =========================================================================
+
+let spinWheelPrizeRegistryCache = [];
+
+async function loadSpinWheelPrizeRegistry() {
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/SpinWheelPrizes?select=*&order=id.asc`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Supabase returned code: ${response.status}`);
+        spinWheelPrizeRegistryCache = await response.json();
+    } catch (err) {
+        console.error("❌ Failed to load spin wheel prizes (has the SpinWheelPrizes table been created yet?):", err);
+        spinWheelPrizeRegistryCache = [];
+    }
+}
+
+function renderAdminSpinWheelConsoleGrid() {
+    const container = document.getElementById('adminSpinWheelTableContainer');
+    if (!container) return;
+
+    if (spinWheelPrizeRegistryCache.length === 0) {
+        container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:#aaa; margin:20px 0;">No prizes configured yet — the wheel will use built-in defaults until you add some.</p>`;
+        return;
+    }
+
+    const totalWeight = spinWheelPrizeRegistryCache.reduce((sum, p) => sum + (parseFloat(p.weight) || 0), 0);
+
+    container.innerHTML = `
+        <table style="width:100%; min-width: 420px; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+            <thead>
+                <tr style="background:#f4f4f7; color:var(--text-muted); font-weight:700; border-bottom:1px solid #e8e8ef;">
+                    <th style="padding:10px;">Prize Label</th>
+                    <th style="padding:10px;">Coupon Code</th>
+                    <th style="padding:10px;">Odds</th>
+                    <th style="padding:10px; text-align:center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${spinWheelPrizeRegistryCache.map(prize => {
+                    const oddsPercent = totalWeight > 0 ? ((parseFloat(prize.weight) / totalWeight) * 100).toFixed(1) : '0';
+                    return `
+                    <tr style="border-bottom:1px solid #f1f1f5;">
+                        <td style="padding:10px; font-weight:700; color:var(--purple-primary);">${prize.label}</td>
+                        <td style="padding:10px; font-family:monospace; font-size:0.78rem;">${prize.coupon_code}</td>
+                        <td style="padding:10px;">${oddsPercent}%</td>
+                        <td style="padding:10px; text-align:center;">
+                            <button onclick="executeAdminSpinWheelPurgePipeline(event, ${prize.id}, '${String(prize.label).replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; justify-content:center; min-width:28px; min-height:28px;" title="Delete Prize">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+        <p style="font-size:0.68rem; color:#aaa; margin-top:10px;">Odds are calculated automatically from each prize's weight relative to the others.</p>
+    `;
+}
+
+async function handleAdminSpinWheelFormSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('spinWheelFormSubmitBtn');
+    if (!submitBtn) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Saving...';
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    const newPrizePayload = {
+        label: document.getElementById('newPrizeLabelInput').value.trim(),
+        coupon_code: document.getElementById('newPrizeCouponInput').value.trim().toUpperCase(),
+        weight: parseFloat(document.getElementById('newPrizeWeightInput').value) || 1
+    };
+
+    if (!newPrizePayload.label || !newPrizePayload.coupon_code) {
+        alert("Please provide both a prize label and a coupon code.");
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+        return;
+    }
+
+    // Warn (don't block) if the coupon code doesn't exist yet in the Coupons registry
+    const couponExists = couponRegistryCache.some(c => c.code.toUpperCase() === newPrizePayload.coupon_code);
+    if (!couponExists) {
+        const proceed = confirm(`"${newPrizePayload.coupon_code}" doesn't exist yet in your Promo Codes. If you save this prize without creating that coupon too, it'll look real to customers but fail at checkout. Save anyway?`);
+        if (!proceed) {
+            submitBtn.disabled = false; submitBtn.innerText = originalText;
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/SpinWheelPrizes`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(newPrizePayload)
+        });
+        if (!response.ok) throw new Error("Supabase rejected the prize entry — check the SpinWheelPrizes table exists.");
+
+        document.getElementById('adminSpinWheelCreatorForm').reset();
+        await loadSpinWheelPrizeRegistry();
+        renderAdminSpinWheelConsoleGrid();
+
+    } catch (err) {
+        console.error(err);
+        alert("Could not save this prize. Make sure the SpinWheelPrizes table has been created in Supabase (see setup notes).");
+    } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+    }
+}
+
+async function executeAdminSpinWheelPurgePipeline(event, prizeId, prizeLabel) {
+    if (event) event.stopPropagation();
+    const verify = confirm(`Delete the "${prizeLabel}" prize from the wheel?`);
+    if (!verify) return;
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    try {
+        const response = await fetch(`${sbUrl}/rest/v1/SpinWheelPrizes?id=eq.${prizeId}`, {
+            method: 'DELETE',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error("Deletion failed.");
+        await loadSpinWheelPrizeRegistry();
+        renderAdminSpinWheelConsoleGrid();
+    } catch (err) {
+        console.error(err);
+        alert("Unable to delete this prize.");
+    }
+}
+
+function openAdminSpinWheelConsoleOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('adminSpinWheelConsoleOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    renderAdminSpinWheelConsoleGrid();
+}
+
+function closeAdminSpinWheelConsoleOverlay() {
+    const overlay = document.getElementById('adminSpinWheelConsoleOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+// =========================================================================
+// STORE SETTINGS MODULE (shipping threshold & fee) — reuses the same
+// SiteSettings key/value table as the feature toggles, just with numeric
+// values instead of booleans.
+// =========================================================================
+
+function renderStoreShippingSettingsForm() {
+    const thresholdInput = document.getElementById('storeShippingThresholdInput');
+    const feeInput = document.getElementById('storeShippingFeeInput');
+    if (!thresholdInput || !feeInput) return;
+
+    thresholdInput.value = siteSettingsRegistryCache.free_shipping_threshold || '';
+    feeInput.value = siteSettingsRegistryCache.shipping_fee || '';
+}
+
+async function handleStoreShippingSettingsSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('shippingSettingsSubmitBtn');
+    if (!submitBtn) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Saving...';
+
+    const sbUrl = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_URL;
+    const sbKey = ANGEL_STORE_CONFIG.DATABASE.SUPABASE_ANON_KEY;
+
+    const thresholdVal = document.getElementById('storeShippingThresholdInput').value.trim();
+    const feeVal = document.getElementById('storeShippingFeeInput').value.trim();
+
+    try {
+        const updates = [
+            { key: 'free_shipping_threshold', value: thresholdVal },
+            { key: 'shipping_fee', value: feeVal }
+        ];
+
+        const response = await fetch(`${sbUrl}/rest/v1/SiteSettings`, {
+            method: 'POST',
+            headers: {
+                'apikey': sbKey, 'Authorization': `Bearer ${getCurrentAdminAccessToken()}`,
+                'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal'
+            },
+            body: JSON.stringify(updates)
+        });
+        if (!response.ok) throw new Error("Supabase rejected the settings update.");
+
+        siteSettingsRegistryCache.free_shipping_threshold = thresholdVal;
+        siteSettingsRegistryCache.shipping_fee = feeVal;
+        alert("✨ Shipping settings saved! Takes effect immediately on the live site.");
+
+    } catch (err) {
+        console.error(err);
+        alert("Could not save shipping settings. Make sure the SiteSettings table has been created in Supabase.");
+    } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+    }
+}
+
+function openStoreSettingsOverlay(event) {
+    if (event) event.preventDefault();
+    const overlay = document.getElementById('storeSettingsOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    renderStoreShippingSettingsForm();
+}
+
+function closeStoreSettingsOverlay() {
+    const overlay = document.getElementById('storeSettingsOverlay');
     if (overlay) overlay.style.display = 'none';
 }
 

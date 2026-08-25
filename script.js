@@ -443,7 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const WELCOME_DISCOUNT_STORAGE_KEY = 'angelJewellerySpinWheelPlayed';
 
-const SPIN_WHEEL_PRIZES = [
+// Used only if the SpinWheelPrizes table hasn't been set up yet, or is
+// temporarily empty — keeps the feature working out of the box.
+const DEFAULT_SPIN_WHEEL_PRIZES = [
     { label: '5% OFF',  code: 'ANGEL5',    color: '#202c55', weight: 30 },
     { label: '7% OFF',  code: 'ANGEL7',    color: '#cca43b', weight: 22 },
     { label: '10% OFF', code: 'WELCOME10', color: '#202c55', weight: 20 },
@@ -451,6 +453,39 @@ const SPIN_WHEEL_PRIZES = [
     { label: '12% OFF', code: 'ANGEL12',   color: '#202c55', weight: 7  },
     { label: '15% OFF', code: 'ANGEL15',   color: '#cca43b', weight: 3  }
 ];
+
+let SPIN_WHEEL_PRIZES = DEFAULT_SPIN_WHEEL_PRIZES;
+
+async function loadSpinWheelPrizesRegistry() {
+    try {
+        const sbUrl = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_URL;
+        const sbKey = ANGEL_STORE_CONFIG?.DATABASE?.SUPABASE_ANON_KEY;
+        if (!sbUrl || !sbKey) return;
+
+        const response = await fetch(`${sbUrl}/rest/v1/SpinWheelPrizes?select=*&order=id.asc`, {
+            method: 'GET',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            console.log("ℹ️ SpinWheelPrizes table not available yet — using built-in default prizes.");
+            return;
+        }
+
+        const rows = await response.json();
+        if (!Array.isArray(rows) || rows.length === 0) return; // stick with defaults
+
+        SPIN_WHEEL_PRIZES = rows.map((row, i) => ({
+            label: row.label,
+            code: row.coupon_code,
+            weight: parseFloat(row.weight) || 1,
+            color: i % 2 === 0 ? '#202c55' : '#cca43b' // alternate brand colors automatically
+        }));
+
+    } catch (error) {
+        console.log("ℹ️ Spin wheel prizes fetch skipped, using defaults:", error.message);
+    }
+}
 
 let spinWheelHasSpun = false;
 
@@ -1593,7 +1628,7 @@ function updateCartUI() {
     }
     
     // Calculate shipping progress triggers
-    const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
+    const SHIPPING_THRESHOLD_LIMIT = getShippingConfig().threshold;
     const progressBarFill = document.getElementById('shippingBarFill');
     const progressText = document.getElementById('shippingProgressText');
     
@@ -2748,9 +2783,10 @@ function openInvoiceScreen() {
     }
     let netTotalBeforeShipping = grandSubtotal - discountAmount;
 
-    // ➔ THE UPGRADE: FETCH CONFIG LOGISTICS PARAMETERS DYNAMICALLY
-    const SHIPPING_THRESHOLD_LIMIT = ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
-    const FLAT_SHIPPING_CHARGE_RATE = ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
+    // ➔ THE UPGRADE: FETCH CONFIG LOGISTICS PARAMETERS DYNAMICALLY (admin-configurable, with safe fallback)
+    const shippingConfig = getShippingConfig();
+    const SHIPPING_THRESHOLD_LIMIT = shippingConfig.threshold;
+    const FLAT_SHIPPING_CHARGE_RATE = shippingConfig.fee;
 
     let shippingChargeAmount = 0;
     if (netTotalBeforeShipping > 0 && netTotalBeforeShipping < SHIPPING_THRESHOLD_LIMIT) {
@@ -3660,6 +3696,25 @@ function getBadgeCustomStyles(badgeText) {
 // ENABLED if the table doesn't exist yet or a key hasn't been saved, so
 // nothing breaks before the admin panel is used for the first time.
 // =========================================================================
+
+function getShippingConfig() {
+    const thresholdSetting = SITE_SETTINGS_CACHE.free_shipping_threshold;
+    const feeSetting = SITE_SETTINGS_CACHE.shipping_fee;
+
+    const threshold = (thresholdSetting !== undefined && thresholdSetting !== null && thresholdSetting !== '')
+        ? parseFloat(thresholdSetting)
+        : ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD;
+
+    const fee = (feeSetting !== undefined && feeSetting !== null && feeSetting !== '')
+        ? parseFloat(feeSetting)
+        : ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE;
+
+    // Guard against a bad/non-numeric value ever slipping through and breaking checkout math
+    return {
+        threshold: isNaN(threshold) ? ANGEL_STORE_CONFIG.LOGISTICS.FREE_SHIPPING_THRESHOLD : threshold,
+        fee: isNaN(fee) ? ANGEL_STORE_CONFIG.LOGISTICS.FLAT_SHIPPING_FEE : fee
+    };
+}
 
 async function loadSiteSettingsRegistry() {
     try {
@@ -5612,11 +5667,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Kick off the social-proof activity toast (independent of catalog load)
     initializeSocialProofToast();
 
-    // 3. Load catalog + real product ratings + site feature toggles in parallel, then coupons
+    // 3. Load catalog + real product ratings + site feature toggles + spin wheel prizes in parallel, then coupons
     await Promise.all([
         loadProductDatabaseEngine(),
         loadProductRatingSummary(),
-        loadSiteSettingsRegistry()
+        loadSiteSettingsRegistry(),
+        loadSpinWheelPrizesRegistry()
     ]);
     loadLiveCouponDatabaseEngine();
 
