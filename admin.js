@@ -403,26 +403,123 @@ function renderFestivalProductPickerList(preCheckedIds) {
         return;
     }
 
-    const sortedProducts = [...productDatabase].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    // 1. Group products by category
+    const categorizedMap = {};
+    productDatabase.forEach(p => {
+        const category = p.category || 'Other / Uncategorized';
+        if (!categorizedMap[category]) categorizedMap[category] = [];
+        categorizedMap[category].push(p);
+    });
 
-    listEl.innerHTML = sortedProducts.map(p => {
-        const itemImage = p.image || 'assets/placeholder.png';
-        const itemTitle = (p.title || 'Untitled piece').replace(/</g, '&lt;');
-        const itemCategory = p.category ? ` · ${p.category}` : '';
+    const categoryKeys = Object.keys(categorizedMap).sort();
 
-        return `
-            <label style="display:flex; align-items:center; gap:10px; padding:6px 10px; font-size:0.78rem; cursor:pointer; border-bottom:1px solid #f4f4f7; transition:background 0.15s ease;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" class="festival-product-checkbox" value="${p.id}" ${checkedSet.has(p.id) ? 'checked' : ''} style="cursor:pointer; flex-shrink:0;">
-                <img src="${itemImage}" alt="${itemTitle}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'" style="width:34px; height:34px; border-radius:4px; object-fit:cover; border:1px solid #e8e8ef; flex-shrink:0;">
-                <div style="display:flex; flex-direction:column; min-width:0;">
-                    <span style="font-weight:600; color:var(--purple-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${itemTitle}</span>
-                    <span style="font-size:0.68rem; color:#8a8da0;">ID: #${p.id}${itemCategory}</span>
-                </div>
-            </label>
-        `;
-    }).join('');
+    // 2. Render Search Bar + Accordion Category Sections
+    listEl.innerHTML = `
+        <!-- Sticky Quick Filter Search -->
+        <div style="position: sticky; top: 0; z-index: 10; background: #ffffff; padding: 6px; border-bottom: 1px solid #e8e8ef;">
+            <input type="text" id="festivalPickerSearchInput" placeholder="Quick search piece name..." 
+                   oninput="filterFestivalPickerItems(this.value)"
+                   style="width: 100%; height: 32px; padding: 0 10px; font-size: 0.75rem; border: 1px solid #e8e8ef; border-radius: 4px; outline: none; box-sizing: border-box;">
+        </div>
+
+        <div id="festivalPickerCategoriesContainer" style="display: flex; flex-direction: column;">
+            ${categoryKeys.map((catName, idx) => {
+                const items = categorizedMap[catName].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                const selectedCount = items.filter(p => checkedSet.has(p.id)).length;
+                const isAllSelected = selectedCount === items.length && items.length > 0;
+                const safeCatId = `cat-group-${idx}`;
+
+                return `
+                    <div class="festival-picker-cat-group" style="border-bottom: 1px solid #e8e8ef;">
+                        <!-- Category Header Bar (Accordion Trigger) -->
+                        <div style="background: #fafafa; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;"
+                             onclick="toggleFestivalPickerCategoryAccordion('${safeCatId}')">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-chevron-right" id="${safeCatId}-chevron" style="font-size: 0.65rem; color: #8a8da0; transition: transform 0.2s ease;"></i>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--purple-primary); text-transform: uppercase;">${catName}</span>
+                                <span style="font-size: 0.65rem; color: #8a8da0;">(${items.length})</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;" onclick="event.stopPropagation();">
+                                <label style="font-size: 0.65rem; font-weight: 600; color: var(--purple-primary); cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" onchange="toggleSelectAllCategoryItems('${safeCatId}', this.checked)" ${isAllSelected ? 'checked' : ''} style="cursor: pointer;">
+                                    Select All
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Expandable Product Items Container -->
+                        <div id="${safeCatId}" class="festival-picker-cat-body" style="display: none; flex-direction: column;">
+                            ${items.map(p => {
+                                const itemImage = p.image || 'assets/placeholder.png';
+                                const itemTitle = (p.title || 'Untitled piece').replace(/</g, '&lt;');
+                                const isChecked = checkedSet.has(p.id);
+
+                                return `
+                                    <label class="festival-picker-item-row" data-title="${itemTitle.toLowerCase()}" style="display: flex; align-items: center; gap: 10px; padding: 6px 12px; font-size: 0.78rem; cursor: pointer; border-bottom: 1px dashed #f4f4f7; transition: background 0.15s ease;"
+                                           onmouseover="this.style.background='#fdfdfd'" onmouseout="this.style.background='transparent'">
+                                        <input type="checkbox" class="festival-product-checkbox ${safeCatId}-checkbox" value="${p.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; flex-shrink: 0;">
+                                        <img src="${itemImage}" alt="${itemTitle}" loading="lazy" decoding="async" onerror="this.src='assets/placeholder.png'" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover; border: 1px solid #e8e8ef; flex-shrink: 0;">
+                                        <div style="display: flex; flex-direction: column; min-width: 0;">
+                                            <span style="font-weight: 600; color: var(--purple-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
+                                            <span style="font-size: 0.65rem; color: #8a8da0;">ID: #${p.id} · ₹${p.price || 0}</span>
+                                        </div>
+                                    </label>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
 }
 
+// Accordion Expand/Collapse Toggle
+function toggleFestivalPickerCategoryAccordion(catId) {
+    const bodyEl = document.getElementById(catId);
+    const chevronEl = document.getElementById(`${catId}-chevron`);
+    if (!bodyEl) return;
+
+    const isHidden = bodyEl.style.display === 'none';
+    bodyEl.style.display = isHidden ? 'flex' : 'none';
+    if (chevronEl) chevronEl.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+// Category-Level "Select All" Toggle
+function toggleSelectAllCategoryItems(catId, isChecked) {
+    document.querySelectorAll(`.${catId}-checkbox`).forEach(cb => {
+        cb.checked = isChecked;
+    });
+}
+
+// Live Search Filter Across All Categories
+function filterFestivalPickerItems(query) {
+    const cleanQuery = query.toLowerCase().trim();
+    document.querySelectorAll('.festival-picker-cat-group').forEach(group => {
+        let visibleCountInGroup = 0;
+        const rows = group.querySelectorAll('.festival-picker-item-row');
+        const bodyEl = group.querySelector('.festival-picker-cat-body');
+        const chevronEl = group.querySelector('i.fa-chevron-right');
+
+        rows.forEach(row => {
+            const title = row.getAttribute('data-title') || '';
+            const match = title.includes(cleanQuery);
+            row.style.display = match ? 'flex' : 'none';
+            if (match) visibleCountInGroup++;
+        });
+
+        // Automatically auto-expand matching categories when typing in search
+        if (cleanQuery !== '') {
+            group.style.display = visibleCountInGroup > 0 ? 'block' : 'none';
+            if (bodyEl) bodyEl.style.display = visibleCountInGroup > 0 ? 'flex' : 'none';
+            if (chevronEl) chevronEl.style.transform = visibleCountInGroup > 0 ? 'rotate(90deg)' : 'rotate(0deg)';
+        } else {
+            group.style.display = 'block';
+            if (bodyEl) bodyEl.style.display = 'none';
+            if (chevronEl) chevronEl.style.transform = 'rotate(0deg)';
+        }
+    });
+}
 function startEditingFestival(festivalId) {
     const fest = festivalRegistryCache.find(f => f.id === festivalId);
     if (!fest) return;
