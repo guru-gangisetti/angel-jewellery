@@ -689,6 +689,11 @@ function closeAdminFestivalConsoleOverlay() {
 
 const SITE_FEATURE_TOGGLE_DEFS = [
     {
+        key: 'maintenance_mode_enabled',
+        label: 'Store Maintenance Mode',
+        description: 'Puts the site in maintenance mode: displays an alert ribbon and locks checkout buttons.'
+    },
+    {
         key: 'complete_the_look_enabled',
         label: 'Complete the Look Suggestions',
         description: 'Shows complementary product suggestions (with a discount) in the cart drawer, before checkout.'
@@ -729,9 +734,13 @@ function renderSiteFeatureToggles() {
     if (!container) return;
 
     container.innerHTML = SITE_FEATURE_TOGGLE_DEFS.map(def => {
-        // Default to ON if the setting hasn't been saved yet, so a feature
-        // isn't silently disabled just because this row doesn't exist yet.
-        const isEnabled = siteSettingsRegistryCache[def.key] !== 'false';
+        let isEnabled;
+        if (def.key === 'maintenance_mode_enabled') {
+            isEnabled = siteSettingsRegistryCache[def.key] === 'true';
+        } else {
+            isEnabled = siteSettingsRegistryCache[def.key] !== 'false';
+        }
+
         return `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid #f1f1f5;">
                 <div>

@@ -2447,4 +2447,65 @@ footer { background: var(--bg-surface); padding: 60px 0 40px 0; border-top: 1px 
     .order-card-date, .order-card-amount { text-align: left; }
 }
 
+/* --- STORE MAINTENANCE MODE BANNER --- */
+.store-maintenance-ribbon {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background: linear-gradient(135deg, #d9383a 0%, #a61c1e 100%);
+    color: #ffffff;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(217, 56, 58, 0.4);
+    font-family: 'Montserrat', sans-serif;
+}
+
+.store-maintenance-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.store-maintenance-content i {
+    font-size: 1rem;
+    color: #ffeb3b;
+    flex-shrink: 0;
+}
+
+/* Offset fixed header and ribbons while maintenance is active */
+body.maintenance-mode-active header#header {
+    top: 40px !important;
+}
+
+body.maintenance-mode-active .luxury-announcement-ribbon-wrapper {
+    top: 110px !important;
+}
+
+body.maintenance-mode-active .updates-carousel-section {
+    margin-top: 110px !important;
+}
+
+@media (max-width: 768px) {
+    .store-maintenance-content {
+        font-size: 0.72rem;
+    }
+    body.maintenance-mode-active header#header {
+        top: 46px !important;
+    }
+    body.maintenance-mode-active .luxury-announcement-ribbon-wrapper {
+        top: 106px !important;
+    }
+    body.maintenance-mode-active .updates-carousel-section {
+        margin-top: 106px !important;
+    }
+}
 /* =========================================================================

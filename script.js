@@ -1679,9 +1679,16 @@ function updateCartUI() {
     finalTotalCost = finalPayableTotal; 
 
     // Handle checkout button configurations
+    // Inside updateCartUI():
     const primaryCheckoutButtonElement = document.getElementById('checkoutBtn');
+    const isMaintenanceActive = SITE_SETTINGS_CACHE['maintenance_mode_enabled'] === 'true';
+
     if (primaryCheckoutButtonElement) {
-        if (isOversellingDetected) {
+        if (isMaintenanceActive) {
+            primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-screwdriver-wrench"></i> Orders Paused (Maintenance)`;
+            primaryCheckoutButtonElement.disabled = true;
+            primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: #d9383a !important; color: #ffffff !important; cursor: not-allowed; box-shadow: none !important;";
+        } else if (isOversellingDetected) {
             primaryCheckoutButtonElement.innerHTML = `<i class="fas fa-ban"></i> Adjust Quantities to Unlock`;
             primaryCheckoutButtonElement.disabled = true;
             primaryCheckoutButtonElement.style.cssText = "margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; padding: 14px 20px; border-radius: 6px; box-sizing: border-box; border: none; background: #e1e1e6 !important; color: #8e8e9f !important; cursor: not-allowed; box-shadow: none !important;";
@@ -2744,6 +2751,10 @@ function loadRazorpaySDK() {
 
 
 function openInvoiceScreen() {
+    if (SITE_SETTINGS_CACHE['maintenance_mode_enabled'] === 'true') {
+        alert("The website is currently undergoing maintenance. Checkout is temporarily paused. Please check back shortly!");
+        return;
+    }
     if (shoppingCart.length === 0) return;
 
     // Kick off the Razorpay SDK fetch as soon as checkout opens, in the
@@ -5676,6 +5687,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
     loadLiveCouponDatabaseEngine();
 
+    // Apply maintenance mode banner & locks based on Supabase settings
+   applyMaintenanceModeState();
+
     // Ratings may have resolved after the catalog's own initial render —
     // re-render once more so star ratings are guaranteed to show up on cards
     if (typeof generateDynamicCatalogFilters === 'function') generateDynamicCatalogFilters();
@@ -5694,3 +5708,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof loadActiveFestivalShowcase === 'function') loadActiveFestivalShowcase();
     if (typeof renderShopByBodyPartSection === 'function') renderShopByBodyPartSection();
 });
+
+function applyMaintenanceModeState() {
+    const isMaintenance = SITE_SETTINGS_CACHE && SITE_SETTINGS_CACHE['maintenance_mode_enabled'] === 'true';
+    let banner = document.getElementById('storeMaintenanceRibbon');
+
+    if (isMaintenance) {
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'storeMaintenanceRibbon';
+            banner.className = 'store-maintenance-ribbon';
+            banner.innerHTML = `
+                <div class="store-maintenance-content">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span><strong>Store Maintenance Mode Active:</strong> We are currently updating our systems. Ordering is temporarily paused. Please check back shortly!</span>
+                </div>
+            `;
+            document.body.prepend(banner);
+        }
+        document.body.classList.add('maintenance-mode-active');
+    } else {
+        if (banner) banner.remove();
+        document.body.classList.remove('maintenance-mode-active');
+    }
+}
